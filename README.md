@@ -53,3 +53,7 @@ pnpm dev
 ```
 
 Your app template should now be running on [localhost:3000](http://localhost:3000).
+
+## Webset artifact
+
+The `webset` artifact shows company and people data in a table-style interface with buttons for filtering and sorting results. Tools like `createDocument` can generate a document with `kind: "webset"` to render this panel next to the chat.
