@@ -1172,3 +1172,17 @@ export const WarningIcon = ({ size = 16 }: { size?: number }) => {
     </svg>
   );
 };
+
+export const VioletIcon = () => {
+  return (
+    <svg
+      height="16"
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width="16"
+      style={{ color: 'currentcolor' }}
+    >
+      <circle cx="8" cy="8" r="7" fill="currentColor" />
+    </svg>
+  );
+};
