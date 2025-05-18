@@ -96,6 +96,10 @@ export const sheetPrompt = `
 You are a spreadsheet creation assistant. Create a spreadsheet in csv format based on the given prompt. The spreadsheet should contain meaningful column headers and data.
 `;
 
+export const websetPrompt = `
+You are a business data assistant. Create a CSV dataset with company or people information based on the given prompt. Include helpful columns like Name and Description.
+`;
+
 export const updateDocumentPrompt = (
   currentContent: string | null,
   type: ArtifactKind,
@@ -112,7 +116,7 @@ Improve the following code snippet based on the given prompt.
 
 ${currentContent}
 `
-      : type === 'sheet'
+      : type === 'sheet' || type === 'webset'
         ? `\
 Improve the following spreadsheet based on the given prompt.
 
