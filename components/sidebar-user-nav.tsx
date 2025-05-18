@@ -74,9 +74,13 @@ export function SidebarUserNav({ user }: { user: User }) {
             <DropdownMenuItem
               data-testid="user-nav-item-theme"
               className="cursor-pointer"
-              onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onSelect={() => {
+                if (theme === 'light') setTheme('dark');
+                else if (theme === 'dark') setTheme('violet');
+                else setTheme('light');
+              }}
             >
-              {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
+              {`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'violet' : 'light'} mode`}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild data-testid="user-nav-item-auth">
