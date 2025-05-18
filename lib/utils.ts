@@ -69,7 +69,9 @@ export function getDocumentTimestampByIndex(
   index: number,
 ) {
   if (!documents) return new Date();
-  if (index > documents.length) return new Date();
+  // index is zero-based, so an index equal to the length is out of bounds
+  // Also handle negative indexes
+  if (index < 0 || index >= documents.length) return new Date();
 
   return documents[index].createdAt;
 }
