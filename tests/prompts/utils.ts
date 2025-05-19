@@ -123,9 +123,11 @@ export const getResponseChunksByPrompt = (
         usage: { completionTokens: 10, promptTokens: 3 },
       },
     ];
-  } else if (compareMessages(recentMessage, TEST_PROMPTS.USER_NEXTJS)) {
+  } else if (
+    compareMessages(recentMessage, TEST_PROMPTS.USER_WEBSET_COMPANIES)
+  ) {
     return [
-      ...textToDeltas('With Next.js, you can ship fast!'),
+      ...textToDeltas('Here is a webset of top tech companies.'),
 
       {
         type: 'finish',
