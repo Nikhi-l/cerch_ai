@@ -13,10 +13,10 @@ export const TEST_PROMPTS: Record<string, CoreMessage> = {
     role: 'user',
     content: [{ type: 'text', text: 'Thanks!' }],
   },
-  USER_NEXTJS: {
+  USER_WEBSET_COMPANIES: {
     role: 'user',
     content: [
-      { type: 'text', text: 'What are the advantages of using Next.js?' },
+      { type: 'text', text: 'Show a webset of top tech companies' },
     ],
   },
   USER_IMAGE_ATTACHMENT: {
