@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from './toast';
 import { LoaderIcon } from './icons';
 import { guestRegex } from '@/lib/constants';
+import ThemeSettings from './theme-settings';
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
@@ -71,6 +72,8 @@ export function SidebarUserNav({ user }: { user: User }) {
             side="top"
             className="w-[--radix-popper-anchor-width]"
           >
+            <ThemeSettings />
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               data-testid="user-nav-item-theme"
               className="cursor-pointer"
