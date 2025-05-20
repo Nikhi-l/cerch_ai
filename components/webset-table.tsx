@@ -61,26 +61,26 @@ export function WebsetTable({ csv }: WebsetTableProps) {
   }, [filteredRows, headers, sortedColumn, sortDirection]);
 
   return (
-    <div className="w-full bg-[#1e1a2e] text-gray-200 min-h-screen">
-      <div className="flex items-center justify-between p-4 border-b border-[#2d2640]">
+    <div className="w-full bg-[hsl(var(--artifact-background))] text-gray-200 min-h-screen">
+      <div className="flex items-center justify-between p-4 border-b border-[hsl(var(--artifact-border))]">
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1 bg-[#2d2640] border-[#3d3654] text-gray-300 hover:bg-[#3d3654] hover:text-white"
+                className="h-8 gap-1 bg-[hsl(var(--artifact-border))] border-[hsl(var(--artifact-hover))] text-gray-300 hover:bg-[hsl(var(--artifact-hover))] hover:text-white"
               >
                 <Filter className="h-4 w-4" />
                 <span>Filter</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-[#2d2640] border-[#3d3654] p-2 space-y-2">
+            <DropdownMenuContent className="bg-[hsl(var(--artifact-border))] border-[hsl(var(--artifact-hover))] p-2 space-y-2">
               {headers.map((header) => (
                 <div key={header} className="flex items-center gap-2">
                   <span className="w-32 text-xs">{header}</span>
                   <input
-                    className="flex-1 rounded bg-[#1e1a2e] border border-[#3d3654] px-2 py-1 text-xs"
+                    className="flex-1 rounded bg-[hsl(var(--artifact-background))] border border-[hsl(var(--artifact-hover))] px-2 py-1 text-xs"
                     placeholder="Filter"
                     value={filters[header] || ''}
                     onChange={(e) =>
@@ -96,18 +96,18 @@ export function WebsetTable({ csv }: WebsetTableProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1 bg-[#2d2640] border-[#3d3654] text-gray-300 hover:bg-[#3d3654] hover:text-white"
+                className="h-8 gap-1 bg-[hsl(var(--artifact-border))] border-[hsl(var(--artifact-hover))] text-gray-300 hover:bg-[hsl(var(--artifact-hover))] hover:text-white"
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 <span>Sort</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-[#2d2640] border-[#3d3654]">
+            <DropdownMenuContent className="bg-[hsl(var(--artifact-border))] border-[hsl(var(--artifact-hover))]">
               {headers.map((header) => (
                 <DropdownMenuItem
                   key={header}
                   onSelect={() => setSortedColumn(header)}
-                  className="cursor-pointer hover:bg-[#3d3654] focus:bg-[#3d3654]"
+                  className="cursor-pointer hover:bg-[hsl(var(--artifact-hover))] focus:bg-[hsl(var(--artifact-hover))]"
                 >
                   {header}
                 </DropdownMenuItem>
@@ -116,7 +116,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                 onSelect={() =>
                   setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
                 }
-                className="cursor-pointer hover:bg-[#3d3654] focus:bg-[#3d3654]"
+                className="cursor-pointer hover:bg-[hsl(var(--artifact-hover))] focus:bg-[hsl(var(--artifact-hover))]"
               >
                 Direction: {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
               </DropdownMenuItem>
@@ -125,7 +125,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-1 bg-[#2d2640] border-[#3d3654] text-gray-300 hover:bg-[#3d3654] hover:text-white"
+            className="h-8 gap-1 bg-[hsl(var(--artifact-border))] border-[hsl(var(--artifact-hover))] text-gray-300 hover:bg-[hsl(var(--artifact-hover))] hover:text-white"
           >
             <Code className="h-4 w-4" />
             <span>Get Code</span>
@@ -137,19 +137,19 @@ export function WebsetTable({ csv }: WebsetTableProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1 bg-[#2d2640] border-[#3d3654] text-gray-300 hover:bg-[#3d3654] hover:text-white"
+                className="h-8 gap-1 bg-[hsl(var(--artifact-border))] border-[hsl(var(--artifact-hover))] text-gray-300 hover:bg-[hsl(var(--artifact-hover))] hover:text-white"
               >
                 <span>Actions</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-[#2d2640] border-[#3d3654] text-gray-200">
-              <DropdownMenuItem className="hover:bg-[#3d3654] focus:bg-[#3d3654]">Export</DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-[#3d3654] focus:bg-[#3d3654]">Share</DropdownMenuItem>
-              <DropdownMenuItem className="hover:bg-[#3d3654] focus:bg-[#3d3654]">Delete</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="bg-[hsl(var(--artifact-border))] border-[hsl(var(--artifact-hover))] text-gray-200">
+              <DropdownMenuItem className="hover:bg-[hsl(var(--artifact-hover))] focus:bg-[hsl(var(--artifact-hover))]">Export</DropdownMenuItem>
+              <DropdownMenuItem className="hover:bg-[hsl(var(--artifact-hover))] focus:bg-[hsl(var(--artifact-hover))]">Share</DropdownMenuItem>
+              <DropdownMenuItem className="hover:bg-[hsl(var(--artifact-hover))] focus:bg-[hsl(var(--artifact-hover))]">Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" className="h-8 gap-1 bg-[#8a57db] hover:bg-[#9a67eb] text-white">
+          <Button size="sm" className="h-8 gap-1 bg-[hsl(var(--artifact-accent))] hover:bg-[hsl(var(--artifact-accent))] text-white">
             <Zap className="h-4 w-4" />
             <span>Add Enrichment</span>
           </Button>
@@ -158,7 +158,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
       <div className="overflow-auto">
         <Table className="border-collapse">
           <TableHeader>
-            <TableRow className="border-b border-[#2d2640]">
+            <TableRow className="border-b border-[hsl(var(--artifact-border))]">
               <TableHead className="w-12 text-center text-gray-400 font-normal">#</TableHead>
               {headers.map((header, idx) => (
                 <TableHead key={idx} className="min-w-[150px] text-gray-400 font-normal">
@@ -171,7 +171,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#3d3654]"
+                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[hsl(var(--artifact-hover))]"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -180,7 +180,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
           </TableHeader>
           <TableBody>
             {sortedRows.map((row, rowIdx) => (
-              <TableRow key={rowIdx} className="border-b border-[#2d2640] hover:bg-[#2d2640]">
+              <TableRow key={rowIdx} className="border-b border-[hsl(var(--artifact-border))] hover:bg-[hsl(var(--artifact-table))]">
                 <TableCell className="text-center text-sm text-gray-400">{rowIdx + 1}</TableCell>
                 {row.map((cell, cellIdx) => {
                   const header = headers[cellIdx] || '';
@@ -228,7 +228,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#3d3654]"
+                      className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[hsl(var(--artifact-hover))]"
                     >
                       <Maximize2 className="h-4 w-4" />
                     </Button>
@@ -239,9 +239,9 @@ export function WebsetTable({ csv }: WebsetTableProps) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-center p-4 border-t border-[#2d2640]">
-        <Button variant="outline" className="rounded-full px-6 bg-[#2d2640] border-[#3d3654] hover:bg-[#3d3654]">
-          <span className="text-[#a57eeb]">Find more results</span>
+      <div className="flex justify-center p-4 border-t border-[hsl(var(--artifact-border))]">
+        <Button variant="outline" className="rounded-full px-6 bg-[hsl(var(--artifact-border))] border-[hsl(var(--artifact-hover))] hover:bg-[hsl(var(--artifact-hover))]">
+          <span className="text-[hsl(var(--artifact-accent))]">Find more results</span>
         </Button>
       </div>
     </div>
