@@ -6,16 +6,26 @@ import {
   SparklesIcon,
   UndoIcon,
 } from '@/components/icons';
-import { WebsetTable } from '@/components/webset-table';
+import { WebsetSearch, type WebsetSearchMetadata } from '@/components/webset-search';
 import { parse, unparse } from 'papaparse';
 import { toast } from 'sonner';
 
-type Metadata = any;
+type Metadata = WebsetSearchMetadata;
 
 export const websetArtifact = new Artifact<'webset', Metadata>({
   kind: 'webset',
   description: 'Useful for exploring company and people data',
-  initialize: async () => {},
+  initialize: async ({ setMetadata }) => {
+    setMetadata({
+      step: 'setup',
+      query: '',
+      entityType: 'People',
+      criteria: [],
+      enrichments: [],
+      resultCount: 25,
+      progress: 0,
+    });
+  },
   onStreamPart: ({ setArtifact, streamPart }) => {
     if (streamPart.type === 'sheet-delta') {
       setArtifact((draftArtifact) => ({
@@ -26,14 +36,15 @@ export const websetArtifact = new Artifact<'webset', Metadata>({
       }));
     }
   },
-  content: ({
-    content,
-    currentVersionIndex,
-    isCurrentVersion,
-    onSaveContent,
-    status,
-  }) => {
-    return <WebsetTable csv={content} />;
+  content: ({ content, onSaveContent, metadata, setMetadata }) => {
+    return (
+      <WebsetSearch
+        csv={content}
+        metadata={metadata as WebsetSearchMetadata}
+        setMetadata={setMetadata as any}
+        onSaveContent={onSaveContent}
+      />
+    );
   },
   actions: [
     {
