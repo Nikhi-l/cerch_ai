@@ -11,9 +11,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 interface WebsetTableProps {
   csv: string;
+  onAddEnrichment?: () => void;
 }
 
-export function WebsetTable({ csv }: WebsetTableProps) {
+export function WebsetTable({ csv, onAddEnrichment }: WebsetTableProps) {
   const { headers, rows } = useMemo(() => {
     const parsed = parse<string[]>(csv || "", { skipEmptyLines: true });
     const data = parsed.data as string[][];
@@ -149,7 +150,11 @@ export function WebsetTable({ csv }: WebsetTableProps) {
               <DropdownMenuItem className="hover:bg-[#3d3654] focus:bg-[#3d3654]">Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" className="h-8 gap-1 bg-[#8a57db] hover:bg-[#9a67eb] text-white">
+          <Button
+            size="sm"
+            className="h-8 gap-1 bg-[#8a57db] hover:bg-[#9a67eb] text-white"
+            onClick={() => onAddEnrichment?.()}
+          >
             <Zap className="h-4 w-4" />
             <span>Add Enrichment</span>
           </Button>
@@ -172,6 +177,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#3d3654]"
+                  onClick={() => onAddEnrichment?.()}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>

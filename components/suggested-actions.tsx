@@ -2,9 +2,10 @@
 
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
+import { WebsetSearch } from './webset-search';
 
 interface SuggestedActionsProps {
   chatId: string;
@@ -17,6 +18,7 @@ function PureSuggestedActions({
   append,
   selectedVisibilityType,
 }: SuggestedActionsProps) {
+  const [showSearch, setShowSearch] = useState(false);
   const suggestedActions = [
     {
       title: 'Show a webset',
@@ -45,6 +47,11 @@ function PureSuggestedActions({
       data-testid="suggested-actions"
       className="grid sm:grid-cols-2 gap-2 w-full"
     >
+      {showSearch && (
+        <div className="col-span-2">
+          <WebsetSearch />
+        </div>
+      )}
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -58,11 +65,14 @@ function PureSuggestedActions({
             variant="ghost"
             onClick={async () => {
               window.history.replaceState({}, '', `/chat/${chatId}`);
-
-              append({
-                role: 'user',
-                content: suggestedAction.action,
-              });
+              if (index === 1) {
+                setShowSearch(true);
+              } else {
+                append({
+                  role: 'user',
+                  content: suggestedAction.action,
+                });
+              }
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
