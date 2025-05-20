@@ -57,3 +57,18 @@ Your app template should now be running on [localhost:3000](http://localhost:300
 ## Webset artifact
 
 The `webset` artifact shows company and people data in a table-style interface with buttons for filtering and sorting results. Tools like `createDocument` can generate a document with `kind: "webset"` to render this panel next to the chat.
+
+## Parallel scraping example
+
+A small Python module in the `scraper/` directory demonstrates how to fetch pages in parallel and judge their relevance with an LLM. The workflow is:
+
+1. `data_fetcher.get_urls` chooses which URLs to scrape for a search query.
+2. `main.process_query` downloads those pages concurrently and hands the results to `judge.judge_relevance`.
+
+Run the script with:
+
+```bash
+python3 -m scraper.main "your search terms"
+```
+
+Set the `OPENAI_API_KEY` environment variable to enable the LLM judging step. When the OpenAI package is not installed, the script falls back to a simple keyword heuristic.
