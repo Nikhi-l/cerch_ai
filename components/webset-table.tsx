@@ -61,7 +61,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
   }, [filteredRows, headers, sortedColumn, sortDirection]);
 
   return (
-    <div className="w-full bg-[#1e1a2e] text-gray-200 min-h-screen">
+    <div className="w-full bg-[hsl(var(--artifact-background))] text-gray-200 min-h-screen">
       <div className="flex items-center justify-between p-4 border-b border-[#2d2640]">
         <div className="flex items-center gap-4">
           <DropdownMenu>
@@ -149,7 +149,10 @@ export function WebsetTable({ csv }: WebsetTableProps) {
               <DropdownMenuItem className="hover:bg-[#3d3654] focus:bg-[#3d3654]">Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" className="h-8 gap-1 bg-[#8a57db] hover:bg-[#9a67eb] text-white">
+          <Button
+            size="sm"
+            className="h-8 gap-1 text-white bg-[hsl(var(--artifact-heading))] hover:brightness-110"
+          >
             <Zap className="h-4 w-4" />
             <span>Add Enrichment</span>
           </Button>
@@ -241,7 +244,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
       </div>
       <div className="flex justify-center p-4 border-t border-[#2d2640]">
         <Button variant="outline" className="rounded-full px-6 bg-[#2d2640] border-[#3d3654] hover:bg-[#3d3654]">
-          <span className="text-[#a57eeb]">Find more results</span>
+          <span className="text-[hsl(var(--artifact-heading))]">Find more results</span>
         </Button>
       </div>
     </div>
