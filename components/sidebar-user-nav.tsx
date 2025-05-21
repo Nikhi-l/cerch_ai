@@ -5,7 +5,11 @@ import Image from 'next/image';
 import type { User } from 'next-auth';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
+import { useState } from 'react'; // Added
 
+import { // Added CustomThemeEditor
+  CustomThemeEditor,
+} from '@/components/custom-theme-editor';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,17 +27,47 @@ import { toast } from './toast';
 import { LoaderIcon } from './icons';
 import { guestRegex } from '@/lib/constants';
 
+// Helper function to apply styles from an object (similar to ThemeProvider)
+function applyThemeStyles(styles: Record<string, string>) {
+  if (typeof window !== 'undefined') {
+    Object.entries(styles).forEach(([variable, value]) => {
+      document.documentElement.style.setProperty(`--${variable}`, value);
+    });
+  }
+}
+
+// Helper function to load and apply custom theme from local storage (similar to ThemeProvider)
+function loadAndApplyCustomThemeFromLocalStorage() {
+  if (typeof window !== 'undefined') {
+    const savedColors = localStorage.getItem('custom-theme-colors');
+    if (savedColors) {
+      try {
+        const parsedColors = JSON.parse(savedColors);
+        applyThemeStyles(parsedColors);
+        console.log('Custom theme loaded from local storage and applied via sidebar.');
+      } catch (error) {
+        console.error('Failed to parse custom theme from local storage in sidebar:', error);
+      }
+    } else {
+      console.log('No custom theme found in local storage via sidebar.');
+    }
+  }
+}
+
+
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
   const { data, status } = useSession();
   const { setTheme, theme } = useTheme();
+  const [isCustomThemeEditorOpen, setIsCustomThemeEditorOpen] = useState(false); // Added
 
   const isGuest = guestRegex.test(data?.user?.email ?? '');
 
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
+    <> {/* Added Fragment */}
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             {status === 'loading' ? (
               <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent bg-background data-[state=open]:text-sidebar-accent-foreground h-10 justify-between">
@@ -75,12 +109,37 @@ export function SidebarUserNav({ user }: { user: User }) {
               data-testid="user-nav-item-theme"
               className="cursor-pointer"
               onSelect={() => {
-                if (theme === 'light') setTheme('dark');
-                else if (theme === 'dark') setTheme('violet');
-                else setTheme('light');
+                let nextTheme = 'light';
+                if (theme === 'light') nextTheme = 'dark';
+                else if (theme === 'dark') nextTheme = 'violet';
+                else if (theme === 'violet') nextTheme = 'custom';
+                // else, it's 'custom' or undefined, so it cycles to 'light'
+
+                setTheme(nextTheme);
+
+                if (nextTheme === 'custom') {
+                  loadAndApplyCustomThemeFromLocalStorage();
+                }
               }}
             >
-              {`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'violet' : 'light'} mode`}
+              {`Switch to ${
+                theme === 'light'
+                  ? 'dark'
+                  : theme === 'dark'
+                    ? 'violet'
+                    : theme === 'violet'
+                      ? 'custom'
+                      : 'light'
+              } mode`}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              data-testid="user-nav-item-customize-theme"
+              className="cursor-pointer"
+              onSelect={() => {
+                setIsCustomThemeEditorOpen(true); // Updated
+              }}
+            >
+              Customize Theme
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild data-testid="user-nav-item-auth">
@@ -114,5 +173,11 @@ export function SidebarUserNav({ user }: { user: User }) {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
+    {/* Added CustomThemeEditor instance */}
+    <CustomThemeEditor
+      isOpen={isCustomThemeEditorOpen}
+      onClose={() => setIsCustomThemeEditorOpen(false)}
+    />
+    </>
   );
 }
