@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from './toast';
 import { LoaderIcon } from './icons';
 import { guestRegex } from '@/lib/constants';
+import { ThemeSettings } from '@/components/theme-settings';
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
@@ -32,6 +33,9 @@ export function SidebarUserNav({ user }: { user: User }) {
 
   return (
     <SidebarMenu>
+      <SidebarMenuItem>
+        <ThemeSettings />
+      </SidebarMenuItem>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

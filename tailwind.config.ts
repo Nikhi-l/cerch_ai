@@ -73,6 +73,11 @@ const config: Config = {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        artifact: {
+          background: 'hsl(var(--artifact-background))',
+          border: 'hsl(var(--artifact-border))',
+          heading: 'hsl(var(--artifact-heading))',
+        },
       },
     },
   },
