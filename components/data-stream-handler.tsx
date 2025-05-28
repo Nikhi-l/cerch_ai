@@ -11,6 +11,7 @@ export type DataStreamDelta = {
     | 'text-delta'
     | 'code-delta'
     | 'sheet-delta'
+    | 'profile-card-delta'
     | 'image-delta'
     | 'title'
     | 'id'
