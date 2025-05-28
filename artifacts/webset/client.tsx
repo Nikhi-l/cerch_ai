@@ -2,20 +2,32 @@ import { Artifact } from '@/components/create-artifact';
 import {
   CopyIcon,
   LineChartIcon,
+  PlusIcon,
   RedoIcon,
   SparklesIcon,
   UndoIcon,
+  CodeIcon,
 } from '@/components/icons';
 import { WebsetTable } from '@/components/webset-table';
 import { parse, unparse } from 'papaparse';
 import { toast } from 'sonner';
 
-type Metadata = any;
+export interface WebsetMetadata {
+  filters: Record<string, string>;
+  sortedColumn: string | null;
+  sortDirection: 'asc' | 'desc';
+}
 
-export const websetArtifact = new Artifact<'webset', Metadata>({
+export const websetArtifact = new Artifact<'webset', WebsetMetadata>({
   kind: 'webset',
   description: 'Useful for exploring company and people data',
-  initialize: async () => {},
+  initialize: async ({ setMetadata }) => {
+    setMetadata({
+      filters: {},
+      sortedColumn: null,
+      sortDirection: 'asc',
+    });
+  },
   onStreamPart: ({ setArtifact, streamPart }) => {
     if (streamPart.type === 'sheet-delta') {
       setArtifact((draftArtifact) => ({
@@ -26,14 +38,24 @@ export const websetArtifact = new Artifact<'webset', Metadata>({
       }));
     }
   },
-  content: ({
-    content,
-    currentVersionIndex,
-    isCurrentVersion,
-    onSaveContent,
-    status,
-  }) => {
-    return <WebsetTable csv={content} />;
+  content: ({ content, metadata, setMetadata }) => {
+    return (
+      <WebsetTable
+        csv={content}
+        filters={metadata?.filters || {}}
+        sortedColumn={metadata?.sortedColumn || null}
+        sortDirection={metadata?.sortDirection || 'asc'}
+        onFiltersChange={(filters) =>
+          setMetadata((m) => ({ ...m, filters }))
+        }
+        onSortedColumnChange={(column) =>
+          setMetadata((m) => ({ ...m, sortedColumn: column }))
+        }
+        onSortDirectionChange={(direction) =>
+          setMetadata((m) => ({ ...m, sortDirection: direction }))
+        }
+      />
+    );
   },
   actions: [
     {
@@ -100,6 +122,26 @@ export const websetArtifact = new Artifact<'webset', Metadata>({
           role: 'user',
           content:
             'Can you please analyze and visualize the data by creating a new code artifact in python?',
+        });
+      },
+    },
+    {
+      description: 'Get code',
+      icon: <CodeIcon />,
+      onClick: ({ appendMessage }) => {
+        appendMessage({
+          role: 'user',
+          content: 'Generate code to reproduce this webset.',
+        });
+      },
+    },
+    {
+      description: 'Add enrichment',
+      icon: <PlusIcon />,
+      onClick: ({ appendMessage }) => {
+        appendMessage({
+          role: 'user',
+          content: 'Please add enrichment to this webset.',
         });
       },
     },

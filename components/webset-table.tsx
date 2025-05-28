@@ -5,15 +5,29 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ChevronDown, Code, Filter, Maximize2, Plus, SlidersHorizontal, Zap } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface WebsetTableProps {
   csv: string;
+  filters: Record<string, string>;
+  sortedColumn: string | null;
+  sortDirection: 'asc' | 'desc';
+  onFiltersChange: (filters: Record<string, string>) => void;
+  onSortedColumnChange: (column: string | null) => void;
+  onSortDirectionChange: (direction: 'asc' | 'desc') => void;
 }
 
-export function WebsetTable({ csv }: WebsetTableProps) {
+export function WebsetTable({
+  csv,
+  filters,
+  sortedColumn,
+  sortDirection,
+  onFiltersChange,
+  onSortedColumnChange,
+  onSortDirectionChange,
+}: WebsetTableProps) {
   const { headers, rows } = useMemo(() => {
     const parsed = parse<string[]>(csv || "", { skipEmptyLines: true });
     const data = parsed.data as string[][];
@@ -22,9 +36,6 @@ export function WebsetTable({ csv }: WebsetTableProps) {
     return { headers, rows };
   }, [csv]);
 
-  const [filters, setFilters] = useState<Record<string, string>>({});
-  const [sortedColumn, setSortedColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) =>
@@ -84,7 +95,10 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                     placeholder="Filter"
                     value={filters[header] || ''}
                     onChange={(e) =>
-                      setFilters({ ...filters, [header]: e.target.value })
+                      onFiltersChange({
+                        ...filters,
+                        [header]: e.target.value,
+                      })
                     }
                   />
                 </div>
@@ -106,7 +120,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
               {headers.map((header) => (
                 <DropdownMenuItem
                   key={header}
-                  onSelect={() => setSortedColumn(header)}
+                  onSelect={() => onSortedColumnChange(header)}
                   className="cursor-pointer hover:bg-[#3d3654] focus:bg-[#3d3654]"
                 >
                   {header}
@@ -114,7 +128,9 @@ export function WebsetTable({ csv }: WebsetTableProps) {
               ))}
               <DropdownMenuItem
                 onSelect={() =>
-                  setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
+                  onSortDirectionChange(
+                    sortDirection === 'asc' ? 'desc' : 'asc',
+                  )
                 }
                 className="cursor-pointer hover:bg-[#3d3654] focus:bg-[#3d3654]"
               >
