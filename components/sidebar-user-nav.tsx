@@ -2,6 +2,7 @@
 
 import { ChevronUp } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import type { User } from 'next-auth';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
@@ -81,6 +82,9 @@ export function SidebarUserNav({ user }: { user: User }) {
               }}
             >
               {`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'violet' : 'light'} mode`}
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings/theme">Theme Settings</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild data-testid="user-nav-item-auth">
