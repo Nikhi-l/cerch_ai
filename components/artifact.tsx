@@ -237,6 +237,17 @@ function PureArtifact({
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const isMobile = windowWidth ? windowWidth < 768 : false;
 
+  const finalWidth = windowWidth
+    ? isMobile
+      ? windowWidth
+      : windowWidth - 400
+    : undefined;
+  const initialWidth: number | string = windowWidth
+    ? finalWidth! * 0.4
+    : isMobile
+      ? 'calc(100dvw * 0.4)'
+      : 'calc((100dvw - 400px) * 0.4)';
+
   const artifactDefinition = artifactDefinitions.find(
     (definition) => definition.kind === artifact.kind,
   );
@@ -356,7 +367,7 @@ function PureArtifact({
                     x: artifact.boundingBox.left,
                     y: artifact.boundingBox.top,
                     height: artifact.boundingBox.height,
-                    width: artifact.boundingBox.width,
+                    width: initialWidth,
                     borderRadius: 50,
                   }
                 : {
@@ -364,7 +375,7 @@ function PureArtifact({
                     x: artifact.boundingBox.left,
                     y: artifact.boundingBox.top,
                     height: artifact.boundingBox.height,
-                    width: artifact.boundingBox.width,
+                    width: initialWidth,
                     borderRadius: 50,
                   }
             }
@@ -375,7 +386,7 @@ function PureArtifact({
                     x: 0,
                     y: 0,
                     height: windowHeight,
-                    width: windowWidth ? windowWidth : 'calc(100dvw)',
+                    width: finalWidth ?? 'calc(100dvw)',
                     borderRadius: 0,
                     transition: {
                       delay: 0,
@@ -390,9 +401,7 @@ function PureArtifact({
                     x: 400,
                     y: 0,
                     height: windowHeight,
-                    width: windowWidth
-                      ? windowWidth - 400
-                      : 'calc(100dvw-400px)',
+                    width: finalWidth ?? 'calc(100dvw-400px)',
                     borderRadius: 0,
                     transition: {
                       delay: 0,
