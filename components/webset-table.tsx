@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ChevronDown, Code, Filter, Maximize2, Plus, SlidersHorizontal, Zap } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -14,13 +14,19 @@ interface WebsetTableProps {
 }
 
 export function WebsetTable({ csv }: WebsetTableProps) {
+  const [csvData, setCsvData] = useState(csv);
+
+  useEffect(() => {
+    setCsvData(csv);
+  }, [csv]);
+
   const { headers, rows } = useMemo(() => {
-    const parsed = parse<string[]>(csv || "", { skipEmptyLines: true });
+    const parsed = parse<string[]>(csvData || "", { skipEmptyLines: true });
     const data = parsed.data as string[][];
     const headers = data.length > 0 ? data[0] : [];
     const rows = data.length > 1 ? data.slice(1) : [];
     return { headers, rows };
-  }, [csv]);
+  }, [csvData]);
 
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortedColumn, setSortedColumn] = useState<string | null>(null);
@@ -240,7 +246,27 @@ export function WebsetTable({ csv }: WebsetTableProps) {
         </Table>
       </div>
       <div className="flex justify-center p-4 border-t border-[#2d2640]">
-        <Button variant="outline" className="rounded-full px-6 bg-[#2d2640] border-[#3d3654] hover:bg-[#3d3654]">
+        <Button
+          variant="outline"
+          className="rounded-full px-6 bg-[#2d2640] border-[#3d3654] hover:bg-[#3d3654]"
+          onClick={async () => {
+            const query = prompt('Search query');
+            if (!query) return;
+            try {
+              const res = await fetch(`/api/exa?query=${encodeURIComponent(query)}`);
+              if (res.ok) {
+                const data = await res.json();
+                if (data.csv) {
+                  setCsvData((prev) => `${prev.trim()}\n${data.csv}`);
+                }
+              } else {
+                console.error('Failed to fetch results');
+              }
+            } catch (err) {
+              console.error(err);
+            }
+          }}
+        >
           <span className="text-[#a57eeb]">Find more results</span>
         </Button>
       </div>

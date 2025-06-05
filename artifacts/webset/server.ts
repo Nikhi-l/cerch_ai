@@ -1,78 +1,28 @@
-import { myProvider } from '@/lib/ai/providers';
-import { websetPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { createDocumentHandler } from '@/lib/artifacts/server';
-import { streamObject } from 'ai';
-import { z } from 'zod';
+import { resultsToCSV, searchExa } from '@/lib/exa';
 
 export const websetDocumentHandler = createDocumentHandler<'webset'>({
   kind: 'webset',
   onCreateDocument: async ({ title, dataStream }) => {
-    let draftContent = '';
-
-    const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
-      system: websetPrompt,
-      prompt: title,
-      schema: z.object({
-        csv: z.string().describe('CSV data'),
-      }),
-    });
-
-    for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === 'object') {
-        const { object } = delta;
-        const { csv } = object;
-
-        if (csv) {
-          dataStream.writeData({
-            type: 'sheet-delta',
-            content: csv,
-          });
-
-          draftContent = csv;
-        }
-      }
-    }
+    const results = await searchExa({ query: title, category: 'company' });
+    const csv = resultsToCSV(results);
 
     dataStream.writeData({
       type: 'sheet-delta',
-      content: draftContent,
+      content: csv,
     });
 
-    return draftContent;
+    return csv;
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
-    let draftContent = '';
+    const results = await searchExa({ query: description, category: 'company' });
+    const csv = resultsToCSV(results);
 
-    const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
-      system: updateDocumentPrompt(document.content, 'webset'),
-      prompt: description,
-      schema: z.object({
-        csv: z.string(),
-      }),
+    dataStream.writeData({
+      type: 'sheet-delta',
+      content: csv,
     });
 
-    for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === 'object') {
-        const { object } = delta;
-        const { csv } = object;
-
-        if (csv) {
-          dataStream.writeData({
-            type: 'sheet-delta',
-            content: csv,
-          });
-
-          draftContent = csv;
-        }
-      }
-    }
-
-    return draftContent;
+    return csv;
   },
 });
