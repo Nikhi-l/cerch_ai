@@ -9,6 +9,14 @@ export const websetDocumentHandler = createDocumentHandler<'webset'>({
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
 
+    // Provide demo data for the ExampleCorp employees prompt without calling the model
+    if (title && title.toLowerCase().includes('examplecorp employees')) {
+      draftContent =
+        'Name,Title,Email\nAlice Johnson,CEO,alice@example.com\nBob Smith,CTO,bob@example.com\nCarol Davis,COO,carol@example.com';
+      dataStream.writeData({ type: 'sheet-delta', content: draftContent });
+      return draftContent;
+    }
+
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
       system: websetPrompt,

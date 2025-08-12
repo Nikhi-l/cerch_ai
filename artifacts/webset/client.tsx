@@ -33,6 +33,14 @@ export const websetArtifact = new Artifact<'webset', Metadata>({
     onSaveContent,
     status,
   }) => {
+    if (!content) {
+      return (
+        <div className="p-4 text-sm text-muted-foreground">
+          No data available.
+        </div>
+      );
+    }
+
     return <WebsetTable csv={content} />;
   },
   actions: [
