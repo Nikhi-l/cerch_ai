@@ -3,6 +3,7 @@ import { imageDocumentHandler } from '@/artifacts/image/server';
 import { websetDocumentHandler } from '@/artifacts/webset/server';
 import { sheetDocumentHandler } from '@/artifacts/sheet/server';
 import { textDocumentHandler } from '@/artifacts/text/server';
+import { dashboardDocumentHandler } from '@/artifacts/dashboard/server';
 import { ArtifactKind } from '@/components/artifact';
 import { DataStreamWriter } from 'ai';
 import { Document } from '../db/schema';
@@ -96,6 +97,7 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   imageDocumentHandler,
   sheetDocumentHandler,
   websetDocumentHandler,
+  dashboardDocumentHandler,
 ];
 
-export const artifactKinds = ['text', 'code', 'image', 'sheet', 'webset'] as const;
+export const artifactKinds = ['text', 'code', 'image', 'sheet', 'webset', 'dashboard'] as const;

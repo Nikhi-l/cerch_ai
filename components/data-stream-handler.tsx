@@ -12,6 +12,8 @@ export type DataStreamDelta = {
     | 'code-delta'
     | 'sheet-delta'
     | 'image-delta'
+    | 'dashboard-delta'
+    | 'chat-message'
     | 'title'
     | 'id'
     | 'suggestion'
