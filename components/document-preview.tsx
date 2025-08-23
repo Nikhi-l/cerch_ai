@@ -2,16 +2,16 @@
 
 import {
   memo,
-  MouseEvent,
+  type MouseEvent,
   useCallback,
   useEffect,
   useMemo,
   useRef,
 } from 'react';
-import { ArtifactKind, UIArtifact } from './artifact';
+import type { ArtifactKind, UIArtifact } from './artifact';
 import { FileIcon, FullscreenIcon, ImageIcon, LoaderIcon } from './icons';
 import { cn, fetcher } from '@/lib/utils';
-import { Document } from '@/lib/db/schema';
+import type { Document } from '@/lib/db/schema';
 import { InlineDocumentSkeleton } from './document-skeleton';
 import useSWR from 'swr';
 import { Editor } from './text-editor';
@@ -21,6 +21,7 @@ import { useArtifact } from '@/hooks/use-artifact';
 import equal from 'fast-deep-equal';
 import { SpreadsheetEditor } from './sheet-editor';
 import { ImageEditor } from './image-editor';
+import { WebsetTable } from './webset-table';
 
 interface DocumentPreviewProps {
   isReadonly: boolean;
@@ -241,7 +242,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
     'h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700',
     {
       'p-4 sm:px-14 sm:py-16': document.kind === 'text',
-      'p-0': document.kind === 'code',
+      'p-0': document.kind === 'code' || document.kind === 'webset',
     },
   );
 
@@ -279,6 +280,8 @@ const DocumentContent = ({ document }: { document: Document }) => {
           status={artifact.status}
           isInline={true}
         />
+      ) : document.kind === 'webset' ? (
+        <WebsetTable csv={document.content ?? ''} />
       ) : null}
     </div>
   );
