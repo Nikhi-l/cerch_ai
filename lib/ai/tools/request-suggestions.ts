@@ -4,16 +4,18 @@ import { DataStreamWriter, streamObject, tool } from 'ai';
 import { getDocumentById, saveSuggestions } from '@/lib/db/queries';
 import { Suggestion } from '@/lib/db/schema';
 import { generateUUID } from '@/lib/utils';
-import { myProvider } from '../providers';
+import { getProvider } from '../providers';
 
 interface RequestSuggestionsProps {
   session: Session;
   dataStream: DataStreamWriter;
+  apiKey?: string;
 }
 
 export const requestSuggestions = ({
   session,
   dataStream,
+  apiKey,
 }: RequestSuggestionsProps) =>
   tool({
     description: 'Request suggestions for a document',
@@ -35,8 +37,9 @@ export const requestSuggestions = ({
         Omit<Suggestion, 'userId' | 'createdAt' | 'documentCreatedAt'>
       > = [];
 
+      const provider = getProvider(apiKey);
       const { elementStream } = streamObject({
-        model: myProvider.languageModel('artifact-model'),
+        model: provider.languageModel('artifact-model'),
         system:
           'You are a help writing assistant. Given a piece of writing, please offer suggestions to improve the piece of writing and describe the change. It is very important for the edits to contain full sentences instead of just words. Max 5 suggestions.',
         prompt: document.content,

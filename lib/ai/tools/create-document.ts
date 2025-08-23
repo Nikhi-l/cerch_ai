@@ -10,9 +10,10 @@ import {
 interface CreateDocumentProps {
   session: Session;
   dataStream: DataStreamWriter;
+  apiKey?: string;
 }
 
-export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
+export const createDocument = ({ session, dataStream, apiKey }: CreateDocumentProps) =>
   tool({
     description:
       'Create a document for a writing or content creation activities. This tool will call other functions that will generate the contents of the document based on the title and kind.',
@@ -57,6 +58,7 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
         title,
         dataStream,
         session,
+        apiKey,
       });
 
       dataStream.writeData({ type: 'finish', content: '' });

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
 
 import { ModelSelector } from '@/components/model-selector';
+import { ApiKeyInput } from '@/components/api-key-input';
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from './icons';
@@ -20,12 +21,16 @@ function PureChatHeader({
   selectedVisibilityType,
   isReadonly,
   session,
+  apiKey,
+  setApiKey,
 }: {
   chatId: string;
   selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
   session: Session;
+  apiKey: string;
+  setApiKey: (key: string) => void;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -64,6 +69,14 @@ function PureChatHeader({
       )}
 
       {!isReadonly && (
+        <ApiKeyInput
+          apiKey={apiKey}
+          setApiKey={setApiKey}
+          className="order-1 md:order-2"
+        />
+      )}
+
+      {!isReadonly && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}
@@ -75,5 +88,8 @@ function PureChatHeader({
 }
 
 export const ChatHeader = memo(PureChatHeader, (prevProps, nextProps) => {
-  return prevProps.selectedModelId === nextProps.selectedModelId;
+  return (
+    prevProps.selectedModelId === nextProps.selectedModelId &&
+    prevProps.apiKey === nextProps.apiKey
+  );
 });

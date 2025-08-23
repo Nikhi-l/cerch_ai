@@ -1,4 +1,4 @@
-import { myProvider } from '@/lib/ai/providers';
+import { getProvider } from '@/lib/ai/providers';
 import { websetPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import { streamObject } from 'ai';
@@ -6,11 +6,12 @@ import { z } from 'zod';
 
 export const websetDocumentHandler = createDocumentHandler<'webset'>({
   kind: 'webset',
-  onCreateDocument: async ({ title, dataStream }) => {
+  onCreateDocument: async ({ title, dataStream, apiKey }) => {
     let draftContent = '';
 
+    const provider = getProvider(apiKey);
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: provider.languageModel('artifact-model'),
       system: websetPrompt,
       prompt: title,
       schema: z.object({
@@ -43,11 +44,12 @@ export const websetDocumentHandler = createDocumentHandler<'webset'>({
 
     return draftContent;
   },
-  onUpdateDocument: async ({ document, description, dataStream }) => {
+  onUpdateDocument: async ({ document, description, dataStream, apiKey }) => {
     let draftContent = '';
 
+    const provider = getProvider(apiKey);
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: provider.languageModel('artifact-model'),
       system: updateDocumentPrompt(document.content, 'webset'),
       prompt: description,
       schema: z.object({
