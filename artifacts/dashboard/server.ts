@@ -10,7 +10,7 @@ export const dashboardDocumentHandler = createDocumentHandler<'dashboard'>({
     const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
       system:
-        'Generate JSON for a dashboard with "charts" and "stats" fields. Respond only with JSON.',
+        'Return JSON for a dashboard with "charts" and "stats" fields. "charts" should include an array with one object { "title": "Traffic source", "data": [{ "label": string, "value": number }] }. "stats" should start with { "label": "Visitors this month", "value": string, "change": string } followed by four widget objects { "label": string, "value": string }. Respond only with JSON.',
       prompt: title,
     });
 
@@ -38,7 +38,7 @@ export const dashboardDocumentHandler = createDocumentHandler<'dashboard'>({
     const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
       system:
-        'Update the following dashboard JSON when the user requests new metrics. Respond only with JSON.',
+        'Update the following dashboard JSON when the user requests new metrics. Maintain the same "charts" and "stats" structure as in the initial response. Respond only with JSON.',
       prompt: `${description}\n\nCurrent dashboard:\n${document.content}`,
     });
 

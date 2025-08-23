@@ -1,10 +1,12 @@
 import { Artifact } from '@/components/create-artifact';
 import { DocumentSkeleton } from '@/components/document-skeleton';
 import { MessageIcon, RedoIcon } from '@/components/icons';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 interface DashboardMetadata {
-  charts: Array<{ title: string }>;
-  stats: Array<{ label: string; value: string }>;
+  charts: Array<{ title: string; data: Array<{ label: string; value: number }> }>;
+  stats: Array<{ label: string; value: string; change?: string }>;
   messages: Array<{ role: 'assistant' | 'user'; content: string }>;
 }
 
@@ -59,34 +61,91 @@ export const dashboardArtifact = new Artifact<'dashboard', DashboardMetadata>({
     const stats = metadata?.stats ?? parsed.stats ?? [];
     const messages = metadata?.messages ?? [];
 
+    const trafficChart = charts[0];
+    const visitorsCard = stats[0];
+    const widgets = stats.slice(1, 5);
+
     return (
-      <div className="flex h-full">
-        <div className="flex-1 overflow-auto p-4 space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            {charts.map((chart, idx) => (
-              <div
-                key={idx}
-                className="h-48 border rounded flex items-center justify-center text-muted-foreground"
-              >
-                {chart.title ?? `Chart ${idx + 1}`}
-              </div>
-            ))}
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {stats.map((stat, idx) => (
-              <div key={idx} className="border rounded p-4 text-center">
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <div className="text-xs text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
-          </div>
+      <div className="grid gap-4 md:grid-cols-2 h-full">
+        <div className="flex flex-col gap-4">
+          {trafficChart ? (
+            <Card className="h-64">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {trafficChart.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {trafficChart.data?.map((d) => (
+                  <div key={d.label} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>{d.label}</span>
+                      <span>{d.value}%</span>
+                    </div>
+                    <div className="h-2 w-full rounded bg-muted">
+                      <div
+                        className="h-2 rounded bg-primary"
+                        style={{ width: `${d.value}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {visitorsCard ? (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {visitorsCard.label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">
+                  {visitorsCard.value}
+                </div>
+                {visitorsCard.change ? (
+                  <p className="text-xs text-muted-foreground">
+                    {visitorsCard.change}
+                  </p>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
-        <div className="w-64 border-l p-4 flex flex-col">
-          <div className="flex-1 overflow-auto space-y-2">
-            {messages.map((m, idx) => (
-              <div key={idx} className="p-2 rounded bg-muted">
-                {m.content}
+
+        <div className="flex flex-col gap-4 h-full">
+          <Card className="flex flex-col flex-1">
+            <CardContent className="flex flex-col flex-1 p-0">
+              <div className="flex-1 overflow-auto p-4 space-y-2">
+                {messages.map((m) => (
+                  <div
+                    key={`${m.role}-${m.content}`}
+                    className="p-2 rounded-md bg-muted text-sm"
+                  >
+                    {m.content}
+                  </div>
+                ))}
               </div>
+              <div className="p-4 border-t mt-auto">
+                <Input placeholder="How can I help you today?" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-4">
+            {widgets.map((w) => (
+              <Card key={w.label}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-medium">
+                    {w.label}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xl font-bold">{w.value}</div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
