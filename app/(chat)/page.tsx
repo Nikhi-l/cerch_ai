@@ -18,6 +18,7 @@ export default async function Page() {
 
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get('chat-model');
+  const apiKeyFromCookie = cookieStore.get('openai-api-key');
 
   if (!modelIdFromCookie) {
     return (
@@ -30,7 +31,8 @@ export default async function Page() {
           initialVisibilityType="private"
           isReadonly={false}
           session={session}
-          autoResume={false}
+           autoResume={false}
+          initialApiKey={apiKeyFromCookie?.value ?? ''}
         />
         <DataStreamHandler id={id} />
       </>
@@ -48,6 +50,7 @@ export default async function Page() {
         isReadonly={false}
         session={session}
         autoResume={false}
+        initialApiKey={apiKeyFromCookie?.value ?? ''}
       />
       <DataStreamHandler id={id} />
     </>

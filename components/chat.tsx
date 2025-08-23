@@ -29,6 +29,7 @@ export function Chat({
   isReadonly,
   session,
   autoResume,
+  initialApiKey = '',
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
@@ -37,6 +38,7 @@ export function Chat({
   isReadonly: boolean;
   session: Session;
   autoResume: boolean;
+  initialApiKey?: string;
 }) {
   const { mutate } = useSWRConfig();
 
@@ -69,6 +71,7 @@ export function Chat({
       message: body.messages.at(-1),
       selectedChatModel: initialChatModel,
       selectedVisibilityType: visibilityType,
+      apiKey,
     }),
     onFinish: () => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
@@ -107,6 +110,7 @@ export function Chat({
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+  const [apiKey, setApiKey] = useState(initialApiKey);
 
   useAutoResume({
     autoResume,
@@ -125,6 +129,8 @@ export function Chat({
           selectedVisibilityType={initialVisibilityType}
           isReadonly={isReadonly}
           session={session}
+          apiKey={apiKey}
+          setApiKey={setApiKey}
         />
 
         <Messages

@@ -3,7 +3,7 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
-import { xai } from '@ai-sdk/xai';
+import { createOpenAI } from '@ai-sdk/openai';
 import { isTestEnvironment } from '../constants';
 import {
   artifactModel,
@@ -12,26 +12,33 @@ import {
   titleModel,
 } from './models.test';
 
-export const myProvider = isTestEnvironment
-  ? customProvider({
+export function getProvider(apiKey?: string) {
+  if (isTestEnvironment) {
+    return customProvider({
       languageModels: {
         'chat-model': chatModel,
         'chat-model-reasoning': reasoningModel,
         'title-model': titleModel,
         'artifact-model': artifactModel,
       },
-    })
-  : customProvider({
-      languageModels: {
-        'chat-model': xai('grok-2-vision-1212'),
-        'chat-model-reasoning': wrapLanguageModel({
-          model: xai('grok-3-mini-beta'),
-          middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),
-        'title-model': xai('grok-2-1212'),
-        'artifact-model': xai('grok-2-1212'),
-      },
-      imageModels: {
-        'small-model': xai.image('grok-2-image'),
-      },
     });
+  }
+
+  const key = apiKey || process.env.OPENAI_API_KEY;
+  const openai = createOpenAI({ apiKey: key });
+
+  return customProvider({
+    languageModels: {
+      'chat-model': openai('gpt-4o-mini'),
+      'chat-model-reasoning': wrapLanguageModel({
+        model: openai('o4-mini'),
+        middleware: extractReasoningMiddleware({ tagName: 'think' }),
+      }),
+      'title-model': openai('gpt-4o-mini'),
+      'artifact-model': openai('gpt-4o-mini'),
+    },
+    imageModels: {
+      'small-model': openai.image('gpt-image-1'),
+    },
+  });
+}
