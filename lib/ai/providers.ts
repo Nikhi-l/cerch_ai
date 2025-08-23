@@ -3,7 +3,7 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 import { isTestEnvironment } from '../constants';
 import {
   artifactModel,
@@ -25,19 +25,20 @@ export function getProvider(apiKey?: string) {
   }
 
   const key = apiKey || process.env.OPENAI_API_KEY;
+  const openai = createOpenAI({ apiKey: key });
 
   return customProvider({
     languageModels: {
-      'chat-model': openai('gpt-4o-mini', { apiKey: key }),
+      'chat-model': openai('gpt-4o-mini'),
       'chat-model-reasoning': wrapLanguageModel({
-        model: openai('o4-mini', { apiKey: key }),
+        model: openai('o4-mini'),
         middleware: extractReasoningMiddleware({ tagName: 'think' }),
       }),
-      'title-model': openai('gpt-4o-mini', { apiKey: key }),
-      'artifact-model': openai('gpt-4o-mini', { apiKey: key }),
+      'title-model': openai('gpt-4o-mini'),
+      'artifact-model': openai('gpt-4o-mini'),
     },
     imageModels: {
-      'small-model': openai.image('gpt-image-1', { apiKey: key }),
+      'small-model': openai.image('gpt-image-1'),
     },
   });
 }
