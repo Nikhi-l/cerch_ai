@@ -1,8 +1,8 @@
+import { textDocumentHandler } from '@/artifacts/text/server';
 import { codeDocumentHandler } from '@/artifacts/code/server';
 import { imageDocumentHandler } from '@/artifacts/image/server';
-import { websetDocumentHandler } from '@/artifacts/webset/server';
 import { sheetDocumentHandler } from '@/artifacts/sheet/server';
-import { textDocumentHandler } from '@/artifacts/text/server';
+import { websetDocumentHandler } from '@/artifacts/webset/server';
 import { dashboardDocumentHandler } from '@/artifacts/dashboard/server';
 import { ArtifactKind } from '@/components/artifact';
 import { DataStreamWriter } from 'ai';
