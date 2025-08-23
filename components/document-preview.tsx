@@ -8,7 +8,8 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { ArtifactKind, UIArtifact } from './artifact';
+import type { ArtifactKind } from '@/lib/artifacts/types';
+import { UIArtifact } from './artifact';
 import { FileIcon, FullscreenIcon, ImageIcon, LoaderIcon } from './icons';
 import { cn, fetcher } from '@/lib/utils';
 import { Document } from '@/lib/db/schema';

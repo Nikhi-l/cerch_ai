@@ -28,7 +28,7 @@ import {
   type Chat,
   stream,
 } from './schema';
-import type { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/lib/artifacts/types';
 import { generateUUID } from '../utils';
 import { generateHashedPassword } from './utils';
 import type { VisibilityType } from '@/components/visibility-selector';

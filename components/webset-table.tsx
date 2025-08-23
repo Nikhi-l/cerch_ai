@@ -48,9 +48,9 @@ export function WebsetTable({ csv }: WebsetTableProps) {
     const sorted = [...filteredRows].sort((a, b) => {
       const av = a[idx] || '';
       const bv = b[idx] || '';
-      const aNum = parseFloat(av);
-      const bNum = parseFloat(bv);
-      if (!isNaN(aNum) && !isNaN(bNum)) {
+      const aNum = Number.parseFloat(av);
+      const bNum = Number.parseFloat(bv);
+      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
         return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
       }
       return sortDirection === 'asc'
@@ -160,8 +160,11 @@ export function WebsetTable({ csv }: WebsetTableProps) {
           <TableHeader>
             <TableRow className="border-b border-[#2d2640]">
               <TableHead className="w-12 text-center text-gray-400 font-normal">#</TableHead>
-              {headers.map((header, idx) => (
-                <TableHead key={idx} className="min-w-[150px] text-gray-400 font-normal">
+              {headers.map((header) => (
+                <TableHead
+                  key={header}
+                  className="min-w-[150px] text-gray-400 font-normal"
+                >
                   <div className="flex items-center gap-2">
                     <span className="text-xs">{header}</span>
                   </div>
@@ -179,19 +182,32 @@ export function WebsetTable({ csv }: WebsetTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedRows.map((row, rowIdx) => (
-              <TableRow key={rowIdx} className="border-b border-[#2d2640] hover:bg-[#2d2640]">
-                <TableCell className="text-center text-sm text-gray-400">{rowIdx + 1}</TableCell>
-                {row.map((cell, cellIdx) => {
-                  const header = headers[cellIdx] || '';
-                  const isValidator = header.toLowerCase().includes('direct competitor');
-                  const isUrl = header.toLowerCase().includes('url');
-                  const content = cell || '';
-                  return (
-                    <TableCell key={cellIdx} className="text-gray-300">
-                      {isValidator ? (
-                        content.toLowerCase() === 'true' || content.toLowerCase() === 'match' || content === '1' ? (
-                          <Badge
+            {sortedRows.map((row) => {
+              const rowKey = row.join('|');
+              const rowIndex = sortedRows.indexOf(row);
+              return (
+                <TableRow
+                  key={rowKey}
+                  className="border-b border-[#2d2640] hover:bg-[#2d2640]"
+                >
+                  <TableCell className="text-center text-sm text-gray-400">
+                    {rowIndex + 1}
+                  </TableCell>
+                  {row.map((cell, cellIdx) => {
+                    const header = headers[cellIdx] || '';
+                    const isValidator = header
+                      .toLowerCase()
+                      .includes('direct competitor');
+                    const isUrl = header.toLowerCase().includes('url');
+                    const content = cell || '';
+                    return (
+                      <TableCell
+                        key={`${rowKey}-${header}`}
+                        className="text-gray-300"
+                      >
+                        {isValidator ? (
+                          content.toLowerCase() === 'true' || content.toLowerCase() === 'match' || content === '1' ? (
+                            <Badge
                             className="h-6 px-3 rounded-[4px] bg-[#2ECC71] text-white text-[12px] font-semibold flex items-center justify-center"
                             aria-label="Validation status: match"
                           >
@@ -224,7 +240,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                   );
                 })}
                 <TableCell>
-                  {rowIdx === 0 && (
+                  {rowIndex === 0 && (
                     <Button
                       variant="ghost"
                       size="icon"
@@ -235,7 +251,8 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                   )}
                 </TableCell>
               </TableRow>
-            ))}
+            );
+          })}
           </TableBody>
         </Table>
       </div>
