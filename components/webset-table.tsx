@@ -1,16 +1,16 @@
-"use client";
-import { parse } from "papaparse";
-import { useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
+'use client';
+import { parse } from 'papaparse';
+import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react';
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -18,12 +18,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogFooter,
   AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   ChevronDown,
   Code,
@@ -41,7 +41,7 @@ import {
   Plus,
   SlidersHorizontal,
   Zap,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface WebsetTableProps {
   csv: string;
@@ -50,7 +50,7 @@ interface WebsetTableProps {
 
 export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
   const { headers, rows } = useMemo(() => {
-    const parsed = parse<string[]>(csv || "", { skipEmptyLines: true });
+    const parsed = parse<string[]>(csv || '', { skipEmptyLines: true });
     const data = parsed.data as string[][];
     const headers = data.length > 0 ? data[0] : [];
     const rows = data.length > 1 ? data.slice(1) : [];
@@ -59,20 +59,19 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
 
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortedColumn, setSortedColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [columnWidths, setColumnWidths] =
-    useState<Record<string, number>>({});
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
 
   const handleExport = async () => {
-    if (!window.confirm("Export table as CSV?")) return;
-    const blob = new Blob([csv], { type: "text/csv" });
+    if (!window.confirm('Export table as CSV?')) return;
+    const blob = new Blob([csv], { type: 'text/csv' });
     try {
-      if ("showSaveFilePicker" in window) {
+      if ('showSaveFilePicker' in window) {
         // @ts-ignore: File System Access API
         const handle = await window.showSaveFilePicker({
-          suggestedName: "webset.csv",
+          suggestedName: 'webset.csv',
           types: [
-            { description: "CSV Files", accept: { "text/csv": [".csv"] } },
+            { description: 'CSV Files', accept: { 'text/csv': ['.csv'] } },
           ],
         });
         const writable = await handle.createWritable();
@@ -80,16 +79,16 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
         await writable.close();
       } else {
         const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
+        const link = document.createElement('a');
         link.href = url;
-        link.download = "webset.csv";
+        link.download = 'webset.csv';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error("Export failed", error);
+      console.error('Export failed', error);
     }
   };
 
@@ -99,15 +98,15 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
       if (navigator.share) {
         await navigator.share({ url: shareUrl });
       } else {
-        window.prompt("Share this link", shareUrl);
+        window.prompt('Share this link', shareUrl);
       }
     } catch {
-      window.prompt("Share this link", shareUrl);
+      window.prompt('Share this link', shareUrl);
     }
   };
 
   const handleDelete = () => {
-    if (window.confirm("Delete this webset data?")) {
+    if (window.confirm('Delete this webset data?')) {
       onDelete();
     }
   };
@@ -121,11 +120,11 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
       setColumnWidths((w) => ({ ...w, [header]: newWidth }));
     };
     const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
     };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   };
 
   const filteredRows = useMemo(() => {
@@ -133,7 +132,7 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
       headers.every((header, idx) => {
         const filter = filters[header];
         if (!filter) return true;
-        const cell = row[idx] || "";
+        const cell = row[idx] || '';
         const numeric = /^\d+(?:\.\d+)?$/.test(cell);
         if (numeric && /^\d+(?:\.\d+)?$/.test(filter)) {
           return Number(cell) >= Number(filter);
@@ -148,14 +147,14 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
     const idx = headers.indexOf(sortedColumn);
     if (idx === -1) return filteredRows;
     const sorted = [...filteredRows].sort((a, b) => {
-      const av = a[idx] || "";
-      const bv = b[idx] || "";
+      const av = a[idx] || '';
+      const bv = b[idx] || '';
       const aNum = Number.parseFloat(av);
       const bNum = Number.parseFloat(bv);
       if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
-        return sortDirection === "asc" ? aNum - bNum : bNum - aNum;
+        return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
       }
-      return sortDirection === "asc"
+      return sortDirection === 'asc'
         ? av.localeCompare(bv)
         : bv.localeCompare(av);
     });
@@ -163,7 +162,7 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
   }, [filteredRows, headers, sortedColumn, sortDirection]);
 
   const nameIdx = useMemo(
-    () => headers.findIndex((h) => h.toLowerCase().includes("name")),
+    () => headers.findIndex((h) => h.toLowerCase().includes('name')),
     [headers],
   );
 
@@ -185,7 +184,7 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
                   <input
                     className="flex-1 rounded border px-2 py-1 text-xs"
                     placeholder="Filter"
-                    value={filters[header] || ""}
+                    value={filters[header] || ''}
                     onChange={(e) =>
                       setFilters({ ...filters, [header]: e.target.value })
                     }
@@ -212,10 +211,11 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
               ))}
               <DropdownMenuItem
                 onSelect={() =>
-                  setSortDirection((d) => (d === "asc" ? "desc" : "asc"))
+                  setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
                 }
               >
-                Direction: {sortDirection === "asc" ? "Ascending" : "Descending"}
+                Direction:{' '}
+                {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -231,7 +231,7 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
                 <AlertDialogTitle>Integration Code</AlertDialogTitle>
               </AlertDialogHeader>
               <pre className="mt-4 bg-muted p-4 rounded-md text-sm overflow-x-auto">
-  {`import os
+                {`import os
 import requests
 
 api_key = os.getenv('CRUSTDATA_API_KEY')
@@ -250,7 +250,11 @@ payload = {
         "count": 25,
     },
     "enrichments": [
-        # ...
+        # "email",            # Business email enrichment
+        # "realtime",         # Real-time enrichment
+        # "basic_profile",    # Basic profile enrichment
+        # "linkedin_posts",   # Recent LinkedIn posts
+        # "company",          # Company enrichment
     ],
 }
 
@@ -276,15 +280,30 @@ webset = response.json()`}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={handleExport}>Export</DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleExport}>
+                Export
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={handleShare}>Share</DropdownMenuItem>
-              <DropdownMenuItem onSelect={handleDelete}>Delete</DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleDelete}>
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" className="h-8 gap-1">
-            <Zap className="h-4 w-4" />
-            <span>Add Enrichment</span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="h-8 gap-1">
+                <Zap className="h-4 w-4" />
+                <span>Add Enrichment</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Email Enrichment</DropdownMenuItem>
+              <DropdownMenuItem>Real-time Enrichment</DropdownMenuItem>
+              <DropdownMenuItem>Basic Profile Enrichment</DropdownMenuItem>
+              <DropdownMenuItem>LinkedIn Posts Enrichment</DropdownMenuItem>
+              <DropdownMenuItem>Company Enrichment</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       <div className="overflow-auto">
@@ -320,19 +339,21 @@ webset = response.json()`}
           </TableHeader>
           <TableBody>
             {sortedRows.map((row, rowIdx) => (
-              <TableRow key={row.join("|") || rowIdx} className="border-border">
+              <TableRow key={row.join('|') || rowIdx} className="border-border">
                 <TableCell className="text-center text-sm text-muted-foreground px-4 py-2 border-r border-border">
                   {rowIdx + 1}
                 </TableCell>
                 {row.map((cell, cellIdx) => {
-                  const header = headers[cellIdx] || "";
+                  const header = headers[cellIdx] || '';
                   const isValidator = header
                     .toLowerCase()
-                    .includes("direct competitor");
-                  const isUrl = header.toLowerCase().includes("url");
-                  const isLogo = header.toLowerCase().match(/image|avatar|logo/);
+                    .includes('direct competitor');
+                  const isUrl = header.toLowerCase().includes('url');
+                  const isLogo = header
+                    .toLowerCase()
+                    .match(/image|avatar|logo/);
                   const isName = cellIdx === nameIdx;
-                  const content = cell || "";
+                  const content = cell || '';
                   return (
                     <TableCell
                       key={`${headers[cellIdx] ?? cellIdx}-${content}`}
@@ -342,16 +363,21 @@ webset = response.json()`}
                       {isLogo ? (
                         content && (
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={content} alt={row[nameIdx] ?? ""} />
-                            <AvatarFallback>{row[nameIdx]?.[0] ?? ""}</AvatarFallback>
+                            <AvatarImage
+                              src={content}
+                              alt={row[nameIdx] ?? ''}
+                            />
+                            <AvatarFallback>
+                              {row[nameIdx]?.[0] ?? ''}
+                            </AvatarFallback>
                           </Avatar>
                         )
                       ) : isName ? (
                         <span className="font-medium">{content}</span>
                       ) : isValidator ? (
-                        content.toLowerCase() === "true" ||
-                        content.toLowerCase() === "match" ||
-                        content === "1" ? (
+                        content.toLowerCase() === 'true' ||
+                        content.toLowerCase() === 'match' ||
+                        content === '1' ? (
                           <Badge
                             className="h-6 px-3 rounded bg-green-500 text-white text-xs font-semibold"
                             aria-label="Validation status: match"
