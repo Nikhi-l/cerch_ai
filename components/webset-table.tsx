@@ -171,20 +171,34 @@ export function WebsetTable({ csv }: WebsetTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12 text-center px-4 py-2 font-bold border-r border-border">
-                #
-              </TableHead>
-              {headers.map((header) => (
+              <TableHead className="w-12 px-4 py-2 bg-blue-100 border-r border-border" />
+              {headers.map((header, idx) => (
                 <TableHead
                   key={header}
-                  className="min-w-[150px] px-4 py-2 font-bold border-r border-border"
+                  className="min-w-[150px] px-4 py-2 font-bold bg-blue-100 text-blue-700 border-r border-border"
+                >
+                  {idx + 1}
+                </TableHead>
+              ))}
+              <TableHead className="w-10 px-4 py-2 bg-blue-100" />
+            </TableRow>
+            <TableRow>
+              <TableHead className="w-12 text-center px-4 py-2 font-bold bg-blue-50 text-blue-700 border-r border-border">
+                #
+              </TableHead>
+              {headers.map((header, idx) => (
+                <TableHead
+                  key={header}
+                  className="min-w-[150px] px-4 py-2 font-bold bg-blue-50 text-blue-700 border-r border-border"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold">{header}</span>
+                    <span className="text-xs font-bold">
+                      {idx + 1}. {header}
+                    </span>
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="w-10 px-4 py-2">
+              <TableHead className="w-10 px-4 py-2 bg-blue-50">
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -204,6 +218,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                     .includes("direct competitor");
                   const isUrl = header.toLowerCase().includes("url");
                   const isLogo = header.toLowerCase().match(/image|avatar|logo/);
+                  const isTags = header.toLowerCase().includes("tag");
                   const isName = cellIdx === nameIdx;
                   const content = cell || "";
                   return (
@@ -241,6 +256,18 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                             </Badge>
                           )
                         )
+                      ) : isTags ? (
+                        <div className="flex flex-wrap gap-1">
+                          {content.split(",").map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="bg-yellow-100 text-yellow-800"
+                            >
+                              {tag.trim()}
+                            </Badge>
+                          ))}
+                        </div>
                       ) : isUrl ? (
                         <a
                           href={content}
