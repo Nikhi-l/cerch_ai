@@ -37,8 +37,6 @@ import {
   ChevronDown,
   Code,
   Filter,
-  Maximize2,
-  Plus,
   SlidersHorizontal,
   Zap,
 } from 'lucide-react';
@@ -61,6 +59,9 @@ export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
   const [sortedColumn, setSortedColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [verification, setVerification] = useState<
+    Record<number, 'match' | 'miss'>
+  >({});
 
   const handleExport = async () => {
     if (!window.confirm('Export table as CSV?')) return;
@@ -330,10 +331,8 @@ webset = response.json()`}
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="w-10 px-4 py-2 border-b border-border">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Plus className="h-4 w-4" />
-                </Button>
+              <TableHead className="px-4 py-2 border-b border-border">
+                Verify
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -417,12 +416,28 @@ webset = response.json()`}
                     </TableCell>
                   );
                 })}
-                <TableCell className="px-4 py-2">
-                  {rowIdx === 0 && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Maximize2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                <TableCell className="px-4 py-2 text-center">
+                  <Button
+                    className={
+                      verification[rowIdx] === 'match'
+                        ? 'bg-green-500 text-white hover:bg-green-600'
+                        : verification[rowIdx] === 'miss'
+                        ? 'bg-red-500 text-white hover:bg-red-600'
+                        : 'bg-purple-600 text-white hover:bg-purple-700'
+                    }
+                    onClick={() =>
+                      setVerification((v) => ({
+                        ...v,
+                        [rowIdx]: Math.random() > 0.5 ? 'match' : 'miss',
+                      }))
+                    }
+                  >
+                    {verification[rowIdx] === 'match'
+                      ? 'Match'
+                      : verification[rowIdx] === 'miss'
+                      ? 'Miss'
+                      : 'Verify'}
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
