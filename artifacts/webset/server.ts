@@ -3,11 +3,19 @@ import { websetPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import { streamObject } from 'ai';
 import { z } from 'zod';
+import { generateBangaloreCSV } from '@/lib/data/bangalore-startups';
 
 export const websetDocumentHandler = createDocumentHandler<'webset'>({
   kind: 'webset',
   onCreateDocument: async ({ title, dataStream, apiKey }) => {
     let draftContent = '';
+
+    const normalizedTitle = title.toLowerCase();
+    if (normalizedTitle.includes('startups in bangalore')) {
+      draftContent = generateBangaloreCSV();
+      dataStream.writeData({ type: 'sheet-delta', content: draftContent });
+      return draftContent;
+    }
 
     const provider = getProvider(apiKey);
     const { fullStream } = streamObject({

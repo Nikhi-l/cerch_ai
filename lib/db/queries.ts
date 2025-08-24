@@ -1,4 +1,8 @@
-import 'server-only';
+// Prevent server-only from throwing during tests
+if (process.env.NODE_ENV !== 'test') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('server-only');
+}
 
 import {
   and,
