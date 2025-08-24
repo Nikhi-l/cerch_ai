@@ -48,13 +48,13 @@ export function ApiKeyInput({
         </SelectContent>
       </Select>
       {mode === 'custom' && (
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2">
           <Input
             type="password"
             placeholder="API Key"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="md:w-48"
+            className="flex-1"
           />
           <Button
             variant="outline"
