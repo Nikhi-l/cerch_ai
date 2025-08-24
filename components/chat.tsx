@@ -125,12 +125,8 @@ export function Chat({
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader
           chatId={id}
-          selectedModelId={initialChatModel}
           selectedVisibilityType={initialVisibilityType}
           isReadonly={isReadonly}
-          session={session}
-          apiKey={apiKey}
-          setApiKey={setApiKey}
         />
 
         <Messages
@@ -159,6 +155,10 @@ export function Chat({
               setMessages={setMessages}
               append={append}
               selectedVisibilityType={visibilityType}
+              session={session}
+              selectedModelId={initialChatModel}
+              apiKey={apiKey}
+              setApiKey={setApiKey}
             />
           )}
         </form>
@@ -180,6 +180,10 @@ export function Chat({
         votes={votes}
         isReadonly={isReadonly}
         selectedVisibilityType={visibilityType}
+        session={session}
+        selectedModelId={initialChatModel}
+        apiKey={apiKey}
+        setApiKey={setApiKey}
       />
     </>
   );
