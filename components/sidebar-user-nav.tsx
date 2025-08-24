@@ -72,6 +72,12 @@ export function SidebarUserNav({ user }: { user: User }) {
             className="w-[--radix-popper-anchor-width]"
           >
             <DropdownMenuItem
+              className="cursor-pointer"
+              onSelect={() => router.push('/settings')}
+            >
+              Theme Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem
               data-testid="user-nav-item-theme"
               className="cursor-pointer"
               onSelect={() => {
