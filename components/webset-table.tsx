@@ -107,8 +107,8 @@ export function WebsetTable({ csv }: WebsetTableProps) {
   );
 
   return (
-    <div className="w-full bg-white text-gray-900 border border-border rounded-lg overflow-hidden">
-      <div className="flex items-center justify-between p-4 border-b border-border gap-4">
+    <div className="w-full bg-white text-gray-900 border border-border rounded-lg overflow-hidden p-2 sm:p-4">
+      <div className="flex items-center justify-between p-2 sm:p-4 border-b border-border gap-4">
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -285,7 +285,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-center p-4 border-t border-border">
+      <div className="flex justify-center p-2 sm:p-4 border-t border-border">
         <Button variant="outline" className="rounded-full px-6">
           Find more results
         </Button>
