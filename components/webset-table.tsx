@@ -45,9 +45,10 @@ import {
 
 interface WebsetTableProps {
   csv: string;
+  onDelete: () => void;
 }
 
-export function WebsetTable({ csv }: WebsetTableProps) {
+export function WebsetTable({ csv, onDelete }: WebsetTableProps) {
   const { headers, rows } = useMemo(() => {
     const parsed = parse<string[]>(csv || "", { skipEmptyLines: true });
     const data = parsed.data as string[][];
@@ -61,6 +62,55 @@ export function WebsetTable({ csv }: WebsetTableProps) {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [columnWidths, setColumnWidths] =
     useState<Record<string, number>>({});
+
+  const handleExport = async () => {
+    if (!window.confirm("Export table as CSV?")) return;
+    const blob = new Blob([csv], { type: "text/csv" });
+    try {
+      if ("showSaveFilePicker" in window) {
+        // @ts-ignore: File System Access API
+        const handle = await window.showSaveFilePicker({
+          suggestedName: "webset.csv",
+          types: [
+            { description: "CSV Files", accept: { "text/csv": [".csv"] } },
+          ],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } else {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "webset.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error("Export failed", error);
+    }
+  };
+
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ url: shareUrl });
+      } else {
+        window.prompt("Share this link", shareUrl);
+      }
+    } catch {
+      window.prompt("Share this link", shareUrl);
+    }
+  };
+
+  const handleDelete = () => {
+    if (window.confirm("Delete this webset data?")) {
+      onDelete();
+    }
+  };
 
   const startResizing = (header: string) => (e: ReactMouseEvent) => {
     e.preventDefault();
@@ -226,9 +276,9 @@ webset = response.json()`}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Export</DropdownMenuItem>
-              <DropdownMenuItem>Share</DropdownMenuItem>
-              <DropdownMenuItem>Delete</DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleExport}>Export</DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleShare}>Share</DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleDelete}>Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button size="sm" className="h-8 gap-1">
