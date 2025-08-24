@@ -282,7 +282,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
           isInline={true}
         />
       ) : document.kind === 'webset' ? (
-        <WebsetTable csv={document.content ?? ''} />
+        <WebsetTable csv={document.content ?? ''} onDelete={() => {}} />
       ) : null}
     </div>
   );

@@ -33,7 +33,14 @@ export const websetArtifact = new Artifact<'webset', Metadata>({
     onSaveContent,
     status,
   }) => {
-    return <WebsetTable csv={content} />;
+    return (
+      <WebsetTable
+        csv={content}
+        onDelete={() => {
+          onSaveContent('', false);
+        }}
+      />
+    );
   },
   actions: [
     {
