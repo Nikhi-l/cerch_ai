@@ -64,7 +64,7 @@ export class ChatPage {
 
   async sendUserMessageFromSuggestion() {
     await this.page
-      .getByRole('button', { name: 'Show a webset of top tech companies' })
+      .getByRole('button', { name: /Find customers/ })
       .click();
   }
 

@@ -32,7 +32,7 @@ test.describe('Chat activity', () => {
 
     const assistantMessage = await chatPage.getRecentAssistantMessage();
     expect(assistantMessage.content).toContain(
-      'Here is a webset of top tech companies.',
+      'Here are some potential customers for you.',
     );
   });
 

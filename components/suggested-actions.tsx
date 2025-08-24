@@ -19,24 +19,33 @@ function PureSuggestedActions({
 }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'Show a webset',
-      label: 'of top tech companies',
-      action: 'Show a webset of top tech companies',
+      category: 'Sales',
+      title: 'Find customers',
+      label: 'Source the perfect companies and people to sell to',
+      action:
+        'Find customers and source the perfect companies and people to sell to.',
     },
     {
-      title: 'Create a webset',
-      label: 'of ExampleCorp employees',
-      action: 'Create a webset of ExampleCorp employees',
+      category: 'Market research',
+      title: 'Analyze competitors',
+      label: 'Find competitors and know everything about them',
+      action:
+        'Analyze competitors by finding competitors and learning everything about them.',
     },
     {
-      title: 'Find people named',
-      label: 'Jane Doe',
-      action: 'Find people named Jane Doe and display a webset',
+      category: 'Recruiting',
+      title: 'Source talent',
+      label: 'Find the exact profiles you need for your business',
+      action:
+        'Source talent and find the exact profiles you need for your business.',
     },
     {
-      title: 'List companies',
-      label: 'founded after 2015',
-      action: 'List companies founded after 2015 in a webset',
+      category: 'Academic research',
+      title: 'Find research papers',
+      label:
+        'Search for papers on a topic with summaries, citations, and more',
+      action:
+        'Find research papers on a topic with summaries, citations, and more.',
     },
   ];
 
@@ -66,6 +75,11 @@ function PureSuggestedActions({
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
+            {'category' in suggestedAction && (
+              <span className="text-xs text-muted-foreground">
+                {suggestedAction.category}
+              </span>
+            )}
             <span className="font-medium">{suggestedAction.title}</span>
             <span className="text-muted-foreground">
               {suggestedAction.label}
