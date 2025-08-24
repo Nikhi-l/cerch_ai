@@ -40,12 +40,12 @@ function PureSuggestedActions({
         'Source talent and find the exact profiles you need for your business.',
     },
     {
-      category: 'Academic research',
-      title: 'Find research papers',
+      category: 'Startup research',
+      title: 'Find startups',
       label:
-        'Search for papers on a topic with summaries, citations, and more',
+        'Find startups in Bangalore that raised $1M in the last year',
       action:
-        'Find research papers on a topic with summaries, citations, and more.',
+        'Find startups in Bangalore that raised $1M in the last year.',
     },
   ];
 
