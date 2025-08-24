@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ProfileCard } from "@/components/profile-card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,22 +89,6 @@ export function WebsetTable({ csv }: WebsetTableProps) {
     () => headers.findIndex((h) => h.toLowerCase().includes("name")),
     [headers],
   );
-  const roleIdx = useMemo(
-    () =>
-      headers.findIndex((h) =>
-        h
-          .toLowerCase()
-          .match(/role|title|department/),
-      ),
-    [headers],
-  );
-  const imageIdx = useMemo(
-    () =>
-      headers.findIndex((h) =>
-        h.toLowerCase().match(/image|avatar/),
-      ),
-    [headers],
-  );
 
   return (
     <div className="w-full bg-white text-gray-900 border border-border rounded-lg overflow-hidden p-2 sm:p-4">
@@ -187,14 +171,16 @@ export function WebsetTable({ csv }: WebsetTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12 text-center font-normal px-4 py-2">#</TableHead>
+              <TableHead className="w-12 text-center px-4 py-2 font-bold border-r border-border">
+                #
+              </TableHead>
               {headers.map((header) => (
                 <TableHead
                   key={header}
-                  className="min-w-[150px] font-normal px-4 py-2"
+                  className="min-w-[150px] px-4 py-2 font-bold border-r border-border"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-xs">{header}</span>
+                    <span className="text-xs font-bold">{header}</span>
                   </div>
                 </TableHead>
               ))}
@@ -208,7 +194,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
           <TableBody>
             {sortedRows.map((row, rowIdx) => (
               <TableRow key={row.join("|") || rowIdx} className="border-border">
-                <TableCell className="text-center text-sm text-muted-foreground px-4 py-2">
+                <TableCell className="text-center text-sm text-muted-foreground px-4 py-2 border-r border-border">
                   {rowIdx + 1}
                 </TableCell>
                 {row.map((cell, cellIdx) => {
@@ -217,19 +203,23 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                     .toLowerCase()
                     .includes("direct competitor");
                   const isUrl = header.toLowerCase().includes("url");
+                  const isLogo = header.toLowerCase().match(/image|avatar|logo/);
                   const isName = cellIdx === nameIdx;
                   const content = cell || "";
                   return (
                     <TableCell
                       key={`${headers[cellIdx] ?? cellIdx}-${content}`}
-                      className="text-sm px-4 py-2"
+                      className="text-sm px-4 py-2 border-r border-border"
                     >
-                      {isName ? (
-                        <ProfileCard
-                          name={content}
-                          description={row[roleIdx]}
-                          image={imageIdx !== -1 ? row[imageIdx] : undefined}
-                        />
+                      {isLogo ? (
+                        content && (
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={content} alt={row[nameIdx] ?? ""} />
+                            <AvatarFallback>{row[nameIdx]?.[0] ?? ""}</AvatarFallback>
+                          </Avatar>
+                        )
+                      ) : isName ? (
+                        <span className="font-medium">{content}</span>
                       ) : isValidator ? (
                         content.toLowerCase() === "true" ||
                         content.toLowerCase() === "match" ||
