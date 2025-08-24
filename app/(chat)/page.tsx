@@ -19,6 +19,7 @@ export default async function Page() {
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get('chat-model');
   const apiKeyFromCookie = cookieStore.get('openai-api-key');
+  const crustdataApiKeyFromCookie = cookieStore.get('crustdata-api-key');
 
   if (!modelIdFromCookie) {
     return (
@@ -33,6 +34,7 @@ export default async function Page() {
           session={session}
            autoResume={false}
           initialApiKey={apiKeyFromCookie?.value ?? ''}
+          initialCrustdataApiKey={crustdataApiKeyFromCookie?.value ?? ''}
         />
         <DataStreamHandler id={id} />
       </>
@@ -51,6 +53,7 @@ export default async function Page() {
         session={session}
         autoResume={false}
         initialApiKey={apiKeyFromCookie?.value ?? ''}
+        initialCrustdataApiKey={crustdataApiKeyFromCookie?.value ?? ''}
       />
       <DataStreamHandler id={id} />
     </>

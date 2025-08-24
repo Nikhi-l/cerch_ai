@@ -48,6 +48,8 @@ function PureMultimodalInput({
   selectedModelId,
   apiKey,
   setApiKey,
+  crustdataApiKey,
+  setCrustdataApiKey,
 }: {
   chatId: string;
   input: UseChatHelpers['input'];
@@ -66,6 +68,8 @@ function PureMultimodalInput({
   selectedModelId: string;
   apiKey: string;
   setApiKey: (key: string) => void;
+  crustdataApiKey: string;
+  setCrustdataApiKey: (key: string) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -308,6 +312,8 @@ function PureMultimodalInput({
           selectedModelId={selectedModelId}
           apiKey={apiKey}
           setApiKey={setApiKey}
+          crustdataApiKey={crustdataApiKey}
+          setCrustdataApiKey={setCrustdataApiKey}
         />
       </div>
 
@@ -336,6 +342,7 @@ export const MultimodalInput = memo(
       return false;
     if (prevProps.selectedModelId !== nextProps.selectedModelId) return false;
     if (prevProps.apiKey !== nextProps.apiKey) return false;
+    if (prevProps.crustdataApiKey !== nextProps.crustdataApiKey) return false;
 
     return true;
   },

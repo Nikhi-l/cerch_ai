@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { ModelSelector } from '@/components/model-selector';
 import { ApiKeyInput } from '@/components/api-key-input';
+import { CrustdataApiKeyInput } from '@/components/crustdata-api-key-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,12 +18,16 @@ export function ChatSettings({
   selectedModelId,
   apiKey,
   setApiKey,
+  crustdataApiKey,
+  setCrustdataApiKey,
   className,
 }: {
   session: Session;
   selectedModelId: string;
   apiKey: string;
   setApiKey: (key: string) => void;
+  crustdataApiKey: string;
+  setCrustdataApiKey: (key: string) => void;
   className?: string;
 }) {
   const [temperature, setTemperature] = useState('1');
@@ -42,6 +47,10 @@ export function ChatSettings({
       </PopoverTrigger>
       <PopoverContent className="w-64 p-4 flex flex-col gap-4">
         <ApiKeyInput apiKey={apiKey} setApiKey={setApiKey} />
+        <CrustdataApiKeyInput
+          apiKey={crustdataApiKey}
+          setApiKey={setCrustdataApiKey}
+        />
         <ModelSelector
           session={session}
           selectedModelId={selectedModelId}

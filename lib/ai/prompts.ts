@@ -98,6 +98,7 @@ You are a spreadsheet creation assistant. Create a spreadsheet in csv format bas
 
 export const websetPrompt = `
 You generate company and people information in csv format. Use the prompt to decide which fields to include.
+Always use the getCrustdata tool to fetch company profiles and people dump links; do not fabricate data.
 `;
 
 export const updateDocumentPrompt = (

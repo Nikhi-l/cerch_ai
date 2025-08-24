@@ -30,6 +30,7 @@ export function Chat({
   session,
   autoResume,
   initialApiKey = '',
+  initialCrustdataApiKey = '',
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
@@ -39,6 +40,7 @@ export function Chat({
   session: Session;
   autoResume: boolean;
   initialApiKey?: string;
+  initialCrustdataApiKey?: string;
 }) {
   const { mutate } = useSWRConfig();
 
@@ -111,6 +113,9 @@ export function Chat({
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
   const [apiKey, setApiKey] = useState(initialApiKey);
+  const [crustdataApiKey, setCrustdataApiKey] = useState(
+    initialCrustdataApiKey,
+  );
 
   useAutoResume({
     autoResume,
@@ -159,6 +164,8 @@ export function Chat({
               selectedModelId={initialChatModel}
               apiKey={apiKey}
               setApiKey={setApiKey}
+              crustdataApiKey={crustdataApiKey}
+              setCrustdataApiKey={setCrustdataApiKey}
             />
           )}
         </form>
