@@ -1,6 +1,6 @@
 "use client";
 import { parse } from "papaparse";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import {
   ChevronDown,
   Code,
@@ -50,6 +59,24 @@ export function WebsetTable({ csv }: WebsetTableProps) {
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortedColumn, setSortedColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [columnWidths, setColumnWidths] =
+    useState<Record<string, number>>({});
+
+  const startResizing = (header: string) => (e: ReactMouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = columnWidths[header] ?? 150;
+    const onMouseMove = (event: MouseEvent) => {
+      const newWidth = Math.max(100, startWidth + event.clientX - startX);
+      setColumnWidths((w) => ({ ...w, [header]: newWidth }));
+    };
+    const onMouseUp = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) =>
@@ -142,10 +169,45 @@ export function WebsetTable({ csv }: WebsetTableProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm" className="h-8 gap-1">
-            <Code className="h-4 w-4" />
-            <span>Get Code</span>
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1">
+                <Code className="h-4 w-4" />
+                <span>Get Code</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="sm:max-w-[600px]">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Integration Code</AlertDialogTitle>
+              </AlertDialogHeader>
+              <pre className="mt-4 bg-muted p-4 rounded-md text-sm overflow-x-auto">
+{`from exa_py import Exa
+from exa_py.websets.types import CreateWebsetParameters, CreateEnrichmentParameters
+import os
+
+exa = Exa(os.getenv('EXA_API_KEY'))
+
+webset = exa.websets.create(
+    params=CreateWebsetParameters(
+        search={
+            "query": "software engineer in SF",
+            "criteria": [
+                "Currently employ or self-identifies as a software engineer",
+                "located in san francisco, ca"
+            ],
+        },
+        "count": 25
+    ),
+    enrichments=[
+        # ...
+    ],
+)`}
+              </pre>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Close</AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -171,20 +233,27 @@ export function WebsetTable({ csv }: WebsetTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12 text-center px-4 py-2 font-bold border-r border-border">
+              <TableHead className="w-12 text-center px-4 py-2 font-bold border-r border-b border-border">
                 #
               </TableHead>
               {headers.map((header) => (
                 <TableHead
                   key={header}
-                  className="min-w-[150px] px-4 py-2 font-bold border-r border-border"
+                  style={{ width: columnWidths[header] ?? 150 }}
+                  className="relative px-4 py-2 font-bold border-r border-b border-border bg-muted"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-bold">{header}</span>
+                    <span
+                      role="separator"
+                      aria-orientation="vertical"
+                      className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none"
+                      onMouseDown={startResizing(header)}
+                    />
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="w-10 px-4 py-2">
+              <TableHead className="w-10 px-4 py-2 border-b border-border">
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -209,7 +278,8 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                   return (
                     <TableCell
                       key={`${headers[cellIdx] ?? cellIdx}-${content}`}
-                      className="text-sm px-4 py-2 border-r border-border"
+                      style={{ width: columnWidths[header] ?? 150 }}
+                      className="text-sm px-4 py-2 border-r border-border overflow-hidden"
                     >
                       {isLogo ? (
                         content && (
@@ -253,7 +323,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                       ) : (
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="line-clamp-1 block max-w-[200px]">
+                            <span className="truncate block w-full">
                               {content}
                             </span>
                           </TooltipTrigger>
