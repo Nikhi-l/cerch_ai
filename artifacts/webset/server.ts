@@ -1,80 +1,39 @@
-import { getProvider } from '@/lib/ai/providers';
-import { websetPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { createDocumentHandler } from '@/lib/artifacts/server';
-import { streamObject } from 'ai';
-import { z } from 'zod';
+
+const CRUSTDATA_TOKEN =
+  process.env.CRUSTDATA_TOKEN || 'a8695e91fcf954209117407c1e29c04ae8715141';
+
+async function fetchWebsetCsv(query: string): Promise<string> {
+  const response = await fetch('https://api.crustdata.com/websets', {
+    method: 'POST',
+    headers: {
+      Authorization: `Token ${CRUSTDATA_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      search: { query },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Crustdata request failed: ${response.status}`);
+  }
+
+  const data = (await response.json()) as { csv?: string };
+  return data.csv || '';
+}
 
 export const websetDocumentHandler = createDocumentHandler<'webset'>({
   kind: 'webset',
-  onCreateDocument: async ({ title, dataStream, apiKey }) => {
-    let draftContent = '';
-
-    const provider = getProvider(apiKey);
-    const { fullStream } = streamObject({
-      model: provider.languageModel('artifact-model'),
-      system: websetPrompt,
-      prompt: title,
-      schema: z.object({
-        csv: z.string().describe('CSV data'),
-      }),
-    });
-
-    for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === 'object') {
-        const { object } = delta;
-        const { csv } = object;
-
-        if (csv) {
-          dataStream.writeData({
-            type: 'sheet-delta',
-            content: csv,
-          });
-
-          draftContent = csv;
-        }
-      }
-    }
-
-    dataStream.writeData({
-      type: 'sheet-delta',
-      content: draftContent,
-    });
-
-    return draftContent;
+  onCreateDocument: async ({ title, dataStream }) => {
+    const csv = await fetchWebsetCsv(title);
+    dataStream.writeData({ type: 'sheet-delta', content: csv });
+    return csv;
   },
-  onUpdateDocument: async ({ document, description, dataStream, apiKey }) => {
-    let draftContent = '';
-
-    const provider = getProvider(apiKey);
-    const { fullStream } = streamObject({
-      model: provider.languageModel('artifact-model'),
-      system: updateDocumentPrompt(document.content, 'webset'),
-      prompt: description,
-      schema: z.object({
-        csv: z.string(),
-      }),
-    });
-
-    for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === 'object') {
-        const { object } = delta;
-        const { csv } = object;
-
-        if (csv) {
-          dataStream.writeData({
-            type: 'sheet-delta',
-            content: csv,
-          });
-
-          draftContent = csv;
-        }
-      }
-    }
-
-    return draftContent;
+  onUpdateDocument: async ({ description, dataStream }) => {
+    const csv = await fetchWebsetCsv(description);
+    dataStream.writeData({ type: 'sheet-delta', content: csv });
+    return csv;
   },
 });
+

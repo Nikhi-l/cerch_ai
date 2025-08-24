@@ -59,3 +59,6 @@ Your app template should now be running on [localhost:3000](http://localhost:300
 ## Webset artifact
 
 The `webset` artifact shows company and people data in a table-style interface with buttons for filtering and sorting results. Tools like `createDocument` can generate a document with `kind: "webset"` to render this panel next to the chat.
+
+The table content is retrieved from the Crustdata Websets API. Provide your API token via the
+`CRUSTDATA_TOKEN` environment variable (a demo token is used if unset).
