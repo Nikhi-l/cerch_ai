@@ -301,9 +301,14 @@ function PureMultimodalInput({
         }}
       />
 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row gap-2 justify-start">
+      <div className="absolute bottom-0 p-2 w-fit flex flex-row gap-2 items-end justify-start">
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
-        <ChatSettings session={session} selectedModelId={selectedModelId} apiKey={apiKey} setApiKey={setApiKey} />
+        <ChatSettings
+          session={session}
+          selectedModelId={selectedModelId}
+          apiKey={apiKey}
+          setApiKey={setApiKey}
+        />
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
