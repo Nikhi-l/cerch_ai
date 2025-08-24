@@ -26,6 +26,7 @@ import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
 import { ChatSettings } from './chat-settings';
+import { GmailButton } from './gmail-button';
 import type { Session } from 'next-auth';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
@@ -303,6 +304,7 @@ function PureMultimodalInput({
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row gap-2 items-end justify-start">
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+        <GmailButton setInput={setInput} />
         <ChatSettings
           session={session}
           selectedModelId={selectedModelId}
