@@ -35,7 +35,7 @@
 
 ## Model Providers
 
-This template ships with [OpenAI](https://openai.com) `gpt-5` as the default chat model. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
+This template ships with [OpenAI](https://openai.com) `gpt-4o-mini` as the default chat model. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
 
 In the chat header you can enter your own OpenAI API key, which will be used for chat responses and artifact generation.
 
