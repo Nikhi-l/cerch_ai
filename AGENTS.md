@@ -47,13 +47,13 @@ export function getProvider(apiKey?: string) {
       })
     : customProvider({
         languageModels: {
-          'chat-model': openai('gpt-4o-mini', { apiKey }),
+          'chat-model': openai('gpt-5', { apiKey }),
           'chat-model-reasoning': wrapLanguageModel({
             model: openai('o4-mini', { apiKey }),
             middleware: extractReasoningMiddleware({ tagName: 'think' }),
           }),
-          'title-model': openai('gpt-4o-mini', { apiKey }),
-          'artifact-model': openai('gpt-4o-mini', { apiKey }),
+          'title-model': openai('gpt-5', { apiKey }),
+          'artifact-model': openai('gpt-5', { apiKey }),
         },
         imageModels: { 'small-model': openai.image('gpt-image-1', { apiKey }) },
       });
