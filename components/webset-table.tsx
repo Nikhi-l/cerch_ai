@@ -181,27 +181,35 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                 <AlertDialogTitle>Integration Code</AlertDialogTitle>
               </AlertDialogHeader>
               <pre className="mt-4 bg-muted p-4 rounded-md text-sm overflow-x-auto">
-{`from exa_py import Exa
-from exa_py.websets.types import CreateWebsetParameters, CreateEnrichmentParameters
-import os
+  {`import os
+import requests
 
-exa = Exa(os.getenv('EXA_API_KEY'))
+api_key = os.getenv('CRUSTDATA_API_KEY')
+headers = {
+    "x-api-key": api_key,
+    "content-type": "application/json",
+}
 
-webset = exa.websets.create(
-    params=CreateWebsetParameters(
-        search={
-            "query": "software engineer in SF",
-            "criteria": [
-                "Currently employ or self-identifies as a software engineer",
-                "located in san francisco, ca"
-            ],
-        },
-        "count": 25
-    ),
-    enrichments=[
+payload = {
+    "search": {
+        "query": "software engineer in SF",
+        "criteria": [
+            "Currently employed or self-identifies as a software engineer",
+            "located in san francisco, ca",
+        ],
+        "count": 25,
+    },
+    "enrichments": [
         # ...
     ],
-)`}
+}
+
+response = requests.post(
+    "https://api.crustdata.com/websets",
+    json=payload,
+    headers=headers,
+)
+webset = response.json()`}
               </pre>
               <AlertDialogFooter>
                 <AlertDialogCancel>Close</AlertDialogCancel>
