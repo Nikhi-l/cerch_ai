@@ -13,10 +13,13 @@ export const TEST_PROMPTS: Record<string, CoreMessage> = {
     role: 'user',
     content: [{ type: 'text', text: 'Thanks!' }],
   },
-  USER_WEBSET_COMPANIES: {
+  USER_FIND_CUSTOMERS: {
     role: 'user',
     content: [
-      { type: 'text', text: 'Show a webset of top tech companies' },
+      {
+        type: 'text',
+        text: 'Find customers and source the perfect companies and people to sell to.',
+      },
     ],
   },
   USER_IMAGE_ATTACHMENT: {

@@ -124,10 +124,10 @@ export const getResponseChunksByPrompt = (
       },
     ];
   } else if (
-    compareMessages(recentMessage, TEST_PROMPTS.USER_WEBSET_COMPANIES)
+    compareMessages(recentMessage, TEST_PROMPTS.USER_FIND_CUSTOMERS)
   ) {
     return [
-      ...textToDeltas('Here is a webset of top tech companies.'),
+      ...textToDeltas('Here are some potential customers for you.'),
 
       {
         type: 'finish',
