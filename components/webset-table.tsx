@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,9 +73,9 @@ export function WebsetTable({ csv }: WebsetTableProps) {
     const sorted = [...filteredRows].sort((a, b) => {
       const av = a[idx] || "";
       const bv = b[idx] || "";
-      const aNum = parseFloat(av);
-      const bNum = parseFloat(bv);
-      if (!isNaN(aNum) && !isNaN(bNum)) {
+      const aNum = Number.parseFloat(av);
+      const bNum = Number.parseFloat(bv);
+      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
         return sortDirection === "asc" ? aNum - bNum : bNum - aNum;
       }
       return sortDirection === "asc"
@@ -84,9 +85,14 @@ export function WebsetTable({ csv }: WebsetTableProps) {
     return sorted;
   }, [filteredRows, headers, sortedColumn, sortDirection]);
 
+  const nameIdx = useMemo(
+    () => headers.findIndex((h) => h.toLowerCase().includes("name")),
+    [headers],
+  );
+
   return (
-    <div className="w-full bg-white text-gray-900 border rounded-md">
-      <div className="flex items-center justify-between p-4 border-b gap-4">
+    <div className="w-full bg-white text-gray-900 border border-border rounded-lg overflow-hidden p-2 sm:p-4">
+      <div className="flex items-center justify-between p-2 sm:p-4 border-b border-border gap-4">
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -165,15 +171,20 @@ export function WebsetTable({ csv }: WebsetTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12 text-center font-normal">#</TableHead>
+              <TableHead className="w-12 text-center px-4 py-2 font-bold border-r border-border">
+                #
+              </TableHead>
               {headers.map((header) => (
-                <TableHead key={header} className="min-w-[150px] font-normal">
+                <TableHead
+                  key={header}
+                  className="min-w-[150px] px-4 py-2 font-bold border-r border-border"
+                >
                   <div className="flex items-center gap-2">
-                    <span className="text-xs">{header}</span>
+                    <span className="text-xs font-bold">{header}</span>
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="w-10">
+              <TableHead className="w-10 px-4 py-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -182,8 +193,8 @@ export function WebsetTable({ csv }: WebsetTableProps) {
           </TableHeader>
           <TableBody>
             {sortedRows.map((row, rowIdx) => (
-              <TableRow key={row.join("|") || rowIdx}>
-                <TableCell className="text-center text-sm text-muted-foreground">
+              <TableRow key={row.join("|") || rowIdx} className="border-border">
+                <TableCell className="text-center text-sm text-muted-foreground px-4 py-2 border-r border-border">
                   {rowIdx + 1}
                 </TableCell>
                 {row.map((cell, cellIdx) => {
@@ -192,10 +203,24 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                     .toLowerCase()
                     .includes("direct competitor");
                   const isUrl = header.toLowerCase().includes("url");
+                  const isLogo = header.toLowerCase().match(/image|avatar|logo/);
+                  const isName = cellIdx === nameIdx;
                   const content = cell || "";
                   return (
-                    <TableCell key={`${headers[cellIdx] ?? cellIdx}-${content}`} className="text-sm">
-                      {isValidator ? (
+                    <TableCell
+                      key={`${headers[cellIdx] ?? cellIdx}-${content}`}
+                      className="text-sm px-4 py-2 border-r border-border"
+                    >
+                      {isLogo ? (
+                        content && (
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={content} alt={row[nameIdx] ?? ""} />
+                            <AvatarFallback>{row[nameIdx]?.[0] ?? ""}</AvatarFallback>
+                          </Avatar>
+                        )
+                      ) : isName ? (
+                        <span className="font-medium">{content}</span>
+                      ) : isValidator ? (
                         content.toLowerCase() === "true" ||
                         content.toLowerCase() === "match" ||
                         content === "1" ? (
@@ -238,7 +263,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                     </TableCell>
                   );
                 })}
-                <TableCell>
+                <TableCell className="px-4 py-2">
                   {rowIdx === 0 && (
                     <Button variant="ghost" size="icon" className="h-8 w-8">
                       <Maximize2 className="h-4 w-4" />
@@ -250,7 +275,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-center p-4 border-t">
+      <div className="flex justify-center p-2 sm:p-4 border-t border-border">
         <Button variant="outline" className="rounded-full px-6">
           Find more results
         </Button>
