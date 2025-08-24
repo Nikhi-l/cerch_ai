@@ -5,18 +5,45 @@ import { Button } from './ui/button';
 import { memo } from 'react';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
+import { generateUUID } from '@/lib/utils';
+import { useArtifact } from '@/hooks/use-artifact';
 
 interface SuggestedActionsProps {
   chatId: string;
   append: UseChatHelpers['append'];
+  setMessages: UseChatHelpers['setMessages'];
   selectedVisibilityType: VisibilityType;
 }
 
 function PureSuggestedActions({
   chatId,
   append,
+  setMessages,
   selectedVisibilityType,
 }: SuggestedActionsProps) {
+  const { setArtifact, setMetadata } = useArtifact();
+
+  const dashboardData = {
+    charts: [
+      {
+        title: 'Traffic source',
+        data: [
+          { label: 'Direct', value: 45 },
+          { label: 'Organic', value: 30 },
+          { label: 'Referral', value: 25 },
+        ],
+      },
+    ],
+    stats: [
+      { label: 'Visitors this month', value: '12,345', change: '+5%' },
+      { label: 'Bounce rate', value: '40%' },
+      { label: 'Avg. session', value: '3m 12s' },
+      { label: 'New users', value: '1,200' },
+      { label: 'Conversions', value: '120' },
+    ],
+    messages: [],
+  };
+
   const suggestedActions = [
     {
       title: 'Show a webset',
@@ -29,9 +56,38 @@ function PureSuggestedActions({
       action: 'Create a webset of ExampleCorp employees',
     },
     {
-      title: 'Find people named',
-      label: 'Jane Doe',
-      action: 'Find people named Jane Doe and display a webset',
+      title: 'Show dashboard',
+      label: 'traffic analytics',
+      onSelect: () => {
+        const id = generateUUID();
+        setArtifact({
+          documentId: id,
+          title: 'Traffic dashboard',
+          kind: 'dashboard',
+          content: JSON.stringify(dashboardData),
+          isVisible: true,
+          status: 'idle',
+          boundingBox: { top: 0, left: 0, width: 0, height: 0 },
+        });
+        setMetadata({
+          charts: dashboardData.charts,
+          stats: dashboardData.stats,
+          messages: [],
+        });
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: generateUUID(),
+            role: 'user',
+            content: 'Show traffic analytics dashboard.',
+          },
+          {
+            id: generateUUID(),
+            role: 'assistant',
+            content: 'Here is the traffic analytics dashboard.',
+          },
+        ]);
+      },
     },
     {
       title: 'List companies',
@@ -59,10 +115,14 @@ function PureSuggestedActions({
             onClick={async () => {
               window.history.replaceState({}, '', `/chat/${chatId}`);
 
-              append({
-                role: 'user',
-                content: suggestedAction.action,
-              });
+              if ('onSelect' in suggestedAction && suggestedAction.onSelect) {
+                suggestedAction.onSelect();
+              } else if ('action' in suggestedAction && suggestedAction.action) {
+                append({
+                  role: 'user',
+                  content: suggestedAction.action,
+                });
+              }
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
