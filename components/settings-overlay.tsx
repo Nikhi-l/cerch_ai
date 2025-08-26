@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, startTransition } from 'react';
+import { useState, } from 'react';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -53,7 +53,7 @@ export function SettingsOverlay({
       </AlertDialogTrigger>
       <AlertDialogContent
         // Full-screen on mobile, modal on larger screens
-        className="w-full h-[100dvh] sm:h-auto sm:max-w-2xl sm:rounded-lg p-0 sm:p-6"
+        className="w-full h-dvh sm:h-auto sm:max-w-2xl sm:rounded-lg p-0 sm:p-6"
       >
         <div className="flex flex-col h-full">
           <AlertDialogHeader className="border-b px-6 py-4">
@@ -114,4 +114,3 @@ export function SettingsOverlay({
     </AlertDialog>
   );
 }
-

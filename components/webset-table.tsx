@@ -24,15 +24,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogFooter,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
 import { ChevronDown, Download, Filter, Maximize2, Plus, SlidersHorizontal, Zap, Eye, EyeOff, Search } from "lucide-react";
 
 interface WebsetTableProps {
@@ -276,7 +267,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                 <TableHead
                   key={header}
                   style={{ width: columnWidths[header] ?? 150 }}
-                  className="relative px-4 py-2 font-bold border-r border-b border-border bg-muted sticky top-0 z-10"
+                  className="px-4 py-2 font-bold border-r border-b border-border bg-muted sticky top-0 z-10"
                 >
                   <div className="flex items-center justify-between gap-2 cursor-pointer select-none" onClick={() => {
                     if (sortedColumn === header) setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));

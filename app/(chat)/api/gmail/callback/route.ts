@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { authorizationCodeGrant } from 'openid-client';
 import { getGoogleClient } from '@/lib/googleClient';
-import { getSessionId, saveTokenSet, OAuthTokens } from '@/lib/session';
+import { getSessionId, saveTokenSet, type OAuthTokens } from '@/lib/session';
 
 const STATE_COOKIE = 'gc_oauth_state';
 const VERIFIER_COOKIE = 'gc_oauth_verifier';

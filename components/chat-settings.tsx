@@ -51,7 +51,7 @@ export function ChatSettings({
           <Settings size={14} />
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="w-full h-[100dvh] sm:h-auto sm:max-w-2xl sm:rounded-lg p-0 sm:p-6">
+      <AlertDialogContent className="w-full h-dvh sm:h-auto sm:max-w-2xl sm:rounded-lg p-0 sm:p-6">
         <div className="flex flex-col h-full">
           <AlertDialogHeader className="border-b px-6 py-4">
             <AlertDialogTitle>Settings</AlertDialogTitle>

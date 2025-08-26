@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 
 const SESSION_COOKIE = 'gc_session_id';
 

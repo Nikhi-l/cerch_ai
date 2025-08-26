@@ -1,4 +1,4 @@
-import { discovery, Configuration } from 'openid-client';
+import { discovery, type Configuration } from 'openid-client';
 
 let cachedConfig: Configuration | null = null;
 
