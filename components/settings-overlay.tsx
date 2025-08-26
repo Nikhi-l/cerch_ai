@@ -1,9 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import type { Session } from 'next-auth';
-import { Settings } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, startTransition } from 'react';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -15,12 +12,15 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { ModelSelector } from '@/components/model-selector';
 import { ApiKeyInput } from '@/components/api-key-input';
+import { Settings } from 'lucide-react';
+import type { Session } from 'next-auth';
+import { cn } from '@/lib/utils';
 
-export function ChatSettings({
+export function SettingsOverlay({
   session,
   selectedModelId,
   apiKey,
@@ -51,7 +51,10 @@ export function ChatSettings({
           <Settings size={14} />
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="w-full h-[100dvh] sm:h-auto sm:max-w-2xl sm:rounded-lg p-0 sm:p-6">
+      <AlertDialogContent
+        // Full-screen on mobile, modal on larger screens
+        className="w-full h-[100dvh] sm:h-auto sm:max-w-2xl sm:rounded-lg p-0 sm:p-6"
+      >
         <div className="flex flex-col h-full">
           <AlertDialogHeader className="border-b px-6 py-4">
             <AlertDialogTitle>Settings</AlertDialogTitle>
@@ -111,3 +114,4 @@ export function ChatSettings({
     </AlertDialog>
   );
 }
+

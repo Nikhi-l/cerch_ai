@@ -4,7 +4,6 @@ import { ChevronUp } from 'lucide-react';
 import Image from 'next/image';
 import type { User } from 'next-auth';
 import { signOut, useSession } from 'next-auth/react';
-import { useTheme } from 'next-themes';
 
 import {
   DropdownMenu,
@@ -26,7 +25,7 @@ import { guestRegex } from '@/lib/constants';
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
   const { data, status } = useSession();
-  const { setTheme, theme } = useTheme();
+  // Light-only theme: hide theme toggle
 
   const isGuest = guestRegex.test(data?.user?.email ?? '');
 
@@ -71,18 +70,7 @@ export function SidebarUserNav({ user }: { user: User }) {
             side="top"
             className="w-[--radix-popper-anchor-width]"
           >
-            <DropdownMenuItem
-              data-testid="user-nav-item-theme"
-              className="cursor-pointer"
-              onSelect={() => {
-                if (theme === 'light') setTheme('dark');
-                else if (theme === 'dark') setTheme('violet');
-                else setTheme('light');
-              }}
-            >
-              {`Switch to ${theme === 'light' ? 'dark' : theme === 'dark' ? 'violet' : 'light'} mode`}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {/* Theme toggle removed for light-only mode */}
             <DropdownMenuItem asChild data-testid="user-nav-item-auth">
               <button
                 type="button"

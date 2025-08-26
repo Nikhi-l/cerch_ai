@@ -1,6 +1,6 @@
 'use client';
 
-import { startTransition, useState } from 'react';
+import { startTransition, useMemo, useState } from 'react';
 import { saveOpenAIApiKeyAsCookie } from '@/app/(chat)/actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,9 @@ export function ApiKeyInput({
 }) {
   const [mode, setMode] = useState(apiKey ? 'custom' : 'auto');
   const [value, setValue] = useState(apiKey);
+  const [show, setShow] = useState(false);
+
+  const isLikelyKey = useMemo(() => /^(sk|rk|sess)-/.test(value.trim()), [value]);
 
   const handleModeChange = (val: string) => {
     setMode(val);
@@ -50,26 +53,57 @@ export function ApiKeyInput({
       {mode === 'custom' && (
         <div className="flex w-full items-center gap-2">
           <Input
-            type="password"
-            placeholder="API Key"
+            type={show ? 'text' : 'password'}
+            inputMode="text"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="Paste your OpenAI API key (sk-...)"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => setValue(e.target.value.trim())}
             className="flex-1"
           />
           <Button
             variant="outline"
+            onClick={() => setShow((s) => !s)}
+            title={show ? 'Hide' : 'Show'}
+          >
+            {show ? 'Hide' : 'Show'}
+          </Button>
+          <Button
+            variant="default"
             onClick={() => {
-              setApiKey(value);
+              const trimmed = value.trim();
+              setApiKey(trimmed);
               startTransition(() => {
-                saveOpenAIApiKeyAsCookie(value);
+                saveOpenAIApiKeyAsCookie(trimmed);
               });
             }}
+            disabled={!isLikelyKey}
           >
             Save
           </Button>
+          {value || apiKey ? (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setValue('');
+                setApiKey('');
+                startTransition(() => {
+                  saveOpenAIApiKeyAsCookie('');
+                });
+              }}
+              title="Clear key"
+            >
+              Clear
+            </Button>
+          ) : null}
         </div>
+      )}
+      {mode === 'custom' && (
+        <p className={cn('text-xs', isLikelyKey ? 'text-muted-foreground' : 'text-amber-600')}>
+          {isLikelyKey ? 'Looks like a valid key format.' : 'Tip: keys usually start with sk-'}
+        </p>
       )}
     </div>
   );
 }
-

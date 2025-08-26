@@ -14,6 +14,7 @@ import { useDebounceCallback, useWindowSize } from 'usehooks-ts';
 import type { Document, Vote } from '@/lib/db/schema';
 import { fetcher } from '@/lib/utils';
 import { MultimodalInput } from './multimodal-input';
+import { Button } from './ui/button';
 import { Toolbar } from './toolbar';
 import { VersionFooter } from './version-footer';
 import { ArtifactActions } from './artifact-actions';
@@ -231,6 +232,7 @@ function PureArtifact({
   };
 
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   /*
    * NOTE: if there are no documents, or if
@@ -275,7 +277,7 @@ function PureArtifact({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { delay: 0.4 } }}
         >
-          {!isMobile && (
+          {!isMobile && !isFullscreen && (
             <motion.div
               className="fixed bg-background h-dvh"
               initial={{
@@ -290,7 +292,7 @@ function PureArtifact({
             />
           )}
 
-          {!isMobile && (
+          {!isMobile && !isFullscreen && (
             <motion.div
               className="relative w-[400px] bg-muted dark:bg-background h-dvh shrink-0"
               initial={{ opacity: 0, x: 10, scale: 1 }}
@@ -400,12 +402,16 @@ function PureArtifact({
                   }
                 : {
                     opacity: 1,
-                    x: 400,
+                    x: isFullscreen ? 0 : 400,
                     y: 0,
                     height: windowHeight,
                     width: windowWidth
-                      ? windowWidth - 400
-                      : 'calc(100dvw-400px)',
+                      ? isFullscreen
+                        ? windowWidth
+                        : windowWidth - 400
+                      : isFullscreen
+                        ? '100dvw'
+                        : 'calc(100dvw-400px)',
                     borderRadius: 0,
                     transition: {
                       delay: 0,
@@ -454,7 +460,17 @@ function PureArtifact({
                 </div>
               </div>
 
-              <ArtifactActions
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsFullscreen((f) => !f)}
+                  data-testid="artifact-fullscreen-toggle"
+                  title={isFullscreen ? 'Exit full screen' : 'Full screen'}
+                >
+                  {isFullscreen ? 'Exit full screen' : 'Full screen'}
+                </Button>
+                <ArtifactActions
                 artifact={artifact}
                 currentVersionIndex={currentVersionIndex}
                 handleVersionChange={handleVersionChange}
@@ -463,6 +479,7 @@ function PureArtifact({
                 metadata={metadata}
                 setMetadata={setMetadata}
               />
+              </div>
             </div>
 
             <div className="dark:bg-muted bg-background h-full overflow-y-scroll !max-w-full items-center">

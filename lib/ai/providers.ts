@@ -29,13 +29,17 @@ export function getProvider(apiKey?: string) {
 
   return customProvider({
     languageModels: {
-      'chat-model': openai('gpt-4o-mini'),
+      // Primary chat model
+      'chat-model': openai('gpt-5'),
+      // Reasoning variant with thinking trace extraction
       'chat-model-reasoning': wrapLanguageModel({
-        model: openai('o4-mini'),
+        model: openai('gpt-5-reasoning'),
         middleware: extractReasoningMiddleware({ tagName: 'think' }),
       }),
-      'title-model': openai('gpt-4o-mini'),
-      'artifact-model': openai('gpt-4o-mini'),
+      // Title generation model
+      'title-model': openai('gpt-5'),
+      // Artifact generation (text/code/sheet/webset)
+      'artifact-model': openai('gpt-5'),
     },
     imageModels: {
       'small-model': openai.image('gpt-image-1'),

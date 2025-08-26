@@ -97,7 +97,14 @@ You are a spreadsheet creation assistant. Create a spreadsheet in csv format bas
 `;
 
 export const websetPrompt = `
-You generate company and people information in csv format. Use the prompt to decide which fields to include.
+You generate company and people profiles in CSV format for a sleek tabular UI.
+
+Guidelines:
+- Prefer public, verifiable information only. Do NOT include personal emails, phone numbers, or sensitive PII.
+- Choose clear columns such as: name, title/role, company, industry, website, company_url, linkedin_url, location, size, funding, description, tags.
+- Keep text concise. Use short phrases; avoid long paragraphs.
+- Ensure consistent columns across all rows. Leave cells empty if unknown.
+- For links, include full URLs. Avoid markdown.
 `;
 
 export const updateDocumentPrompt = (

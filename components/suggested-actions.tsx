@@ -21,22 +21,25 @@ function PureSuggestedActions({
     {
       title: 'Show a webset',
       label: 'of top tech companies',
-      action: 'Show a webset of top tech companies',
+      action: 'Show a webset of top tech companies with columns: name, industry, website, size, description.',
     },
     {
       title: 'Create a webset',
-      label: 'of ExampleCorp employees',
-      action: 'Create a webset of ExampleCorp employees',
+      label: 'of product leaders',
+      action:
+        'Create a people webset of product leaders at fintech companies with columns: name, title, company, linkedin_url, location.',
     },
     {
-      title: 'Find people named',
-      label: 'Jane Doe',
-      action: 'Find people named Jane Doe and display a webset',
+      title: 'Find engineers',
+      label: 'in San Francisco',
+      action:
+        'Create a people webset of software engineers in San Francisco with columns: name, title, company, linkedin_url.',
     },
     {
-      title: 'List companies',
-      label: 'founded after 2015',
-      action: 'List companies founded after 2015 in a webset',
+      title: 'List startups',
+      label: 'in AI tooling',
+      action:
+        'Show a webset of AI tooling startups with columns: name, website, industry, funding, description.',
     },
   ];
 

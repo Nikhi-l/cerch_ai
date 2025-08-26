@@ -58,4 +58,12 @@ Your app template should now be running on [localhost:3000](http://localhost:300
 
 ## Webset artifact
 
-The `webset` artifact shows company and people data in a table-style interface with buttons for filtering and sorting results. Tools like `createDocument` can generate a document with `kind: "webset"` to render this panel next to the chat.
+The `webset` artifact focuses on people and company profiles. It renders CSV data in a sleek, responsive table with search, per-column filters, sorting, column visibility, sticky headers, and CSV export. Recommended columns include: name, title, company, industry, website/company_url, linkedin_url, location, size, funding, description.
+
+## LLM Flow (GPT-5)
+
+- Provider: `lib/ai/providers.ts` maps logical model ids to OpenAI models. `chat-model`, `artifact-model`, and `title-model` use `gpt-5`; `chat-model-reasoning` uses `gpt-5-reasoning` with reasoning traces extracted via `<think>` tags.
+- System prompts: `lib/ai/prompts.ts` selects prompts per model. Non-reasoning chat includes the Artifacts instructions so GPT-5 knows when/how to call tools.
+- Tools/Artifacts: `app/(chat)/api/chat/route.ts` wires tools for weather, document create/update, suggestions, Gmail. Artifact servers in `artifacts/*/server.ts` stream typed outputs (text/code/sheet/webset) to the UI.
+- API key: Users set an OpenAI API key in Settings overlay (stored as `openai-api-key` cookie). If empty, `OPENAI_API_KEY` env var is used.
+- Model selection: UI exposes a model selector (`components/model-selector.tsx`) constrained by entitlements. Selection is stored as `chat-model` cookie and used by the chat API.
