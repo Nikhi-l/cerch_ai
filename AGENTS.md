@@ -1,74 +1,39 @@
-# AI Chatbot Agents
+# Repository Guidelines
 
-This repository implements a Next.js based AI chatbot. The codebase is organized around the following top‑level folders:
+## Project Structure & Module Organization
+- `app/`: Next.js App Router routes (chat, auth), API routes, and server actions.
+- `components/`: Reusable React UI (chat, messages, editors, selectors, icons).
+- `artifacts/`: Server/client handlers for text, code, image, and sheet artifacts.
+- `lib/`: Providers, prompts, DB (Drizzle + Postgres), utilities, and editor helpers.
+- `hooks/`: Custom React hooks used across the UI.
+- `tests/`: Playwright E2E/API tests (`e2e`, `routes`, `pages`).
 
-- **`app/`** – Next.js App Router routes and pages for chat and auth.
-- **`components/`** – Reusable React components including the chat UI and artifact editors.
-- **`artifacts/`** – Client/server code for code, text, image and spreadsheet artifacts.
-- **`lib/`** – Server utilities, AI provider configuration and database helpers.
-- **`hooks/`** – Custom React hooks used across the UI.
-- **`tests/`** – Playwright end‑to‑end and API tests.
+## Build, Test, and Development Commands
+- `pnpm install`: Install dependencies.
+- `pnpm dev`: Start local dev server (Next.js turbo).
+- `pnpm build`: Run DB migrations then build the app.
+- `pnpm start`: Start the production build locally.
+- `pnpm test`: Run Playwright tests.
+- `pnpm lint` / `pnpm lint:fix`: ESLint + Biome linting.
+- `pnpm format`: Biome formatting.
 
-## Architecture
+## Coding Style & Naming Conventions
+- Formatter/Linter: Biome + ESLint (see `biome.jsonc`).
+- Indent: 2 spaces; width 80; semicolons always; single quotes; JSX uses double quotes.
+- React components: PascalCase `.tsx` in `components/`.
+- Hooks: `useX` camelCase in `hooks/`.
+- Files: kebab-case for non-components; types/interfaces in `lib/*.ts`.
 
-The project uses the Next.js App Router with React Server Components and Server Actions for performance. The AI SDK provides a unified API for generating text, structured data and tool calls. Styling is handled by the shadcn/ui library with Tailwind CSS and Radix primitives.
+## Testing Guidelines
+- Framework: Playwright (`@playwright/test`). Tests live in `tests/` and end with `.test.ts`.
+- Run: `pnpm test`. Use stable selectors (e.g., `data-testid`) for reliability.
+- Prefer realistic flows: chat lifecycle, artifacts CRUD, auth/session.
 
-Data is stored using Neon Postgres and file uploads use Vercel Blob. Authentication is handled by Auth.js.
+## Commit & Pull Request Guidelines
+- Commit style: Conventional Commits (`feat:`, `fix:`, `chore:`, `style:`). Keep scope small and messages imperative.
+- PRs: clear description, linked issues, steps to test, and screenshots/GIFs for UI changes. Request review before merge; keep PRs focused.
 
-Local development:
-```bash
-pnpm install
-pnpm dev
-```
-from README lines 58‑62.【F:README.md†L58-L62】
-
-## AI Models and Providers
-
-Available chat models are defined in `lib/ai/models.ts`:
-```ts
-export const chatModels: Array<ChatModel> = [
-  { id: 'chat-model', name: 'Chat model', description: 'Primary model for all-purpose chat' },
-  { id: 'chat-model-reasoning', name: 'Reasoning model', description: 'Uses advanced reasoning' },
-];
-```
-【F:lib/ai/models.ts†L9-L20】
-
-Model providers are configured in `lib/ai/providers.ts` and default to OpenAI models:
-```ts
-export function getProvider(apiKey?: string) {
-  return isTestEnvironment
-    ? customProvider({
-        languageModels: {
-          'chat-model': chatModel,
-          'chat-model-reasoning': reasoningModel,
-          'title-model': titleModel,
-          'artifact-model': artifactModel,
-        },
-      })
-    : customProvider({
-        languageModels: {
-          'chat-model': openai('gpt-4o-mini', { apiKey }),
-          'chat-model-reasoning': wrapLanguageModel({
-            model: openai('o4-mini', { apiKey }),
-            middleware: extractReasoningMiddleware({ tagName: 'think' }),
-          }),
-          'title-model': openai('gpt-4o-mini', { apiKey }),
-          'artifact-model': openai('gpt-4o-mini', { apiKey }),
-        },
-        imageModels: { 'small-model': openai.image('gpt-image-1', { apiKey }) },
-      });
-}
-```
-【F:lib/ai/providers.ts†L15-L37】
-
-## Core Components
-
-- **Chat Component** – `components/chat.tsx` uses the `useChat` hook to manage messages and communication with the models. Lines 34‑84 show the main hook setup and handlers.【F:components/chat.tsx†L34-L84】
-- **Artifact System** – `components/artifact.tsx` defines supported artifact types (text, code, image, sheet) and manages document content.【F:components/artifact.tsx†L30-L37】
-- **Prompts** – System prompts and artifact instructions are defined in `lib/ai/prompts.ts`. Lines 4‑32 describe the artifact mode and guidelines.【F:lib/ai/prompts.ts†L4-L32】
-
-## Testing
-
-Playwright tests live under `tests/`, covering chat flows and artifact behavior. Run `pnpm test` to execute them (may require network access for dependencies).
-
----
+## Security & Configuration Tips
+- Required env vars: `OPENAI_API_KEY`, `POSTGRES_URL`, `AUTH_SECRET` (use `.env.local`).
+- Do not commit secrets or logs with sensitive data. Use test doubles/mocks in tests.
+- Verify migrations locally before `pnpm build`; Playwright runs with `PLAYWRIGHT=true` via script.

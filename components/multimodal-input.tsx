@@ -29,6 +29,7 @@ import { ChatSettings } from './chat-settings';
 import type { Session } from 'next-auth';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
+import { GmailButton } from './gmail-button';
 
 function PureMultimodalInput({
   chatId,
@@ -303,6 +304,7 @@ function PureMultimodalInput({
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row gap-2 items-end justify-start">
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+        <GmailButton chatId={chatId} append={append} />
         <ChatSettings
           session={session}
           selectedModelId={selectedModelId}
