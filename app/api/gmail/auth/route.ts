@@ -6,7 +6,11 @@ import {
   randomState,
   buildAuthorizationUrl,
 } from 'openid-client';
-import { getGoogleClient, getRedirectUri, GOOGLE_SCOPES } from '@/lib/googleClient';
+import {
+  getGoogleClient,
+  getRedirectUri,
+  GOOGLE_SCOPES,
+} from '@/lib/googleClient';
 import { getOrCreateSessionId } from '@/lib/session';
 
 const STATE_COOKIE = 'gc_oauth_state';
@@ -49,4 +53,3 @@ export async function GET() {
 
   return NextResponse.redirect(authorizationUrl.toString());
 }
-
