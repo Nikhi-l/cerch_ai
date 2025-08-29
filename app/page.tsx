@@ -3,7 +3,11 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import Spline from '@splinetool/react-spline/next';
+import dynamic from 'next/dynamic';
+// Avoid server-side rendering of the Spline component to prevent build-time errors
+const Spline = dynamic(() => import('@splinetool/react-spline/next'), {
+  ssr: false,
+});
 import { Brain, Building2, Users } from 'lucide-react';
 
 const features = [
