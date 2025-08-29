@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const redirectUrl = searchParams.get('redirectUrl') || '/';
+  const redirectUrl = searchParams.get('redirectUrl') || '/chat';
 
   const token = await getToken({
     req: request,
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   });
 
   if (token) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/chat', request.url));
   }
 
   return signIn('guest', { redirect: true, redirectTo: redirectUrl });
