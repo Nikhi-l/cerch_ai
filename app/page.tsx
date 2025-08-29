@@ -3,13 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import dynamic from 'next/dynamic';
-// Avoid server-side rendering of the Spline component to prevent build-time errors
-const Spline = dynamic(
-  // eslint-disable-next-line import/no-unresolved
-  () => import('@splinetool/react-spline').then((mod) => mod.default),
-  { ssr: false },
-);
+import EarthSpline from '@/components/EarthSpline';
 import { Brain, Building2, Users } from 'lucide-react';
 
 const features = [
@@ -35,10 +29,7 @@ const features = [
 export default function Page() {
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center gap-16 overflow-hidden p-6 text-center">
-      <Spline
-        className="pointer-events-none absolute inset-0 -z-10"
-        scene="https://prod.spline.design/1oF8kp0AWvtjr-CD/scene.splinecode"
-      />
+      <EarthSpline />
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
