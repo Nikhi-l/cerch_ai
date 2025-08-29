@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 // Avoid server-side rendering of the Spline component to prevent build-time errors
-const Spline = dynamic(() => import('@splinetool/react-spline/next'), {
-  ssr: false,
-});
+const Spline = dynamic(
+  // eslint-disable-next-line import/no-unresolved
+  () => import('@splinetool/react-spline').then((mod) => mod.default),
+  { ssr: false },
+);
 import { Brain, Building2, Users } from 'lucide-react';
 
 const features = [
