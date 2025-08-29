@@ -140,7 +140,7 @@ test.describe('Chat activity', () => {
   });
 
   test('Create message from url query', async ({ page }) => {
-    await page.goto('/?query=Why is the sky blue?');
+    await page.goto('/chat?query=Why is the sky blue?');
 
     await chatPage.isGenerationComplete();
 
