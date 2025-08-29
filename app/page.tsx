@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -54,7 +56,7 @@ export default function Page() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <Icon className="h-12 w-12" />
+            <Icon className="size-12" />
             <h3 className="text-xl font-semibold">{title}</h3>
             <p className="max-w-xs text-sm text-muted-foreground">
               {description}

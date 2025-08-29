@@ -6,6 +6,7 @@ import { textDocumentHandler } from '@/artifacts/text/server';
 import type { ArtifactKind } from '@/components/artifact';
 import type { DataStreamWriter } from 'ai';
 import type { Document } from '../db/schema';
+import { artifactKinds } from './constants';
 import { saveDocument } from '../db/queries';
 import type { Session } from 'next-auth';
 
@@ -30,7 +31,7 @@ export interface UpdateDocumentCallbackProps {
   description: string;
   dataStream: DataStreamWriter;
   session: Session;
-   apiKey?: string;
+  apiKey?: string;
 }
 
 export interface DocumentHandler<T = ArtifactKind> {
@@ -102,4 +103,4 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   websetDocumentHandler,
 ];
 
-export const artifactKinds = ['text', 'code', 'image', 'sheet', 'webset'] as const;
+export { artifactKinds };
