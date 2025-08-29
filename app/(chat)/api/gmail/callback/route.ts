@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   jar.delete(VERIFIER_COOKIE);
 
   if (!sessionId) {
-    return NextResponse.redirect(new URL('/?error=no-session', request.url));
+    return NextResponse.redirect(new URL('/chat?error=no-session', request.url));
   }
 
   const url = new URL(request.url);
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const hasCode = url.searchParams.has('code');
 
   if (!stateCookie || !verifier || !hasCode || returnedState !== stateCookie) {
-    return NextResponse.redirect(new URL('/?error=invalid_state', request.url));
+    return NextResponse.redirect(new URL('/chat?error=invalid_state', request.url));
   }
 
   try {
@@ -64,9 +64,9 @@ export async function GET(request: NextRequest) {
     if (tokens.id_token) jar.set('gc_id_token', tokens.id_token, cookieOptions);
     if (tokens.expires_at) jar.set('gc_expires_at', String(tokens.expires_at), cookieOptions);
 
-    return NextResponse.redirect(new URL('/?connected=1', request.url));
+    return NextResponse.redirect(new URL('/chat?connected=1', request.url));
   } catch {
-    return NextResponse.redirect(new URL('/?error=oauth_failed', request.url));
+    return NextResponse.redirect(new URL('/chat?error=oauth_failed', request.url));
   }
 }
 

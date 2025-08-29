@@ -1,11 +1,11 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 import { Chat } from '@/components/chat';
-import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
-import { generateUUID } from '@/lib/utils';
 import { DataStreamHandler } from '@/components/data-stream-handler';
-import { auth } from '../(auth)/auth';
-import { redirect } from 'next/navigation';
+import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
+import { auth } from '@/app/(auth)/auth';
+import { generateUUID } from '@/lib/utils';
 
 export default async function Page() {
   const session = await auth();
@@ -31,7 +31,7 @@ export default async function Page() {
           initialVisibilityType="private"
           isReadonly={false}
           session={session}
-           autoResume={false}
+          autoResume={false}
           initialApiKey={apiKeyFromCookie?.value ?? ''}
         />
         <DataStreamHandler id={id} />
