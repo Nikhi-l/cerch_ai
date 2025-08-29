@@ -17,6 +17,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname === '/') {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
@@ -42,7 +46,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/',
+    '/chat',
     '/chat/:id',
     '/api/:path*',
     '/login',
