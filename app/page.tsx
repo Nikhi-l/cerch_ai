@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import Spline from '@splinetool/react-spline/next';
 import { Brain, Building2, Users } from 'lucide-react';
 
 const features = [
@@ -27,7 +28,11 @@ const features = [
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-16 p-6 text-center">
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-16 overflow-hidden p-6 text-center">
+      <Spline
+        className="pointer-events-none absolute inset-0 -z-10"
+        scene="https://prod.spline.design/1oF8kp0AWvtjr-CD/scene.splinecode"
+      />
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -35,7 +40,8 @@ export default function Page() {
       >
         <h1 className="mb-4 text-5xl font-bold">Cerch AI</h1>
         <p className="max-w-xl text-lg text-muted-foreground">
-          Intelligent chat powered by your personal and company data.
+          Explore insights from over 200M people profiles and 10M+ company
+          records.
         </p>
       </motion.div>
       <motion.div
