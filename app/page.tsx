@@ -1,17 +1,12 @@
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 
 import { Button } from '@/components/ui/button';
-
-/* eslint-disable-next-line import/no-unresolved */
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-  ssr: false,
-});
+import SplineScene from '@/components/SplineScene';
 
 export default function Home() {
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-background text-foreground">
-      <Spline scene="https://prod.spline.design/DS0UgrDOifhNt9T6/scene.splinecode" className="absolute inset-0" />
+      <SplineScene className="absolute inset-0" />
       <div className="absolute left-16 top-1/4 max-w-xl space-y-6">
         <h1 className="text-5xl font-bold leading-tight">
           Search that{' '}
