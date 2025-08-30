@@ -1,15 +1,11 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+// eslint-disable-next-line import/no-unresolved
+import Spline from '@splinetool/react-spline/next';
 
 interface SplineSceneProps {
   className?: string;
 }
-
-// eslint-disable-next-line import/no-unresolved
-const Spline = dynamic(() => import('@splinetool/react-spline'), {
-  ssr: false,
-});
 
 export default function SplineScene({ className }: SplineSceneProps) {
   return (
