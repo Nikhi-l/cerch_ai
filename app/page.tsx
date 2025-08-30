@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { LandingGlobe } from '@/components/landing-globe';
+import { ParticlesBackground } from '@/components/particles-background';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -29,17 +30,18 @@ const useCases = [
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-12 p-4 text-center">
+    <main className="relative flex h-screen flex-col items-center justify-center overflow-hidden p-4 text-center">
+      <ParticlesBackground />
       <LandingGlobe />
       <motion.h1
-        className="text-5xl font-bold"
+        className="mt-4 text-4xl font-bold md:text-5xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
         Cerch AI
       </motion.h1>
-      <div className="grid w-full max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="mt-4 flex w-full max-w-4xl flex-col items-center gap-4 md:flex-row md:justify-center">
         {useCases.map((c) => (
           <motion.div
             key={c.title}
@@ -47,7 +49,7 @@ export default function Page() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Card>
+            <Card className="w-64">
               <CardHeader>
                 <CardTitle>{c.title}</CardTitle>
               </CardHeader>
@@ -58,7 +60,7 @@ export default function Page() {
           </motion.div>
         ))}
       </div>
-      <Link href="/chat">
+      <Link href="/chat" className="mt-6">
         <Button size="lg">Try Demo</Button>
       </Link>
     </main>

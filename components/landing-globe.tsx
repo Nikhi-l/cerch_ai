@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+// eslint-disable-next-line import/no-unresolved
 import createGlobe from 'cobe';
 
 export function LandingGlobe() {
@@ -42,9 +43,9 @@ export function LandingGlobe() {
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: 500, height: 500 }}
-      width={1000}
-      height={1000}
+      style={{ width: 320, height: 320 }}
+      width={640}
+      height={640}
     />
   );
 }
