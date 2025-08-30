@@ -1,14 +1,30 @@
 import Link from 'next/link';
-import Spline from '@splinetool/react-spline/next';
+import dynamic from 'next/dynamic';
+
 import { Button } from '@/components/ui/button';
+
+/* eslint-disable-next-line import/no-unresolved */
+const Spline = dynamic(() => import('@splinetool/react-spline'), {
+  ssr: false,
+});
 
 export default function Home() {
   return (
-    <main className="relative h-screen w-screen">
-      <Spline scene="https://prod.spline.design/DS0UgrDOifhNt9T6/scene.splinecode" />
-      <div className="absolute top-4 right-4">
+    <main className="relative h-screen w-screen overflow-hidden bg-background text-foreground">
+      <Spline scene="https://prod.spline.design/DS0UgrDOifhNt9T6/scene.splinecode" className="absolute inset-0" />
+      <div className="absolute left-16 top-1/4 max-w-xl space-y-6">
+        <h1 className="text-5xl font-bold leading-tight">
+          Search that{' '}
+          <span className="text-primary">feels like a conversation</span>
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Autonomous agents entity fit, dedupe, enrich contacts, and score leads—so you get data you can actually
+          use.
+        </p>
         <Link href="/chat">
-          <Button>Try Demo</Button>
+          <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/80">
+            Try Demo
+          </Button>
         </Link>
       </div>
     </main>

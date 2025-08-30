@@ -18,40 +18,40 @@
 
 @layer base {
     :root {
-        /* Palette extracted from public/images/mouth of the seine, monet.jpg */
-        --background: 60 12% 77%;
-        --foreground: 38 34% 15%;
-        --card: 60 12% 77%;
-        --card-foreground: 38 34% 15%;
-        --popover: 60 12% 77%;
-        --popover-foreground: 38 34% 15%;
-        --primary: 209 29% 61%;
-        --primary-foreground: 0 0% 100%;
-        --secondary: 41 43% 45%;
+        /* Dark green palette */
+        --background: 0 0% 2%;
+        --foreground: 170 12% 72%;
+        --card: 199 67% 8%;
+        --card-foreground: 170 12% 72%;
+        --popover: 199 67% 8%;
+        --popover-foreground: 170 12% 72%;
+        --primary: 180 84% 10%;
+        --primary-foreground: 170 12% 72%;
+        --secondary: 178 75% 34%;
         --secondary-foreground: 0 0% 100%;
-        --muted: 60 12% 84%;
-        --muted-foreground: 38 34% 30%;
-        --accent: 33 46% 30%;
+        --muted: 0 0% 17%;
+        --muted-foreground: 170 12% 72%;
+        --accent: 185 89% 28%;
         --accent-foreground: 0 0% 100%;
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
-        --border: 38 34% 80%;
-        --input: 38 34% 80%;
-        --ring: 209 29% 61%;
-        --chart-1: 209 29% 61%;
-        --chart-2: 41 43% 45%;
-        --chart-3: 33 46% 30%;
-        --chart-4: 60 12% 77%;
-        --chart-5: 38 34% 15%;
+        --border: 180 5% 37%;
+        --input: 180 5% 37%;
+        --ring: 178 75% 34%;
+        --chart-1: 178 75% 34%;
+        --chart-2: 174 86% 20%;
+        --chart-3: 185 89% 28%;
+        --chart-4: 188 89% 14%;
+        --chart-5: 170 12% 72%;
         --radius: 0.5rem;
-        --sidebar-background: 60 12% 77%;
-        --sidebar-foreground: 38 34% 15%;
-        --sidebar-primary: 209 29% 61%;
+        --sidebar-background: 0 0% 2%;
+        --sidebar-foreground: 170 12% 72%;
+        --sidebar-primary: 178 75% 34%;
         --sidebar-primary-foreground: 0 0% 100%;
-        --sidebar-accent: 41 43% 45%;
+        --sidebar-accent: 174 86% 20%;
         --sidebar-accent-foreground: 0 0% 100%;
-        --sidebar-border: 38 34% 80%;
-        --sidebar-ring: 209 29% 61%;
+        --sidebar-border: 180 5% 37%;
+        --sidebar-ring: 178 75% 34%;
     }
 }
 
