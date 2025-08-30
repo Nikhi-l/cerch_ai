@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import EarthSpline from '@/components/EarthSpline';
+import CobeGlobe from '@/components/CobeGlobe';
 import { Brain, Building2, Users } from 'lucide-react';
 
 const features = [
@@ -29,7 +29,7 @@ const features = [
 export default function Page() {
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center gap-16 overflow-hidden p-6 text-center">
-      <EarthSpline />
+      <CobeGlobe />
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
