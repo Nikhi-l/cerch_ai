@@ -51,6 +51,17 @@
         --sidebar-accent-foreground: 222 47% 11%;
         --sidebar-border: 214 32% 91%;
         --sidebar-ring: 221 83% 53%;
+
+        --black: #040404;
+        --tower-gray: #aec0bd;
+        --mountain-meadow: #169994;
+        --deep-sea-green: #076057;
+        --tiber: #042d2d;
+        --corduroy: #5b6464;
+        --mine-shaft: #2c2c2c;
+        --blue-chill: #087a85;
+        --blue-whale: #043b44;
+        --black-pearl: #071b24;
     }
 }
 
@@ -120,5 +131,9 @@
 }
 
 .suggestion-highlight {
-    @apply bg-blue-200 hover:bg-blue-300;
+    @apply text-white;
+    background-color: var(--deep-sea-green);
+}
+.suggestion-highlight:hover {
+    background-color: var(--mountain-meadow);
 }
