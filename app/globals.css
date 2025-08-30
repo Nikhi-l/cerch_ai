@@ -6,6 +6,16 @@
     --foreground-rgb: 0, 0, 0;
     --background-start-rgb: 214, 219, 220;
     --background-end-rgb: 255, 255, 255;
+    --black: #040404;
+    --tower-gray: #aec0bd;
+    --mountain-meadow: #169994;
+    --deep-sea-green: #076057;
+    --tiber: #042d2d;
+    --corduroy: #5b6464;
+    --mine-shaft: #2c2c2c;
+    --blue-chill: #087a85;
+    --blue-whale: #043b44;
+    --black-pearl: #071b24;
 }
 
 /* Light-only: remove dark scheme overrides */
@@ -120,5 +130,9 @@
 }
 
 .suggestion-highlight {
-    @apply bg-blue-200 hover:bg-blue-300;
+    background-color: rgba(7, 96, 87, 0.2);
+}
+
+.suggestion-highlight:hover {
+    background-color: rgba(7, 96, 87, 0.3);
 }

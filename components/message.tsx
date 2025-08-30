@@ -52,7 +52,7 @@ const PurePreviewMessage = ({
       >
         <div
           className={cn(
-            'flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl',
+            'flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:bg-[var(--deep-sea-green)] group-data-[role=user]/message:text-white group-data-[role=user]/message:rounded-xl group-data-[role=user]/message:p-3',
             {
               'w-full': mode === 'edit',
               'group-data-[role=user]/message:w-fit': mode !== 'edit',
@@ -266,7 +266,7 @@ export const ThinkingMessage = () => {
         className={cx(
           'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
           {
-            'group-data-[role=user]/message:bg-muted': true,
+            'group-data-[role=user]/message:bg-[var(--deep-sea-green)] group-data-[role=user]/message:text-white': true,
           },
         )}
       >
