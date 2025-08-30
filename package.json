@@ -88,7 +88,8 @@
     "usehooks-ts": "^3.1.0",
     "zod": "^3.23.8",
     "@radix-ui/react-popover": "^1.1.2",
-    "openid-client": "^6.6.4"
+    "openid-client": "^6.6.4",
+    "@splinetool/react-spline": "^4.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

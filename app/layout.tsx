@@ -28,7 +28,7 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
 });
 
-const LIGHT_THEME_COLOR = 'hsl(0 0% 100%)';
+const LIGHT_THEME_COLOR = 'hsl(0 0% 0%)';
 
 export default async function RootLayout({
   children,
