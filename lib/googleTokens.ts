@@ -18,7 +18,8 @@ export async function getFreshAccessToken(): Promise<FreshTokens> {
   const tokenSet = getTokenSet(sessionId);
 
   let accessToken = jar.get('gc_access_token')?.value || tokenSet?.access_token;
-  let refreshToken = jar.get('gc_refresh_token')?.value || tokenSet?.refresh_token;
+  let refreshToken =
+    jar.get('gc_refresh_token')?.value || tokenSet?.refresh_token;
   const expiresAtStr =
     jar.get('gc_expires_at')?.value ||
     (tokenSet?.expires_at != null ? String(tokenSet.expires_at) : undefined);
@@ -26,16 +27,20 @@ export async function getFreshAccessToken(): Promise<FreshTokens> {
 
   const now = Date.now();
   const isExpiringSoon = expiresAt != null && now > expiresAt - EXPIRY_SKEW_MS;
-  const shouldRefresh = Boolean(refreshToken && (!accessToken || isExpiringSoon));
+  const shouldRefresh = Boolean(
+    refreshToken && (!accessToken || isExpiringSoon),
+  );
 
-  if (shouldRefresh) {
+  if (shouldRefresh && refreshToken) {
     try {
       const config = await getGoogleClient();
-      const refreshed = await refreshTokenGrant(config, refreshToken!);
+      const refreshed = await refreshTokenGrant(config, refreshToken);
       accessToken = refreshed.access_token || accessToken;
       refreshToken = refreshed.refresh_token || refreshToken;
       expiresAt =
-        refreshed.expires_in != null ? now + refreshed.expires_in * 1000 : expiresAt;
+        refreshed.expires_in != null
+          ? now + refreshed.expires_in * 1000
+          : expiresAt;
 
       // Persist refreshed tokens
       const cookieOptions = {
@@ -46,7 +51,8 @@ export async function getFreshAccessToken(): Promise<FreshTokens> {
         maxAge: 60 * 60 * 24 * 7,
       };
       if (accessToken) jar.set('gc_access_token', accessToken, cookieOptions);
-      if (refreshToken) jar.set('gc_refresh_token', refreshToken, cookieOptions);
+      if (refreshToken)
+        jar.set('gc_refresh_token', refreshToken, cookieOptions);
       if (expiresAt) jar.set('gc_expires_at', String(expiresAt), cookieOptions);
       if (sessionId) {
         const existing = tokenSet || {};
@@ -64,4 +70,3 @@ export async function getFreshAccessToken(): Promise<FreshTokens> {
 
   return { accessToken, refreshToken, expiresAt };
 }
-
