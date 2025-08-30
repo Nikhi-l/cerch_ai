@@ -25,6 +25,8 @@ import { useArtifact } from '@/hooks/use-artifact';
 import { imageArtifact } from '@/artifacts/image/client';
 import { codeArtifact } from '@/artifacts/code/client';
 import { websetArtifact } from '@/artifacts/webset/client';
+import { peopleArtifact } from '@/artifacts/people/client';
+import { companyArtifact } from '@/artifacts/company/client';
 import { sheetArtifact } from '@/artifacts/sheet/client';
 import { textArtifact } from '@/artifacts/text/client';
 import equal from 'fast-deep-equal';
@@ -38,6 +40,8 @@ export const artifactDefinitions = [
   imageArtifact,
   sheetArtifact,
   websetArtifact,
+  peopleArtifact,
+  companyArtifact,
 ];
 export type ArtifactKind = (typeof artifactDefinitions)[number]['kind'];
 

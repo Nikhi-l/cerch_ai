@@ -35,33 +35,33 @@
       --card-foreground: 0 0% 2%;
       --popover: 0 0% 100%;
       --popover-foreground: 0 0% 2%;
-      --primary: 174 86% 20%;
+      --primary: 246 82% 60%;
       --primary-foreground: 0 0% 100%;
-      --secondary: 178 75% 34%;
+      --secondary: 243 52% 63%;
       --secondary-foreground: 0 0% 100%;
-      --muted: 170 13% 72%;
-      --muted-foreground: 0 0% 17%;
-      --accent: 185 89% 28%;
+      --muted: 240 16% 92%;
+      --muted-foreground: 0 0% 30%;
+      --accent: 243 52% 63%;
       --accent-foreground: 0 0% 100%;
       --destructive: 0 84.2% 60.2%;
       --destructive-foreground: 0 0% 98%;
-      --border: 170 13% 72%;
-      --input: 170 13% 72%;
-      --ring: 174 86% 20%;
-      --chart-1: 174 86% 20%;
-      --chart-2: 178 75% 34%;
-      --chart-3: 185 89% 28%;
-      --chart-4: 188 89% 14%;
+      --border: 240 16% 88%;
+      --input: 240 16% 88%;
+      --ring: 246 82% 60%;
+      --chart-1: 246 82% 60%;
+      --chart-2: 243 52% 63%;
+      --chart-3: 240 54% 67%;
+      --chart-4: 240 8% 15%;
       --chart-5: 199 67% 8%;
       --radius: 0.5rem;
       --sidebar-background: 0 0% 100%;
-      --sidebar-foreground: 0 0% 2%;
-      --sidebar-primary: 174 86% 20%;
+      --sidebar-foreground: 0 0% 9%;
+      --sidebar-primary: 246 82% 60%;
       --sidebar-primary-foreground: 0 0% 100%;
-      --sidebar-accent: 170 13% 72%;
-      --sidebar-accent-foreground: 0 0% 2%;
-      --sidebar-border: 170 13% 72%;
-      --sidebar-ring: 174 86% 20%;
+      --sidebar-accent: 240 16% 92%;
+      --sidebar-accent-foreground: 0 0% 30%;
+      --sidebar-border: 240 16% 88%;
+      --sidebar-ring: 246 82% 60%;
     }
 }
 
@@ -132,4 +132,56 @@
 
 .suggestion-highlight {
     @apply bg-blue-200 hover:bg-blue-300;
+}
+
+/* Chat-only theme using provided purple palette */
+@layer base {
+  .chat-theme {
+    /* Keep background white */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%; /* #050505 */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+
+    /* Purples from palette */
+    --primary: 243 52% 63%; /* #736ED1 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 246 82% 60%; /* #5644ED */
+    --secondary-foreground: 0 0% 100%;
+    --accent: 240 54% 67%; /* #7c7cd8 */
+    --accent-foreground: 0 0% 100%;
+
+    /* Muted surface + text */
+    --muted: 242 42% 92%; /* light cold-purple */
+    --muted-foreground: 0 0% 24%; /* #3c3c3c */
+
+    /* Borders/inputs slightly tinted */
+    --border: 242 25% 85%;
+    --input: 242 25% 85%;
+    --ring: 243 52% 63%;
+
+    /* Charts (optional, keep within the palette) */
+    --chart-1: 243 52% 63%;
+    --chart-2: 245 62% 68%;
+    --chart-3: 240 54% 67%;
+    --chart-4: 260 30% 35%; /* #2c275a approx */
+    --chart-5: 240 8% 15%;  /* #14132b approx */
+
+    /* Sidebar theme aligned with chat */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 243 52% 63%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 242 25% 92%;
+    --sidebar-accent-foreground: 0 0% 24%;
+    --sidebar-border: 242 25% 85%;
+    --sidebar-ring: 243 52% 63%;
+
+    /* Bubbles */
+    --assistant-bubble: #736ED1; /* medium-slate-blue (unused now) */
+    --user-bubble: #5644ED; /* majorelle-blue for user bubble */
+    --bubble-text: #171717; /* eerie black */
+  }
 }

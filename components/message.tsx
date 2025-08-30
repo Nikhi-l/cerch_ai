@@ -53,8 +53,6 @@ const PurePreviewMessage = ({
         <div
           className={cn(
             'flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl',
-            'group-data-[role=user]/message:bg-[var(--deep-sea-green)] group-data-[role=user]/message:text-white',
-            'group-data-[role=user]/message:px-3 group-data-[role=user]/message:py-2 group-data-[role=user]/message:rounded-xl',
             {
               'w-full': mode === 'edit',
               'group-data-[role=user]/message:w-fit': mode !== 'edit',
@@ -128,8 +126,10 @@ const PurePreviewMessage = ({
                       <div
                         data-testid="message-content"
                         className={cn('flex flex-col gap-4', {
-                          'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
+                          'bg-[var(--user-bubble)] text-white px-3 py-2 rounded-xl':
                             message.role === 'user',
+                          'bg-white text-foreground px-3 py-2 rounded-xl':
+                            message.role === 'assistant',
                         })}
                       >
                         <Markdown>{sanitizeText(part.text)}</Markdown>
@@ -264,19 +264,12 @@ export const ThinkingMessage = () => {
       animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
       data-role={role}
     >
-      <div
-        className={cx(
-          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
-          {
-            'group-data-[role=user]/message:bg-[var(--deep-sea-green)] group-data-[role=user]/message:text-white': true,
-          },
-        )}
-      >
+      <div className={cx('flex gap-4 w-full rounded-xl')}>
         <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
           <SparklesIcon size={14} />
         </div>
 
-        <div className="flex flex-col gap-2 w-full">
+        <div className="flex flex-col gap-2 w-full bg-white text-foreground px-3 py-2 rounded-xl">
           <div className="flex flex-col gap-4 text-muted-foreground">
             Hmm...
           </div>

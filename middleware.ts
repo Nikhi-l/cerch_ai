@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { guestRegex, isDevelopmentEnvironment } from './lib/constants';
+import { isDevelopmentEnvironment } from './lib/constants';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   /*
-   * Playwright starts the dev server and requires a 200 status to
+   * Playwright starts the dev server && requires a 200 status to
    * begin the tests, so this ensures that the tests can start
    */
   if (pathname.startsWith('/ping')) {
@@ -23,18 +23,21 @@ export async function middleware(request: NextRequest) {
     secureCookie: !isDevelopmentEnvironment,
   });
 
-  if (!token) {
-    const redirectUrl = encodeURIComponent(request.url);
-
-    return NextResponse.redirect(
-      new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url),
-    );
+  // Block any legacy guest sessions (email like guest-<ts>)
+  if (token && typeof (token as any).email === 'string' && /^guest-\d+$/.test((token as any).email as string)) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  const isGuest = guestRegex.test(token?.email ?? '');
+  if (!token) {
+    // Allow public access to home, login, && register without forcing guest auth
+    if (['/', '/login', '/register'].includes(pathname)) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
-  if (token && !isGuest && ['/login', '/register'].includes(pathname)) {
-    return NextResponse.redirect(new URL('/', request.url));
+  if (token && ['/login', '/register'].includes(pathname)) {
+    return NextResponse.redirect(new URL('/chat', request.url));
   }
 
   return NextResponse.next();

@@ -1,6 +1,8 @@
 import { codeDocumentHandler } from '@/artifacts/code/server';
 import { imageDocumentHandler } from '@/artifacts/image/server';
 import { websetDocumentHandler } from '@/artifacts/webset/server';
+import { peopleDocumentHandler } from '@/artifacts/people/server';
+import { companyDocumentHandler } from '@/artifacts/company/server';
 import { sheetDocumentHandler } from '@/artifacts/sheet/server';
 import { textDocumentHandler } from '@/artifacts/text/server';
 import type { ArtifactKind } from '@/components/artifact';
@@ -100,6 +102,16 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   imageDocumentHandler,
   sheetDocumentHandler,
   websetDocumentHandler,
+  peopleDocumentHandler,
+  companyDocumentHandler,
 ];
 
-export const artifactKinds = ['text', 'code', 'image', 'sheet', 'webset'] as const;
+export const artifactKinds = [
+  'text',
+  'code',
+  'image',
+  'sheet',
+  'webset',
+  'people',
+  'company',
+] as const;

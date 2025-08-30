@@ -26,7 +26,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
     <Sidebar className="group-data-[side=left]:border-r-0">
       <SidebarHeader>
         <SidebarMenu>
-          <div className="flex flex-row justify-between items-center">
+          <div className="flex flex-row items-center gap-2">
             <Link
               href="/"
               onClick={() => {
@@ -38,23 +38,26 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                 Cerch Ai
               </span>
             </Link>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  className="p-2 h-fit"
-                  onClick={() => {
-                    setOpenMobile(false);
-                    router.push('/');
-                    router.refresh();
-                  }}
-                >
-                  <PlusIcon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent align="end">New Chat</TooltipContent>
-            </Tooltip>
+
+            <div className="ml-auto flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    className="p-2 h-fit"
+                    onClick={() => {
+                      setOpenMobile(false);
+                      router.push('/chat');
+                      router.refresh();
+                    }}
+                  >
+                    <PlusIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent align="end">New Chat</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </SidebarMenu>
       </SidebarHeader>

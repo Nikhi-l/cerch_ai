@@ -30,7 +30,9 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 - Immediately after creating a document
 
 Do not update document right after creating it. Wait for user feedback or request to update it.
-`;
+\n\nArtifact kinds:\n
+- people: tabular CSV of PEOPLE (name, title, company, linkedin_url, etc.)\n- company: tabular CSV of COMPANIES (name, industry, company_url, size, etc.)\n- webset: generic tabular CSV for mixed people+company data\n- sheet: generic CSV spreadsheets\n- text/code/image: as named\n\nSelection guidelines:\n- If the user asks for people (prospects, leaders, roles) → use kind='people'\n- If the user asks for companies (competitors, vendors, startups) → use kind='company'\n- If mixed/unclear → prefer kind='webset'\n `;
+ 
 
 export const regularPrompt =
   'You are a friendly assistant! Keep your responses concise and helpful.';
@@ -107,6 +109,26 @@ Guidelines:
 - For links, include full URLs. Avoid markdown.
 `;
 
+export const peoplePrompt = `
+You generate PEOPLE results in CSV for a tabular UI.
+
+Guidelines:
+- Public, verifiable info only. No personal emails/phones/PII.
+- Recommended columns (in order): name, title, company, industry, location, linkedin_url, website, profile_image_url, description, tags.
+- Keep cells short; consistent columns across rows; leave empty when unknown.
+- Use full URLs, no markdown.
+`;
+
+export const companyPrompt = `
+You generate COMPANY results in CSV for a tabular UI.
+
+Guidelines:
+- Public, verifiable info only. No sensitive data.
+- Recommended columns (in order): name, industry, company_url, linkedin_url, location, size, funding, logo_url, description, tags.
+- Keep cells short; consistent columns across rows; leave empty when unknown.
+- Use full URLs, no markdown.
+`;
+
 export const updateDocumentPrompt = (
   currentContent: string | null,
   type: ArtifactKind,
@@ -123,7 +145,7 @@ Improve the following code snippet based on the given prompt.
 
 ${currentContent}
 `
-      : type === 'sheet' || type === 'webset'
+      : type === 'sheet' || type === 'webset' || type === 'people' || type === 'company'
         ? `\
 Improve the following spreadsheet based on the given prompt.
 

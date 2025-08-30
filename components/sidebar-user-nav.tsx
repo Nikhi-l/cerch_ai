@@ -19,14 +19,13 @@ import {
 import { useRouter } from 'next/navigation';
 import { toast } from './toast';
 import { LoaderIcon } from './icons';
-import { guestRegex } from '@/lib/constants';
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
   const { data, status } = useSession();
   // Light-only theme: hide theme toggle
 
-  const isGuest = guestRegex.test(data?.user?.email ?? '');
+  const isGuest = false;
 
   return (
     <SidebarMenu>
@@ -57,9 +56,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                   height={24}
                   className="rounded-full"
                 />
-                <span data-testid="user-email" className="truncate">
-                  {isGuest ? 'Guest' : user?.email}
-                </span>
+                <span data-testid="user-email" className="truncate">{user?.email ?? 'User'}</span>
                 <ChevronUp className="ml-auto" />
               </SidebarMenuButton>
             )}
@@ -85,16 +82,10 @@ export function SidebarUserNav({ user }: { user: User }) {
                     return;
                   }
 
-                  if (isGuest) {
-                    router.push('/login');
-                  } else {
-                    signOut({
-                      redirectTo: '/',
-                    });
-                  }
+                  signOut({ redirectTo: '/' });
                 }}
               >
-                {isGuest ? 'Login to your account' : 'Sign out'}
+                Sign out
               </button>
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -9,7 +9,7 @@ import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
 
 import { login, type LoginActionState } from '../actions';
-import { useSession } from 'next-auth/react';
+// no session polling needed here
 
 export default function Page() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function Page() {
     },
   );
 
-  const { update: updateSession } = useSession();
+  // avoid useSession to prevent session polling loops on login page
 
   useEffect(() => {
     if (state.status === 'failed') {
@@ -39,10 +39,11 @@ export default function Page() {
       });
     } else if (state.status === 'success') {
       setIsSuccessful(true);
-      updateSession();
-      router.refresh();
+      // Navigate immediately; cookies are set by the server action response
+      // and middleware will allow /chat now.
+      router.replace('/chat');
     }
-  }, [state.status, updateSession, router]);
+  }, [state.status, router]);
 
   const handleSubmit = (formData: FormData) => {
     setEmail(formData.get('email') as string);

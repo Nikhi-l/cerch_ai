@@ -19,27 +19,28 @@ function PureSuggestedActions({
 }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'Show a webset',
-      label: 'of top tech companies',
-      action: 'Show a webset of top tech companies with columns: name, industry, website, size, description.',
+      title: 'Find CTOs',
+      label: 'at fintech companies in SF Bay Area',
+      action:
+        "Create a people artifact of CTOs at fintech companies in the San Francisco Bay Area. Columns: name, title, company, region, linkedin_url, profile_image_url.",
     },
     {
-      title: 'Create a webset',
-      label: 'of product leaders',
+      title: 'Product leaders',
+      label: 'who recently changed jobs (NYC)',
       action:
-        'Create a people webset of product leaders at fintech companies with columns: name, title, company, linkedin_url, location.',
+        "Create a people artifact of product managers who started their current role after 2023-01-01 in New York City. Columns: name, title, company, region, linkedin_url.",
     },
     {
-      title: 'Find engineers',
-      label: 'in San Francisco',
+      title: 'B2B SaaS companies',
+      label: 'USA • 50–500 headcount • >2015',
       action:
-        'Create a people webset of software engineers in San Francisco with columns: name, title, company, linkedin_url.',
+        "Create a company artifact of B2B SaaS companies in the USA with LinkedIn headcount between 50 and 500, founded after 2015-01-01. Columns: name, industry, company_url, linkedin_url, size, year_founded, description.",
     },
     {
-      title: 'List startups',
-      label: 'in AI tooling',
+      title: 'AI tooling startups',
+      label: 'California • <100 headcount',
       action:
-        'Show a webset of AI tooling startups with columns: name, website, industry, funding, description.',
+        "Create a company artifact of AI tooling startups in California with LinkedIn headcount under 100. Columns: name, company_url, linkedin_url, size, funding, description.",
     },
   ];
 
