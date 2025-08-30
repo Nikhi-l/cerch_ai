@@ -1,16 +1,16 @@
-"use client";
-import { parse, unparse } from "papaparse";
-import { useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
+'use client';
+import { parse, unparse } from 'papaparse';
+import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react';
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -18,13 +18,24 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { ChevronDown, Download, Filter, Maximize2, Plus, SlidersHorizontal, Zap, Eye, EyeOff, Search } from "lucide-react";
+} from '@/components/ui/tooltip';
+import {
+  ChevronDown,
+  Download,
+  Filter,
+  Maximize2,
+  Plus,
+  SlidersHorizontal,
+  Zap,
+  Eye,
+  EyeOff,
+  Search,
+} from 'lucide-react';
 
 interface WebsetTableProps {
   csv: string;
@@ -32,7 +43,7 @@ interface WebsetTableProps {
 
 export function WebsetTable({ csv }: WebsetTableProps) {
   const { headers, rows } = useMemo(() => {
-    const parsed = parse<string[]>(csv || "", { skipEmptyLines: true });
+    const parsed = parse<string[]>(csv || '', { skipEmptyLines: true });
     const data = parsed.data as string[][];
     const headers = data.length > 0 ? data[0] : [];
     const rows = data.length > 1 ? data.slice(1) : [];
@@ -41,11 +52,12 @@ export function WebsetTable({ csv }: WebsetTableProps) {
 
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortedColumn, setSortedColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [columnWidths, setColumnWidths] =
-    useState<Record<string, number>>({});
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({});
-  const [q, setQ] = useState("");
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [q, setQ] = useState('');
 
   const startResizing = (header: string) => (e: ReactMouseEvent) => {
     e.preventDefault();
@@ -56,11 +68,11 @@ export function WebsetTable({ csv }: WebsetTableProps) {
       setColumnWidths((w) => ({ ...w, [header]: newWidth }));
     };
     const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
     };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   };
 
   const filteredRows = useMemo(() => {
@@ -69,7 +81,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
         if (visibleColumns[header] === false) return true;
         const filter = filters[header];
         if (!filter) return true;
-        const cell = row[idx] || "";
+        const cell = row[idx] || '';
         const numeric = /^\d+(?:\.\d+)?$/.test(cell);
         if (numeric && /^\d+(?:\.\d+)?$/.test(filter)) {
           return Number(cell) >= Number(filter);
@@ -84,7 +96,9 @@ export function WebsetTable({ csv }: WebsetTableProps) {
     if (!term) return filteredRows;
     return filteredRows.filter((row) =>
       row.some((c, idx) =>
-        (visibleColumns[headers[idx]] !== false ? c.toLowerCase().includes(term) : false),
+        visibleColumns[headers[idx]] !== false
+          ? c.toLowerCase().includes(term)
+          : false,
       ),
     );
   }, [filteredRows, q, headers, visibleColumns]);
@@ -94,14 +108,14 @@ export function WebsetTable({ csv }: WebsetTableProps) {
     const idx = headers.indexOf(sortedColumn);
     if (idx === -1) return searchedRows;
     const sorted = [...searchedRows].sort((a, b) => {
-      const av = a[idx] || "";
-      const bv = b[idx] || "";
+      const av = a[idx] || '';
+      const bv = b[idx] || '';
       const aNum = Number.parseFloat(av);
       const bNum = Number.parseFloat(bv);
       if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
-        return sortDirection === "asc" ? aNum - bNum : bNum - aNum;
+        return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
       }
-      return sortDirection === "asc"
+      return sortDirection === 'asc'
         ? av.localeCompare(bv)
         : bv.localeCompare(av);
     });
@@ -121,7 +135,10 @@ export function WebsetTable({ csv }: WebsetTableProps) {
     [headers],
   );
   const imageIdx = useMemo(
-    () => headers.findIndex((h) => /(profile_)?image|avatar|photo|picture|profile_image_url/i.test(h)),
+    () =>
+      headers.findIndex((h) =>
+        /(profile_)?image|avatar|photo|picture|profile_image_url/i.test(h),
+      ),
     [headers],
   );
 
@@ -140,120 +157,130 @@ export function WebsetTable({ csv }: WebsetTableProps) {
           </div>
         </div>
         <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1">
-                <Filter className="h-4 w-4" />
-                <span>Filter</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="p-2 space-y-2">
-              {headers.map((header) => (
-                <div key={header} className="flex items-center gap-2">
-                  <span className="w-32 text-xs">{header}</span>
-                  <input
-                    className="flex-1 rounded border px-2 py-1 text-xs"
-                    placeholder="Filter"
-                    value={filters[header] || ""}
-                    onChange={(e) =>
-                      setFilters({ ...filters, [header]: e.target.value })
-                    }
-                  />
-                </div>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1">
-                <Eye className="h-4 w-4" />
-                <span>Columns</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="p-2 space-y-1">
-              {headers.map((header) => {
-                const visible = visibleColumns[header] !== false;
-                return (
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 gap-1">
+                  <Filter className="h-4 w-4" />
+                  <span>Filter</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="p-2 space-y-2">
+                {headers.map((header) => (
+                  <div key={header} className="flex items-center gap-2">
+                    <span className="w-32 text-xs">{header}</span>
+                    <input
+                      className="flex-1 rounded border px-2 py-1 text-xs"
+                      placeholder="Filter"
+                      value={filters[header] || ''}
+                      onChange={(e) =>
+                        setFilters({ ...filters, [header]: e.target.value })
+                      }
+                    />
+                  </div>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 gap-1">
+                  <Eye className="h-4 w-4" />
+                  <span>Columns</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="p-2 space-y-1">
+                {headers.map((header) => {
+                  const visible = visibleColumns[header] !== false;
+                  return (
+                    <DropdownMenuItem
+                      key={header}
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        setVisibleColumns((v) => ({
+                          ...v,
+                          [header]: !visible,
+                        }));
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      {visible ? (
+                        <Eye className="h-3.5 w-3.5" />
+                      ) : (
+                        <EyeOff className="h-3.5 w-3.5" />
+                      )}
+                      <span className="text-xs">{header}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 gap-1">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span>Sort</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {headers.map((header) => (
                   <DropdownMenuItem
                     key={header}
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setVisibleColumns((v) => ({ ...v, [header]: !visible }));
-                    }}
-                    className="flex items-center gap-2"
+                    onSelect={() => setSortedColumn(header)}
                   >
-                    {visible ? (
-                      <Eye className="h-3.5 w-3.5" />
-                    ) : (
-                      <EyeOff className="h-3.5 w-3.5" />
-                    )}
-                    <span className="text-xs">{header}</span>
+                    {header}
                   </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1">
-                <SlidersHorizontal className="h-4 w-4" />
-                <span>Sort</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {headers.map((header) => (
+                ))}
                 <DropdownMenuItem
-                  key={header}
-                  onSelect={() => setSortedColumn(header)}
+                  onSelect={() =>
+                    setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
+                  }
                 >
-                  {header}
+                  Direction:{' '}
+                  {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
                 </DropdownMenuItem>
-              ))}
-              <DropdownMenuItem
-                onSelect={() =>
-                  setSortDirection((d) => (d === "asc" ? "desc" : "asc"))
-                }
-              >
-                Direction: {sortDirection === "asc" ? "Ascending" : "Descending"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1">
-                <span>Actions</span>
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onSelect={() => {
-                  const filteredHeaders = headers.filter((h) => visibleColumns[h] !== false);
-                  const dataRows = sortedRows.map((r) => r.filter((_, i) => visibleColumns[headers[i]] !== false));
-                  const csvOut = unparse([filteredHeaders, ...dataRows]);
-                  const blob = new Blob([csvOut], { type: 'text/csv;charset=utf-8;' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'webset.csv';
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-              >
-                <Download className="h-3.5 w-3.5 mr-2" /> Export CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem>Share</DropdownMenuItem>
-              <DropdownMenuItem>Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button size="sm" className="h-8 gap-1">
-            <Zap className="h-4 w-4" />
-            <span>Add Enrichment</span>
-          </Button>
-        </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 gap-1">
+                  <span>Actions</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onSelect={() => {
+                    const filteredHeaders = headers.filter(
+                      (h) => visibleColumns[h] !== false,
+                    );
+                    const dataRows = sortedRows.map((r) =>
+                      r.filter((_, i) => visibleColumns[headers[i]] !== false),
+                    );
+                    const csvOut = unparse([filteredHeaders, ...dataRows]);
+                    const blob = new Blob([csvOut], {
+                      type: 'text/csv;charset=utf-8;',
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'webset.csv';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5 mr-2" /> Export CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem>Share</DropdownMenuItem>
+                <DropdownMenuItem>Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="sm" className="h-8 gap-1">
+              <Zap className="h-4 w-4" />
+              <span>Add Enrichment</span>
+            </Button>
+          </div>
         </div>
       </div>
       <div className="overflow-auto">
@@ -269,13 +296,20 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                   style={{ width: columnWidths[header] ?? 150 }}
                   className="px-4 py-2 font-bold border-r border-b border-border bg-muted sticky top-0 z-10"
                 >
-                  <div className="flex items-center justify-between gap-2 cursor-pointer select-none" onClick={() => {
-                    if (sortedColumn === header) setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-                    else setSortedColumn(header);
-                  }}>
+                  <button
+                    type="button"
+                    className="flex items-center justify-between gap-2 cursor-pointer select-none"
+                    onClick={() => {
+                      if (sortedColumn === header)
+                        setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+                      else setSortedColumn(header);
+                    }}
+                  >
                     <span className="text-xs font-bold">
                       {visibleColumns[header] === false ? (
-                        <span className="line-through opacity-50">{header}</span>
+                        <span className="line-through opacity-50">
+                          {header}
+                        </span>
                       ) : (
                         header
                       )}
@@ -286,7 +320,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                       className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none"
                       onMouseDown={startResizing(header)}
                     />
-                  </div>
+                  </button>
                 </TableHead>
               ))}
               <TableHead className="w-10 px-4 py-2 border-b border-border">
@@ -297,21 +331,23 @@ export function WebsetTable({ csv }: WebsetTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-              {sortedRows.map((row, rowIdx) => (
-                <TableRow key={row.join("|") || rowIdx} className="border-border">
+            {sortedRows.map((row, rowIdx) => (
+              <TableRow key={row.join('|') || rowIdx} className="border-border">
                 <TableCell className="sticky left-0 bg-white z-10 text-center text-sm text-muted-foreground px-4 py-2 border-r border-border">
                   {rowIdx + 1}
                 </TableCell>
                 {row.map((cell, cellIdx) => {
-                  const header = headers[cellIdx] || "";
+                  const header = headers[cellIdx] || '';
                   if (visibleColumns[header] === false) return null;
                   const isValidator = header
                     .toLowerCase()
-                    .includes("direct competitor");
-                  const isUrl = header.toLowerCase().includes("url");
-                  const isLogo = header.toLowerCase().match(/image|avatar|logo/);
+                    .includes('direct competitor');
+                  const isUrl = header.toLowerCase().includes('url');
+                  const isLogo = header
+                    .toLowerCase()
+                    .match(/image|avatar|logo/);
                   const isName = cellIdx === nameIdx;
-                  const content = cell || "";
+                  const content = cell || '';
                   return (
                     <TableCell
                       key={`${headers[cellIdx] ?? cellIdx}-${content}`}
@@ -321,23 +357,38 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                       {isLogo ? (
                         content && (
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={content} alt={row[nameIdx] ?? ""} />
-                            <AvatarFallback>{row[nameIdx]?.[0] ?? ""}</AvatarFallback>
+                            <AvatarImage
+                              src={content}
+                              alt={row[nameIdx] ?? ''}
+                            />
+                            <AvatarFallback>
+                              {row[nameIdx]?.[0] ?? ''}
+                            </AvatarFallback>
                           </Avatar>
                         )
                       ) : isName ? (
                         <div className="flex items-center gap-2 min-w-0">
                           <Avatar className="h-8 w-8 bg-gray-100">
                             {imageIdx >= 0 && row[imageIdx] ? (
-                              <AvatarImage src={row[imageIdx]} alt={row[nameIdx] ?? ''} />
+                              <AvatarImage
+                                src={row[imageIdx]}
+                                alt={row[nameIdx] ?? ''}
+                              />
                             ) : null}
-                            <AvatarFallback>{(row[nameIdx]?.[0] ?? '').toUpperCase()}</AvatarFallback>
+                            <AvatarFallback>
+                              {(row[nameIdx]?.[0] ?? '').toUpperCase()}
+                            </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
-                            <div className="font-medium truncate">{content}</div>
+                            <div className="font-medium truncate">
+                              {content}
+                            </div>
                             {(titleIdx >= 0 || companyIdx >= 0) && (
                               <div className="text-xs text-muted-foreground truncate">
-                                {[titleIdx >= 0 ? row[titleIdx] : null, companyIdx >= 0 ? row[companyIdx] : null]
+                                {[
+                                  titleIdx >= 0 ? row[titleIdx] : null,
+                                  companyIdx >= 0 ? row[companyIdx] : null,
+                                ]
                                   .filter(Boolean)
                                   .join(' · ')}
                               </div>
@@ -345,9 +396,9 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                           </div>
                         </div>
                       ) : isValidator ? (
-                        content.toLowerCase() === "true" ||
-                        content.toLowerCase() === "match" ||
-                        content === "1" ? (
+                        content.toLowerCase() === 'true' ||
+                        content.toLowerCase() === 'match' ||
+                        content === '1' ? (
                           <Badge
                             className="h-6 px-3 rounded bg-green-500 text-white text-xs font-semibold"
                             aria-label="Validation status: match"
@@ -394,7 +445,9 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                     className="h-8 w-8"
                     onClick={() => {
                       // Try to open the most relevant profile URL if present
-                      const urlIdx = headers.findIndex((h) => /linkedin|website|company_url|url/i.test(h));
+                      const urlIdx = headers.findIndex((h) =>
+                        /linkedin|website|company_url|url/i.test(h),
+                      );
                       const link = urlIdx >= 0 ? row[urlIdx] : '';
                       if (link) window.open(link, '_blank');
                     }}

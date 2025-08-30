@@ -1,7 +1,7 @@
 'use client';
 
 import { startTransition, useMemo, useState } from 'react';
-import { saveOpenAIApiKeyAsCookie } from '@/app/(chat)/actions';
+import { saveOpenAIApiKeyAsCookie } from '@/app/chat/actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +26,10 @@ export function ApiKeyInput({
   const [value, setValue] = useState(apiKey);
   const [show, setShow] = useState(false);
 
-  const isLikelyKey = useMemo(() => /^(sk|rk|sess)-/.test(value.trim()), [value]);
+  const isLikelyKey = useMemo(
+    () => /^(sk|rk|sess)-/.test(value.trim()),
+    [value],
+  );
 
   const handleModeChange = (val: string) => {
     setMode(val);
@@ -100,8 +103,15 @@ export function ApiKeyInput({
         </div>
       )}
       {mode === 'custom' && (
-        <p className={cn('text-xs', isLikelyKey ? 'text-muted-foreground' : 'text-amber-600')}>
-          {isLikelyKey ? 'Looks like a valid key format.' : 'Tip: keys usually start with sk-'}
+        <p
+          className={cn(
+            'text-xs',
+            isLikelyKey ? 'text-muted-foreground' : 'text-amber-600',
+          )}
+        >
+          {isLikelyKey
+            ? 'Looks like a valid key format.'
+            : 'Tip: keys usually start with sk-'}
         </p>
       )}
     </div>

@@ -31,7 +31,7 @@ export default async function Page() {
           initialVisibilityType="private"
           isReadonly={false}
           session={session}
-           autoResume={false}
+          autoResume={false}
           initialApiKey={apiKeyFromCookie?.value ?? ''}
         />
         <DataStreamHandler id={id} />

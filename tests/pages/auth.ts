@@ -34,7 +34,7 @@ export class AuthPage {
 
   async logout(email: string, password: string) {
     await this.login(email, password);
-    await this.page.waitForURL('/');
+    await this.page.waitForURL('/chat');
 
     await this.openSidebar();
 
