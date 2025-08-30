@@ -269,10 +269,15 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                   style={{ width: columnWidths[header] ?? 150 }}
                   className="px-4 py-2 font-bold border-r border-b border-border bg-muted sticky top-0 z-10"
                 >
-                  <div className="flex items-center justify-between gap-2 cursor-pointer select-none" onClick={() => {
-                    if (sortedColumn === header) setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
-                    else setSortedColumn(header);
-                  }}>
+                  <button
+                    type="button"
+                    className="flex items-center justify-between gap-2 cursor-pointer select-none"
+                    onClick={() => {
+                      if (sortedColumn === header)
+                        setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
+                      else setSortedColumn(header);
+                    }}
+                  >
                     <span className="text-xs font-bold">
                       {visibleColumns[header] === false ? (
                         <span className="line-through opacity-50">{header}</span>
@@ -286,7 +291,7 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                       className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none"
                       onMouseDown={startResizing(header)}
                     />
-                  </div>
+                  </button>
                 </TableHead>
               ))}
               <TableHead className="w-10 px-4 py-2 border-b border-border">
