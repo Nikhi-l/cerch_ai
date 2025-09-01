@@ -24,6 +24,7 @@ import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { gmailQueryTool } from '@/lib/ai/tools/gmail';
+import { searchPeople } from '@/lib/ai/tools/search-people';
 import { isProductionEnvironment } from '@/lib/constants';
 import { getProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
@@ -169,6 +170,7 @@ export async function POST(request: Request) {
                   'updateDocument',
                   'requestSuggestions',
                   'gmailQuery',
+                  'searchPeople',
                 ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
@@ -182,6 +184,7 @@ export async function POST(request: Request) {
               apiKey,
             }),
             gmailQuery: gmailQueryTool({ apiKey }),
+            searchPeople,
           },
           onFinish: async ({ response }) => {
             if (session.user?.id) {
