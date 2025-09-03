@@ -7,6 +7,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
   kind: 'people',
   onCreateDocument: async ({ title, dataStream, apiKey }) => {
     const query = { q: title, limit: 50 };
+    console.log('[PeopleArtifact] create query', query);
     const result = await aggregatePeople(query, [crustPeopleProvider]);
 
     const headers = [
@@ -30,6 +31,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
   },
   onUpdateDocument: async ({ document, description, dataStream, apiKey }) => {
     const query = { q: description || document.title, limit: 50 };
+    console.log('[PeopleArtifact] update query', query);
     const result = await aggregatePeople(query, [crustPeopleProvider]);
 
     const headers = [

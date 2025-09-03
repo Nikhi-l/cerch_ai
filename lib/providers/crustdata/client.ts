@@ -11,8 +11,10 @@ import { normalizeCompanyRows, normalizePeopleRows } from '../normalize';
 const API_BASE = process.env.CRUSTDATA_API_BASE || 'https://api.crustdata.com';
 const CRUST_TOKEN =
   process.env.CRUSTDATA_API_TOKEN || process.env.CRUSTDATA_API || '';
-const PEOPLE_PATH = process.env.CRUSTDATA_PEOPLE_PATH || '/screener/persondb/search/';
-const COMPANY_DISCOVERY_PATH = process.env.CRUSTDATA_COMPANY_DISCOVERY_PATH || '/screener/screen/';
+const PEOPLE_PATH =
+  process.env.CRUSTDATA_PEOPLE_PATH || '/screener/persondb/search/';
+const COMPANY_DISCOVERY_PATH =
+  process.env.CRUSTDATA_COMPANY_DISCOVERY_PATH || '/screener/screen/';
 
 function buildParams(query: SearchQuery): string {
   const params = new URLSearchParams();
@@ -30,6 +32,7 @@ function buildParams(query: SearchQuery): string {
 
 async function crustFetch<T>(path: string): Promise<T> {
   const url = `${API_BASE}${path}`;
+  console.log('[CrustData] GET', url);
   const res = await fetch(url, {
     headers: {
       Authorization: `Token ${CRUST_TOKEN}`,
@@ -39,11 +42,13 @@ async function crustFetch<T>(path: string): Promise<T> {
   if (!res.ok) {
     throw new Error(`Crust Data request failed: ${res.status}`);
   }
+  console.log('[CrustData] GET status', res.status);
   return (await res.json()) as T;
 }
 
 async function crustPost<T>(path: string, body: any): Promise<T> {
   const url = `${API_BASE}${path}`;
+  console.log('[CrustData] POST', url, 'body', JSON.stringify(body));
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -56,6 +61,7 @@ async function crustPost<T>(path: string, body: any): Promise<T> {
   if (!res.ok) {
     throw new Error(`Crust Data request failed: ${res.status}`);
   }
+  console.log('[CrustData] POST status', res.status);
   return (await res.json()) as T;
 }
 
@@ -82,6 +88,7 @@ export async function getRemainingCredits(): Promise<number> {
 export const crustPeopleProvider: PeopleProvider = {
   async getPeople(query: SearchQuery): Promise<ProviderResult<Person>> {
     try {
+      console.log('[CrustData] getPeople query', query);
       const limit = query.limit ?? 50;
 
       // Build a basic OR search across common text fields if q is provided
@@ -101,24 +108,48 @@ export const crustPeopleProvider: PeopleProvider = {
           if (v === undefined || v === null || v === '') continue;
           switch (k) {
             case 'title':
-              filterConditions.push({ column: 'current_employers.title', type: '(.)', value: v });
+              filterConditions.push({
+                column: 'current_employers.title',
+                type: '(.)',
+                value: v,
+              });
               break;
             case 'company':
-              filterConditions.push({ column: 'current_employers.name', type: '(.)', value: v });
+              filterConditions.push({
+                column: 'current_employers.name',
+                type: '(.)',
+                value: v,
+              });
               break;
             case 'region':
             case 'location':
-              filterConditions.push({ column: 'region', type: '(.)', value: v });
+              filterConditions.push({
+                column: 'region',
+                type: '(.)',
+                value: v,
+              });
               break;
             case 'languages':
-              filterConditions.push({ column: 'languages', type: 'in', value: Array.isArray(v) ? v : [v] });
+              filterConditions.push({
+                column: 'languages',
+                type: 'in',
+                value: Array.isArray(v) ? v : [v],
+              });
               break;
             case 'min_connections':
-              filterConditions.push({ column: 'num_of_connections', type: '=>', value: v });
+              filterConditions.push({
+                column: 'num_of_connections',
+                type: '=>',
+                value: v,
+              });
               break;
             default:
               // Fallback to text match on headline
-              filterConditions.push({ column: 'headline', type: '(.)', value: v });
+              filterConditions.push({
+                column: 'headline',
+                type: '(.)',
+                value: v,
+              });
           }
         }
       }
@@ -127,16 +158,30 @@ export const crustPeopleProvider: PeopleProvider = {
         op: 'and',
         conditions: [
           ...(filterConditions.length ? filterConditions : []),
-          ...(qConditions.length ? [{ op: 'or', conditions: qConditions }] : []),
+          ...(qConditions.length
+            ? [{ op: 'or', conditions: qConditions }]
+            : []),
         ],
       };
 
+      console.log('[CrustData] getPeople payload', { filters, limit });
       const json = await crustPost<any>(PEOPLE_PATH, { filters, limit });
-      const rawRows = Array.isArray(json?.profiles) ? json.profiles : extractArray(json);
+      const rawRows = Array.isArray(json?.profiles)
+        ? json.profiles
+        : extractArray(json);
       const rows = normalizePeopleRows(rawRows);
-      return { rows, source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
-    } catch (_) {
-      return { rows: [], source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
+      return {
+        rows,
+        source: 'crustdata',
+        creditCost: { provider: 'crustdata', estimated: 0 },
+      };
+    } catch (err) {
+      console.error('[CrustData] getPeople error', err);
+      return {
+        rows: [],
+        source: 'crustdata',
+        creditCost: { provider: 'crustdata', estimated: 0 },
+      };
     }
   },
 };
@@ -152,20 +197,36 @@ export const crustCompanyProvider: CompanyProvider = {
           if (v === undefined || v === null || v === '') continue;
           switch (k) {
             case 'industry':
-              conditions.push({ column: 'taxonomy.linkedin_industries', type: '(.)', value: v });
+              conditions.push({
+                column: 'taxonomy.linkedin_industries',
+                type: '(.)',
+                value: v,
+              });
               break;
             case 'location':
             case 'hq':
-              conditions.push({ column: 'headquarters', type: '(.)', value: v });
+              conditions.push({
+                column: 'headquarters',
+                type: '(.)',
+                value: v,
+              });
               break;
             case 'country':
               conditions.push({ column: 'hq_country', type: '(.)', value: v });
               break;
             case 'size_min':
-              conditions.push({ column: 'linkedin_headcount', type: '=>', value: v });
+              conditions.push({
+                column: 'linkedin_headcount',
+                type: '=>',
+                value: v,
+              });
               break;
             case 'size_max':
-              conditions.push({ column: 'linkedin_headcount', type: '=<', value: v });
+              conditions.push({
+                column: 'linkedin_headcount',
+                type: '=<',
+                value: v,
+              });
               break;
             case 'year_founded_min':
               conditions.push({ column: 'year_founded', type: '=>', value: v });
@@ -175,14 +236,21 @@ export const crustCompanyProvider: CompanyProvider = {
               break;
             default:
               // Generic text match on name/website
-              conditions.push({ column: 'company_name', type: '(.)', value: v });
+              conditions.push({
+                column: 'company_name',
+                type: '(.)',
+                value: v,
+              });
           }
         }
       }
 
       const payload: any = { count };
 
-      if (query.q && (!query.filters || Object.keys(query.filters).length === 0)) {
+      if (
+        query.q &&
+        (!query.filters || Object.keys(query.filters).length === 0)
+      ) {
         // Use AI-powered search for natural language
         payload.gpt_prompt = query.q;
       } else {
@@ -197,7 +265,9 @@ export const crustCompanyProvider: CompanyProvider = {
           op: 'and',
           conditions: [
             ...(conditions.length ? conditions : []),
-            ...(qConditions.length ? [{ op: 'or', conditions: qConditions }] : []),
+            ...(qConditions.length
+              ? [{ op: 'or', conditions: qConditions }]
+              : []),
           ],
         };
       }
@@ -205,9 +275,17 @@ export const crustCompanyProvider: CompanyProvider = {
       const json = await crustPost<any>(COMPANY_DISCOVERY_PATH, payload);
       const rawRows = extractArray(json);
       const rows = normalizeCompanyRows(rawRows);
-      return { rows, source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
+      return {
+        rows,
+        source: 'crustdata',
+        creditCost: { provider: 'crustdata', estimated: 0 },
+      };
     } catch (_) {
-      return { rows: [], source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
+      return {
+        rows: [],
+        source: 'crustdata',
+        creditCost: { provider: 'crustdata', estimated: 0 },
+      };
     }
   },
 };
