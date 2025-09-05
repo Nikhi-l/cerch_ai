@@ -11,9 +11,9 @@ export async function aggregatePeople(
   query: SearchQuery,
   providers: PeopleProvider[],
 ): Promise<ProviderResult<Person>> {
-  const results = await Promise.allSettled(
-    providers.map((p) => p.getPeople(query)),
-  );
+  const debug = process.env.DEBUG_CRUSTDATA === 'true';
+  if (debug) console.log('[CRUSTDATA:AGG] aggregatePeople: query', query);
+  const results = await Promise.allSettled(providers.map((p) => p.getPeople(query)));
 
   const rows: Person[] = [];
   for (const r of results) {
@@ -21,7 +21,7 @@ export async function aggregatePeople(
       rows.push(...r.value.rows);
     }
   }
-
+  if (debug) console.log('[CRUSTDATA:AGG] aggregatePeople: rows aggregated', rows.length);
   return { rows, source: 'llm' };
 }
 
@@ -42,4 +42,3 @@ export async function aggregateCompanies(
 
   return { rows, source: 'llm' };
 }
-

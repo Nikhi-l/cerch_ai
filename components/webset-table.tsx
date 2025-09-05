@@ -321,17 +321,34 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                       {isLogo ? (
                         content && (
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={content} alt={row[nameIdx] ?? ""} />
-                            <AvatarFallback>{row[nameIdx]?.[0] ?? ""}</AvatarFallback>
+                            <AvatarImage
+                              src={content}
+                              alt={row[nameIdx] ?? ""}
+                              onError={(e) => {
+                                // Hide broken image to reveal fallback initial
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                            <AvatarFallback>
+                              {(row[nameIdx]?.[0] ?? '').toUpperCase()}
+                            </AvatarFallback>
                           </Avatar>
                         )
                       ) : isName ? (
                         <div className="flex items-center gap-2 min-w-0">
                           <Avatar className="h-8 w-8 bg-gray-100">
                             {imageIdx >= 0 && row[imageIdx] ? (
-                              <AvatarImage src={row[imageIdx]} alt={row[nameIdx] ?? ''} />
+                              <AvatarImage
+                                src={row[imageIdx]}
+                                alt={row[nameIdx] ?? ''}
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
                             ) : null}
-                            <AvatarFallback>{(row[nameIdx]?.[0] ?? '').toUpperCase()}</AvatarFallback>
+                            <AvatarFallback>
+                              {(row[nameIdx]?.[0] ?? '').toUpperCase()}
+                            </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
                             <div className="font-medium truncate">{content}</div>

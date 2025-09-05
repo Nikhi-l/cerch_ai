@@ -31,7 +31,7 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 
 Do not update document right after creating it. Wait for user feedback or request to update it.
 \n\nArtifact kinds:\n
-- people: tabular CSV of PEOPLE (name, title, company, linkedin_url, etc.)\n- company: tabular CSV of COMPANIES (name, industry, company_url, size, etc.)\n- webset: generic tabular CSV for mixed people+company data\n- sheet: generic CSV spreadsheets\n- text/code/image: as named\n\nSelection guidelines:\n- If the user asks for people (prospects, leaders, roles) → use kind='people'\n- If the user asks for companies (competitors, vendors, startups) → use kind='company'\n- If mixed/unclear → prefer kind='webset'\n `;
+- people: tabular CSV of PEOPLE (name, title, company, linkedin_url, etc.)\n- company: tabular CSV of COMPANIES (name, industry, company_url, size, etc.)\n- webset: generic tabular CSV for mixed people+company data\n- sheet: generic CSV spreadsheets\n- text/code/image: as named\n\nSelection guidelines:\n- If the user asks for people (prospects, leaders, roles) → use kind='people'\n- If the user asks for companies (competitors, vendors, startups) → use kind='company'\n- If mixed/unclear → prefer kind='webset'\n\nPeople/Company first behavior:\n- When the user asks for PEOPLE or COMPANY data, immediately call createDocument with a concise title and the appropriate kind ('people' or 'company'). Populate initial results first, then ask clarifying questions if needed.\n- Prefer safe defaults if details are missing (e.g., city vs. broader region, generalist SWE when role is "software engineer").\n `;
  
 
 export const regularPrompt =

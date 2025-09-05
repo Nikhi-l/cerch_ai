@@ -20,6 +20,8 @@ export const updateDocument = ({ session, dataStream, apiKey }: UpdateDocumentPr
         .describe('The description of changes that need to be made'),
     }),
     execute: async ({ id, description }) => {
+      const debug = process.env.DEBUG_CRUSTDATA === 'true';
+      if (debug) console.log('[ARTIFACTS] updateDocument invoked', { id, description });
       const document = await getDocumentById({ id });
 
       if (!document) {
@@ -42,6 +44,7 @@ export const updateDocument = ({ session, dataStream, apiKey }: UpdateDocumentPr
         throw new Error(`No document handler found for kind: ${document.kind}`);
       }
 
+      if (debug) console.log('[ARTIFACTS] handler found', { kind: documentHandler.kind });
       await documentHandler.onUpdateDocument({
         document,
         description,

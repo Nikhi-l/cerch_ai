@@ -59,6 +59,14 @@ async function crustPost<T>(path: string, body: any): Promise<T> {
   return (await res.json()) as T;
 }
 
+function debugEnabled() {
+  return process.env.DEBUG_CRUSTDATA === 'true';
+}
+
+function dbg(...args: any[]) {
+  if (debugEnabled()) console.log('[CRUSTDATA:CLIENT]', ...args);
+}
+
 function extractArray(json: any): any[] {
   if (Array.isArray(json)) return json;
   if (json?.results && Array.isArray(json.results)) return json.results;
@@ -131,11 +139,16 @@ export const crustPeopleProvider: PeopleProvider = {
         ],
       };
 
-      const json = await crustPost<any>(PEOPLE_PATH, { filters, limit });
+      const payload = { filters, limit };
+      dbg('getPeople: POST', { path: PEOPLE_PATH, limit, hasFilters: !!filters, q: query.q ?? '' });
+      const json = await crustPost<any>(PEOPLE_PATH, payload);
       const rawRows = Array.isArray(json?.profiles) ? json.profiles : extractArray(json);
+      dbg('getPeople: response keys', Object.keys(json || {}));
       const rows = normalizePeopleRows(rawRows);
+      dbg('getPeople: normalized rows', rows.length);
       return { rows, source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
-    } catch (_) {
+    } catch (error: any) {
+      console.error('[CRUSTDATA:CLIENT] getPeople: error', error?.message || error);
       return { rows: [], source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
     }
   },

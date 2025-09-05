@@ -22,6 +22,8 @@ export const createDocument = ({ session, dataStream, apiKey }: CreateDocumentPr
       kind: z.enum(artifactKinds),
     }),
     execute: async ({ title, kind }) => {
+      const debug = process.env.DEBUG_CRUSTDATA === 'true';
+      if (debug) console.log('[ARTIFACTS] createDocument invoked', { title, kind });
       const id = generateUUID();
 
       dataStream.writeData({
@@ -53,6 +55,7 @@ export const createDocument = ({ session, dataStream, apiKey }: CreateDocumentPr
         throw new Error(`No document handler found for kind: ${kind}`);
       }
 
+      if (debug) console.log('[ARTIFACTS] handler found', { kind: documentHandler.kind });
       await documentHandler.onCreateDocument({
         id,
         title,
