@@ -21,7 +21,14 @@ export const peopleArtifact = new Artifact<'people', Metadata>({
     }
   },
   content: ({ content }) => {
-    return <WebsetTable csv={content} />;
+    return (
+      <WebsetTable
+        csv={content}
+        variant="people"
+        autoHideEmptyColumns
+        hideImageUrlColumns
+      />
+    );
   },
   actions: [
     {
@@ -71,4 +78,3 @@ export const peopleArtifact = new Artifact<'people', Metadata>({
   ],
   toolbar: [],
 });
-

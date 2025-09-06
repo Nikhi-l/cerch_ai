@@ -28,16 +28,44 @@ import { ChevronDown, Download, Filter, Maximize2, Plus, SlidersHorizontal, Zap,
 
 interface WebsetTableProps {
   csv: string;
+  variant?: 'people' | 'company' | 'webset';
+  autoHideEmptyColumns?: boolean;
+  hideImageUrlColumns?: boolean;
 }
 
-export function WebsetTable({ csv }: WebsetTableProps) {
-  const { headers, rows } = useMemo(() => {
+export function WebsetTable({
+  csv,
+  variant,
+  autoHideEmptyColumns,
+  hideImageUrlColumns,
+}: WebsetTableProps) {
+  const hideEmpty = autoHideEmptyColumns ?? (variant === 'people');
+  const hideImageCols = hideImageUrlColumns ?? (variant === 'people');
+
+  const { headers, rows, imageUrls } = useMemo(() => {
     const parsed = parse<string[]>(csv || "", { skipEmptyLines: true });
     const data = parsed.data as string[][];
-    const headers = data.length > 0 ? data[0] : [];
-    const rows = data.length > 1 ? data.slice(1) : [];
-    return { headers, rows };
-  }, [csv]);
+    const rawHeaders = data.length > 0 ? data[0] : [];
+    const rawRows = data.length > 1 ? data.slice(1) : [];
+
+    const imageColRegex = /(profile_)?image|avatar|photo|picture|profile_image_url|image_url/i;
+
+    const rawImageIdx = rawHeaders.findIndex((h) => imageColRegex.test(h));
+    const imageUrls = rawRows.map((row) => (rawImageIdx >= 0 ? row[rawImageIdx] || '' : ''));
+
+    const allowedIndex: boolean[] = rawHeaders.map((h, idx) => {
+      if (hideImageCols && imageColRegex.test(h)) return false;
+      if (hideEmpty) {
+        const anyNonEmpty = rawRows.some((r) => (r[idx] || '').trim() !== '');
+        if (!anyNonEmpty) return false;
+      }
+      return true;
+    });
+
+    const filteredHeaders = rawHeaders.filter((_, idx) => allowedIndex[idx]);
+    const filteredRows = rawRows.map((row) => row.filter((_, idx) => allowedIndex[idx]));
+    return { headers: filteredHeaders, rows: filteredRows, imageUrls };
+  }, [csv, hideEmpty, hideImageCols]);
 
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortedColumn, setSortedColumn] = useState<string | null>(null);
@@ -120,15 +148,13 @@ export function WebsetTable({ csv }: WebsetTableProps) {
     () => headers.findIndex((h) => /company/i.test(h)),
     [headers],
   );
-  const imageIdx = useMemo(
-    () => headers.findIndex((h) => /(profile_)?image|avatar|photo|picture|profile_image_url/i.test(h)),
-    [headers],
-  );
+  // Image URLs extracted from raw CSV prior to filtering out the image column
+  const imageIdx = -1;
 
   return (
     <div className="w-full bg-white text-gray-900 border border-border rounded-lg overflow-hidden p-2 sm:p-4">
-      <div className="flex flex-col gap-3 p-2 sm:p-4 border-b border-border">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-4 p-2 sm:p-4 border-b border-border flex-wrap">
+        <div className="flex items-center gap-2 flex-1 min-w-[260px]">
           <div className="relative w-full sm:max-w-xs">
             <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -138,9 +164,6 @@ export function WebsetTable({ csv }: WebsetTableProps) {
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8 gap-1">
@@ -254,7 +277,6 @@ export function WebsetTable({ csv }: WebsetTableProps) {
             <span>Add Enrichment</span>
           </Button>
         </div>
-        </div>
       </div>
       <div className="overflow-auto">
         <Table>
@@ -337,9 +359,9 @@ export function WebsetTable({ csv }: WebsetTableProps) {
                       ) : isName ? (
                         <div className="flex items-center gap-2 min-w-0">
                           <Avatar className="h-8 w-8 bg-gray-100">
-                            {imageIdx >= 0 && row[imageIdx] ? (
+                            {imageUrls[rowIdx] ? (
                               <AvatarImage
-                                src={row[imageIdx]}
+                                src={imageUrls[rowIdx]}
                                 alt={row[nameIdx] ?? ''}
                                 onError={(e) => {
                                   (e.currentTarget as HTMLImageElement).style.display = 'none';
