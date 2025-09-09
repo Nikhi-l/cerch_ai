@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from 'react';
 import Spline from '@splinetool/react-spline/next';
 import { Button } from '@/components/ui/button';
