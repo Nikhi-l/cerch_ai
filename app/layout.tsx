@@ -2,6 +2,7 @@ import { Toaster } from 'sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 import './globals.css';
 import { SessionProvider } from 'next-auth/react';
@@ -28,7 +29,7 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
 });
 
-const LIGHT_THEME_COLOR = 'hsl(0 0% 100%)';
+const THEME_COLOR = '#000000';
 
 export default async function RootLayout({
   children,
@@ -46,10 +47,20 @@ export default async function RootLayout({
       className={`${geist.variable} ${geistMono.variable}`}
     >
       <head>
-        <meta name="theme-color" content={LIGHT_THEME_COLOR} />
+        <meta name="theme-color" content={THEME_COLOR} />
       </head>
       <body className="antialiased">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange themes={["light"]}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+          themes={["light", "dark"]}
+        >
+          {/* Global top-right theme toggle */}
+          <div className="fixed top-2 right-2 md:right-4 z-50">
+            <ThemeToggle />
+          </div>
           <Toaster position="top-center" />
           <SessionProvider>{children}</SessionProvider>
         </ThemeProvider>

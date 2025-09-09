@@ -37,11 +37,11 @@
       --popover-foreground: 0 0% 2%;
       --primary: 246 82% 60%;
       --primary-foreground: 0 0% 100%;
-      --secondary: 243 52% 63%;
+      --secondary: 246 82% 60%;
       --secondary-foreground: 0 0% 100%;
       --muted: 240 16% 92%;
       --muted-foreground: 0 0% 30%;
-      --accent: 243 52% 63%;
+      --accent: 246 82% 60%;
       --accent-foreground: 0 0% 100%;
       --destructive: 0 84.2% 60.2%;
       --destructive-foreground: 0 0% 98%;
@@ -62,7 +62,60 @@
       --sidebar-accent-foreground: 0 0% 30%;
       --sidebar-border: 240 16% 88%;
       --sidebar-ring: 246 82% 60%;
+
+      /* Global bubble colors to ensure Radix portals can access them */
+      --assistant-bubble: #736ED1; /* medium-slate-blue */
+      --user-bubble: #5644ED; /* majorelle-blue */
+      --bubble-text: #171717; /* eerie black */
     }
+}
+
+/* Dark theme: global tokens */
+@layer base {
+  .dark {
+    --background: 0 0% 0%; /* jet black */
+    --foreground: 0 0% 100%; /* white */
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Use dark bubble violet for highlights */
+    --primary: 246 82% 60%; /* #5644ED */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 246 82% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 246 82% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 0 0% 0%; /* avoid grey; keep black surfaces */
+    --muted-foreground: 0 0% 85%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 246 82% 60%;
+
+    --chart-1: 243 52% 63%;
+    --chart-2: 245 62% 68%;
+    --chart-3: 240 54% 67%;
+    --chart-4: 260 30% 35%;
+    --chart-5: 240 8% 15%;
+
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 246 82% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 246 82% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 246 82% 60%;
+
+    /* Keep bubble colors consistent in dark */
+    --assistant-bubble: #736ED1;
+    --user-bubble: #5644ED;
+    --bubble-text: #ffffff;
+  }
 }
 
 @layer base {
@@ -73,6 +126,19 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+
+/* Selection highlight: use dark violet in dark mode */
+@layer base {
+  ::selection {
+    background-color: hsl(var(--primary) / 0.25);
+    color: hsl(0 0% 100%);
+  }
+  .dark ::selection {
+    /* Darker violet highlight matching chat bubble */
+    background-color: rgba(86, 68, 237, 0.45); /* #5644ED */
+    color: #ffffff;
+  }
 }
 
 .skeleton {
@@ -106,7 +172,7 @@
 .ͼo.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
 .ͼo.cm-selectionBackground,
 .ͼo.cm-content::selection {
-    @apply bg-blue-200 !important;
+    @apply bg-violet-500/30 !important;
 }
 
 .cm-activeLine,
@@ -116,6 +182,23 @@
 
 .cm-activeLine {
     @apply rounded-r-sm !important;
+}
+
+/* Code editor dark mode */
+@layer base {
+  .dark .cm-editor,
+  .dark .cm-gutters {
+    @apply bg-black text-white outline-none !important;
+  }
+  .dark .cm-activeLine,
+  .dark .cm-activeLineGutter {
+    @apply bg-black !important;
+  }
+  .dark .ͼo.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+  .dark .ͼo.cm-selectionBackground,
+  .dark .ͼo.cm-content::selection {
+    @apply bg-violet-700/35 !important;
+  }
 }
 
 .cm-lineNumbers {
@@ -131,26 +214,26 @@
 }
 
 .suggestion-highlight {
-    @apply bg-blue-200 hover:bg-blue-300;
+    @apply bg-primary/25 hover:bg-primary/35 dark:bg-violet-700/35 dark:hover:bg-violet-700/45;
 }
 
 /* Chat-only theme using provided purple palette */
 @layer base {
   .chat-theme {
-    /* Keep background white */
+    /* Chat theme accents (light) */
     --background: 0 0% 100%;
-    --foreground: 0 0% 9%; /* #050505 */
+    --foreground: 0 0% 9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 9%;
 
-    /* Purples from palette */
-    --primary: 243 52% 63%; /* #736ED1 */
+    /* Use dark violet accents across chat */
+    --primary: 246 82% 60%; /* #5644ED */
     --primary-foreground: 0 0% 100%;
     --secondary: 246 82% 60%; /* #5644ED */
     --secondary-foreground: 0 0% 100%;
-    --accent: 240 54% 67%; /* #7c7cd8 */
+    --accent: 246 82% 60%; /* #5644ED */
     --accent-foreground: 0 0% 100%;
 
     /* Muted surface + text */
@@ -172,16 +255,56 @@
     /* Sidebar theme aligned with chat */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 9%;
-    --sidebar-primary: 243 52% 63%;
+    --sidebar-primary: 246 82% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 242 25% 92%;
-    --sidebar-accent-foreground: 0 0% 24%;
+    --sidebar-accent: 246 82% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 242 25% 85%;
-    --sidebar-ring: 243 52% 63%;
+    --sidebar-ring: 246 82% 60%;
 
     /* Bubbles */
-    --assistant-bubble: #736ED1; /* medium-slate-blue (unused now) */
-    --user-bubble: #5644ED; /* majorelle-blue for user bubble */
-    --bubble-text: #171717; /* eerie black */
+    --assistant-bubble: #736ED1; /* medium-slate-blue */
+    --user-bubble: #5644ED; /* majorelle-blue */
+    --bubble-text: #171717;
+  }
+}
+
+/* Chat theme overrides in dark */
+@layer base {
+  .dark .chat-theme {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 246 82% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 246 82% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 246 82% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 0 0% 0%;
+    --muted-foreground: 0 0% 85%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 246 82% 60%;
+
+    /* Sidebar in dark: violet highlight */
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 246 82% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 246 82% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 246 82% 60%;
+
+    /* Keep violet bubbles on black */
+    --assistant-bubble: #736ED1;
+    --user-bubble: #5644ED;
+    --bubble-text: #ffffff;
   }
 }

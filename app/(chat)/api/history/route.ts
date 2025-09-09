@@ -23,12 +23,16 @@ export async function GET(request: NextRequest) {
     return new ChatSDKError('unauthorized:chat').toResponse();
   }
 
-  const chats = await getChatsByUserId({
-    id: session.user.id,
-    limit,
-    startingAfter,
-    endingBefore,
-  });
-
-  return Response.json(chats);
+  try {
+    const chats = await getChatsByUserId({
+      id: session.user.id,
+      limit,
+      startingAfter,
+      endingBefore,
+    });
+    return Response.json(chats);
+  } catch (error) {
+    if (error instanceof ChatSDKError) return error.toResponse();
+    return new ChatSDKError('bad_request:database', 'Failed to get chats by user id').toResponse();
+  }
 }

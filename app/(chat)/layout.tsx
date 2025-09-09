@@ -32,7 +32,7 @@ export default async function Layout({
           <AppSidebar user={session?.user} />
           {/* Top-right credits pill */}
           {typeof credits === 'number' && (
-            <div className="fixed top-2 right-4 md:right-6 z-50">
+            <div className="fixed top-2 right-14 md:right-20 z-50">
               <div className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-md border bg-background">
                 <Coins className="h-4 w-4" />
                 <span>Credits: {credits}</span>

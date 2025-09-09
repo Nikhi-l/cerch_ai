@@ -1,6 +1,6 @@
 "use client";
 import { parse, unparse } from "papaparse";
-import { useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,12 +25,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ChevronDown, Download, Filter, Maximize2, Plus, SlidersHorizontal, Zap, Eye, EyeOff, Search } from "lucide-react";
+import { EnrichmentDialog } from "@/components/enrichment-dialog";
+import { toast } from "sonner";
 
 interface WebsetTableProps {
   csv: string;
   variant?: 'people' | 'company' | 'webset';
   autoHideEmptyColumns?: boolean;
   hideImageUrlColumns?: boolean;
+  onLoadMore?: () => void;
 }
 
 export function WebsetTable({
@@ -38,6 +41,7 @@ export function WebsetTable({
   variant,
   autoHideEmptyColumns,
   hideImageUrlColumns,
+  onLoadMore,
 }: WebsetTableProps) {
   const hideEmpty = autoHideEmptyColumns ?? (variant === 'people');
   const hideImageCols = hideImageUrlColumns ?? (variant === 'people');
@@ -70,17 +74,52 @@ export function WebsetTable({
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortedColumn, setSortedColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [columnWidths, setColumnWidths] =
-    useState<Record<string, number>>({});
+  // Initial widths for all columns; smaller default to fit more on screen
+  const DEFAULT_COL_WIDTH = 120;
+  const NAME_MULTIPLIER = 2;
+  const NAME_DEFAULT_WIDTH = Math.round(DEFAULT_COL_WIDTH * NAME_MULTIPLIER);
+  const MIN_COL_WIDTH = 80;
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({});
   const [q, setQ] = useState("");
+  const [enriching, setEnriching] = useState(false);
+
+  // Utility: Format header label (start case) for display only
+  const formatHeader = (h: string) =>
+    h
+      .replaceAll('_', ' ')
+      .replaceAll('-', ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // Initialize equal widths for all visible headers on first render and when headers change
+  useEffect(() => {
+    setColumnWidths((prev) => {
+      const next = { ...prev } as Record<string, number>;
+      let changed = false;
+      const nameHeader = headers.find((h) => /(^|\b)name(\b|$)/i.test(h));
+      headers.forEach((h) => {
+        if (next[h] == null) {
+          if (nameHeader && h === nameHeader) {
+            next[h] = NAME_DEFAULT_WIDTH;
+          } else {
+            next[h] = DEFAULT_COL_WIDTH;
+          }
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [headers]);
 
   const startResizing = (header: string) => (e: ReactMouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const startX = e.clientX;
-    const startWidth = columnWidths[header] ?? 150;
+    const startWidth = columnWidths[header] ?? DEFAULT_COL_WIDTH;
     const onMouseMove = (event: MouseEvent) => {
-      const newWidth = Math.max(100, startWidth + event.clientX - startX);
+      const newWidth = Math.max(MIN_COL_WIDTH, startWidth + event.clientX - startX);
       setColumnWidths((w) => ({ ...w, [header]: newWidth }));
     };
     const onMouseUp = () => {
@@ -152,7 +191,7 @@ export function WebsetTable({
   const imageIdx = -1;
 
   return (
-    <div className="w-full bg-white text-gray-900 border border-border rounded-lg overflow-hidden p-2 sm:p-4">
+    <div className="w-full bg-white text-gray-900 dark:bg-black dark:text-white border border-border rounded-lg overflow-hidden p-2 sm:p-4">
       <div className="flex items-center justify-between gap-4 p-2 sm:p-4 border-b border-border flex-wrap">
         <div className="flex items-center gap-2 flex-1 min-w-[260px]">
           <div className="relative w-full sm:max-w-xs">
@@ -272,40 +311,190 @@ export function WebsetTable({
               <DropdownMenuItem>Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" className="h-8 gap-1">
-            <Zap className="h-4 w-4" />
-            <span>Add Enrichment</span>
-          </Button>
+          <EnrichmentDialog
+            headers={headers}
+            variant={variant}
+            trigger={<Button size="sm" className="h-8 gap-1"><Zap className="h-4 w-4" /><span>Add Enrichment</span></Button>}
+            onConfirm={async ({ mode, targetColumn, newColumnName, sourceField }) => {
+              if (variant !== 'people') {
+                try { toast.error('Enrichment is supported for people tables only right now'); } catch {}
+                return;
+              }
+              try {
+                setEnriching(true);
+                // Parse current CSV
+                const parsed = parse<string[]>(csv || '', { skipEmptyLines: true });
+                const rawHeaders = parsed.data[0] as string[];
+                const dataRows = parsed.data.slice(1) as string[][];
+
+                // Ensure we have a linkedin_url column to key enrichment
+                const linkedinIdx = rawHeaders.findIndex((h) => /linkedin_url/i.test(h));
+                if (linkedinIdx === -1) {
+                  try { toast.error('No linkedin_url column found to enrich by'); } catch {}
+                  setEnriching(false);
+                  return;
+                }
+
+                // Determine target column
+                let targetHeader = targetColumn || '';
+                let targetIdx = rawHeaders.indexOf(targetHeader);
+                if (mode === 'new') {
+                  targetHeader = newColumnName || sourceField;
+                  if (!targetHeader) {
+                    try { toast.error('Please enter a new column name'); } catch {}
+                    setEnriching(false);
+                    return;
+                  }
+                  if (rawHeaders.includes(targetHeader)) {
+                    targetIdx = rawHeaders.indexOf(targetHeader);
+                  } else {
+                    rawHeaders.push(targetHeader);
+                    targetIdx = rawHeaders.length - 1;
+                    dataRows.forEach((r) => r.push(''));
+                  }
+                } else if (mode === 'existing') {
+                  if (!targetHeader) {
+                    try { toast.error('Choose a column to enrich'); } catch {}
+                    setEnriching(false);
+                    return;
+                  }
+                  targetIdx = rawHeaders.indexOf(targetHeader);
+                  if (targetIdx === -1) {
+                    try { toast.error('Target column not found'); } catch {}
+                    setEnriching(false);
+                    return;
+                  }
+                }
+
+                // Identify rows missing values for target column
+                const missingRows = dataRows
+                  .map((r, i) => ({ row: r, i }))
+                  .filter(({ row }) => !((row[targetIdx] || '').trim()));
+
+                if (missingRows.length === 0) {
+                  try { toast.info('Nothing to enrich — column already filled'); } catch {}
+                  setEnriching(false);
+                  return;
+                }
+
+                // Batch by 25 linkedin urls
+                const urlToIndexes: Record<string, number[]> = {};
+                const urls: string[] = [];
+                for (const { row, i } of missingRows) {
+                  const url = (row[linkedinIdx] || '').trim();
+                  if (!url) continue;
+                  urls.push(url);
+                  (urlToIndexes[url] ||= []).push(i);
+                }
+                if (!urls.length) {
+                  try { toast.error('No LinkedIn URLs found in missing rows'); } catch {}
+                  setEnriching(false);
+                  return;
+                }
+
+                const batches: string[][] = [];
+                for (let i = 0; i < urls.length; i += 25) batches.push(urls.slice(i, i + 25));
+
+                const enriched: any[] = [];
+                for (const b of batches) {
+                  const res = await fetch('/api/cerch/people/enrich/basic', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ linkedin_urls: b }),
+                  });
+                  const json = await res.json();
+                  if (json?.ok && Array.isArray(json.profiles)) {
+                    enriched.push(...json.profiles);
+                  }
+                }
+
+                // Build lookup from enriched
+                const idxByUrl: Record<string, any> = {};
+                for (const p of enriched) {
+                  const k = (p.linkedin_url || p.linkedin_flagship_url || '').trim();
+                  if (k) idxByUrl[k] = p;
+                }
+
+                // Helper to read the selected field
+                const readField = (p: any): string => {
+                  switch (sourceField) {
+                    case 'profile_image_url':
+                      return p.profile_image_url || p.profile_picture_url || '';
+                    case 'description':
+                      return p.description || p.headline || '';
+                    case 'location':
+                      return p.location || '';
+                    case 'linkedin_url':
+                      return p.linkedin_url || p.linkedin_flagship_url || '';
+                    default:
+                      return '';
+                  }
+                };
+
+                // Fill the values
+                let fillCount = 0;
+                for (let i = 0; i < dataRows.length; i++) {
+                  const url = (dataRows[i][linkedinIdx] || '').trim();
+                  const p = idxByUrl[url] || idxByUrl[(url || '').replace('https://www.', 'https://')] || idxByUrl[(url || '').replace('http://', 'https://')];
+                  if (!p) continue;
+                  if (!((dataRows[i][targetIdx] || '').trim())) {
+                    const val = readField(p);
+                    if (val) {
+                      dataRows[i][targetIdx] = val;
+                      fillCount++;
+                    }
+                  }
+                }
+
+                const newCsv = unparse([rawHeaders, ...dataRows]);
+                onSaveContent(newCsv, false);
+                try { toast.success(`Enriched ${fillCount} cells`); } catch {}
+              } catch (e) {
+                try { toast.error('Enrichment failed'); } catch {}
+              } finally {
+                setEnriching(false);
+              }
+            }}
+          />
         </div>
       </div>
       <div className="overflow-auto">
-        <Table>
+        <Table className="table-fixed">
+          <colgroup>
+            <col style={{ width: 48 }} />
+            {headers.map((h) => {
+              const isName = /(^|\b)name(\b|$)/i.test(h);
+              const w = columnWidths[h] ?? (isName ? NAME_DEFAULT_WIDTH : DEFAULT_COL_WIDTH);
+              return <col key={`col-${h}`} style={{ width: w }} />;
+            })}
+            <col style={{ width: 48 }} />
+          </colgroup>
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 z-10 bg-white w-12 text-center px-4 py-2 font-bold border-r border-b border-border">
+              <TableHead className="sticky left-0 z-10 bg-white dark:bg-black w-12 text-center px-4 py-2 font-bold border-r border-b border-border">
                 #
               </TableHead>
               {headers.map((header) => (
                 <TableHead
                   key={header}
-                  style={{ width: columnWidths[header] ?? 150 }}
-                  className="px-4 py-2 font-bold border-r border-b border-border bg-muted sticky top-0 z-10"
+                  style={{ width: columnWidths[header] ?? (/\bname\b/i.test(header) ? NAME_DEFAULT_WIDTH : DEFAULT_COL_WIDTH) }}
+                  className="px-4 py-2 font-bold border-r border-b border-border bg-muted dark:bg-black sticky top-0 z-10 relative"
                 >
                   <div className="flex items-center justify-between gap-2 cursor-pointer select-none" onClick={() => {
                     if (sortedColumn === header) setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
                     else setSortedColumn(header);
                   }}>
-                    <span className="text-xs font-bold">
+                    <span className="text-xs font-bold capitalize">
                       {visibleColumns[header] === false ? (
-                        <span className="line-through opacity-50">{header}</span>
+                        <span className="line-through opacity-50">{formatHeader(header)}</span>
                       ) : (
-                        header
+                        formatHeader(header)
                       )}
                     </span>
                     <span
                       role="separator"
                       aria-orientation="vertical"
-                      className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none"
+                      className="absolute right-0 top-0 h-full w-4 cursor-col-resize select-none"
                       onMouseDown={startResizing(header)}
                     />
                   </div>
@@ -321,7 +510,7 @@ export function WebsetTable({
           <TableBody>
               {sortedRows.map((row, rowIdx) => (
                 <TableRow key={row.join("|") || rowIdx} className="border-border">
-                <TableCell className="sticky left-0 bg-white z-10 text-center text-sm text-muted-foreground px-4 py-2 border-r border-border">
+                <TableCell className="sticky left-0 bg-white dark:bg-black z-10 text-center text-sm text-muted-foreground px-4 py-2 border-r border-border">
                   {rowIdx + 1}
                 </TableCell>
                 {row.map((cell, cellIdx) => {
@@ -337,12 +526,12 @@ export function WebsetTable({
                   return (
                     <TableCell
                       key={`${headers[cellIdx] ?? cellIdx}-${content}`}
-                      style={{ width: columnWidths[header] ?? 150 }}
+                      style={{ width: columnWidths[header] ?? (/\bname\b/i.test(header) ? NAME_DEFAULT_WIDTH : DEFAULT_COL_WIDTH) }}
                       className="text-sm px-4 py-2 border-r border-border overflow-hidden whitespace-nowrap"
                     >
                       {isLogo ? (
                         content && (
-                          <Avatar className="h-8 w-8">
+                          <Avatar className="h-8 w-8 border-2 border-violet-800">
                             <AvatarImage
                               src={content}
                               alt={row[nameIdx] ?? ""}
@@ -358,7 +547,7 @@ export function WebsetTable({
                         )
                       ) : isName ? (
                         <div className="flex items-center gap-2 min-w-0">
-                          <Avatar className="h-8 w-8 bg-gray-100">
+                          <Avatar className="h-8 w-8 bg-gray-100 dark:bg-gray-800 border-2 border-violet-800">
                             {imageUrls[rowIdx] ? (
                               <AvatarImage
                                 src={imageUrls[rowIdx]}
@@ -409,7 +598,8 @@ export function WebsetTable({
                           href={content}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 underline"
+                          title={content}
+                          className="text-blue-600 underline truncate block w-full"
                         >
                           {content}
                         </a>
@@ -447,11 +637,13 @@ export function WebsetTable({
           </TableBody>
         </Table>
       </div>
-      <div className="flex justify-center p-2 sm:p-4 border-t border-border">
-        <Button variant="outline" className="rounded-full px-6">
-          Find more results
-        </Button>
-      </div>
+      {onLoadMore && (
+        <div className="flex justify-center p-2 sm:p-4 border-t border-border">
+          <Button variant="outline" className="rounded-full px-6" onClick={onLoadMore}>
+            Find more results
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

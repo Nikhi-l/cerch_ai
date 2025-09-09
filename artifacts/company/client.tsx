@@ -10,7 +10,7 @@ export const companyArtifact = new Artifact<'company', Metadata>({
   kind: 'company',
   description: 'Useful for exploring company results in a table.',
   initialize: async () => {},
-  onStreamPart: ({ setArtifact, streamPart }) => {
+  onStreamPart: ({ setArtifact, setMetadata, streamPart }) => {
     if (streamPart.type === 'sheet-delta') {
       setArtifact((draftArtifact) => ({
         ...draftArtifact,
@@ -18,10 +18,41 @@ export const companyArtifact = new Artifact<'company', Metadata>({
         isVisible: true,
         status: 'streaming',
       }));
+    } else if (streamPart.type === 'status') {
+      setArtifact((draftArtifact) => ({
+        ...draftArtifact,
+        isVisible: true,
+        status: 'streaming',
+      }));
+      setMetadata((m: any) => ({ ...(m || {}), statusText: String(streamPart.content || '') }));
+    } else if (streamPart.type === 'error') {
+      setArtifact((draftArtifact) => ({
+        ...draftArtifact,
+        status: 'idle',
+        isVisible: true,
+      }));
+      try { toast.error(String(streamPart.content || 'Failed to fetch company results')); } catch {}
+      setMetadata((m: any) => ({ ...(m || {}), statusText: '' }));
+    } else if (streamPart.type === 'finish') {
+      setMetadata((m: any) => ({ ...(m || {}), statusText: '' }));
     }
   },
-  content: ({ content }) => {
-    return <WebsetTable csv={content} />;
+  content: ({ content, status, metadata }) => {
+    return (
+      <div className="flex flex-col gap-2">
+        {status === 'streaming' && (
+          <div className="text-sm text-muted-foreground">
+            {metadata?.statusText || 'Scanning companies and preparing your list…'}
+          </div>
+        )}
+        <WebsetTable
+          csv={content}
+          variant="company"
+          autoHideEmptyColumns
+          hideImageUrlColumns
+        />
+      </div>
+    );
   },
   actions: [
     {
@@ -71,4 +102,3 @@ export const companyArtifact = new Artifact<'company', Metadata>({
   ],
   toolbar: [],
 });
-

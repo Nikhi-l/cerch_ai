@@ -49,15 +49,26 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
   return {
     kind: config.kind,
     onCreateDocument: async (args: CreateDocumentCallbackProps) => {
-      const draftContent = await config.onCreateDocument({
-        id: args.id,
-        title: args.title,
-        dataStream: args.dataStream,
-        session: args.session,
-        apiKey: args.apiKey,
-      });
+      let draftContent = '';
+      try {
+        draftContent = await config.onCreateDocument({
+          id: args.id,
+          title: args.title,
+          dataStream: args.dataStream,
+          session: args.session,
+          apiKey: args.apiKey,
+        });
+      } catch (error: any) {
+        console.error('[ARTIFACTS] onCreateDocument error', error?.message || error);
+        args.dataStream.writeData({
+          type: 'error',
+          content: `Failed to create ${config.kind} document: ${error?.message || 'unknown error'}`,
+        });
+        // Do not rethrow to avoid tearing down the main chat stream
+        return;
+      }
 
-      if (args.session?.user?.id) {
+      if (args.session?.user?.id && draftContent) {
         await saveDocument({
           id: args.id,
           title: args.title,
@@ -70,15 +81,25 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
       return;
     },
     onUpdateDocument: async (args: UpdateDocumentCallbackProps) => {
-      const draftContent = await config.onUpdateDocument({
-        document: args.document,
-        description: args.description,
-        dataStream: args.dataStream,
-        session: args.session,
-        apiKey: args.apiKey,
-      });
+      let draftContent = '';
+      try {
+        draftContent = await config.onUpdateDocument({
+          document: args.document,
+          description: args.description,
+          dataStream: args.dataStream,
+          session: args.session,
+          apiKey: args.apiKey,
+        });
+      } catch (error: any) {
+        console.error('[ARTIFACTS] onUpdateDocument error', error?.message || error);
+        args.dataStream.writeData({
+          type: 'error',
+          content: `Failed to update ${config.kind} document: ${error?.message || 'unknown error'}`,
+        });
+        return;
+      }
 
-      if (args.session?.user?.id) {
+      if (args.session?.user?.id && draftContent) {
         await saveDocument({
           id: args.document.id,
           title: args.document.title,

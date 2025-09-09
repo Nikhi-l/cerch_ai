@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Session } from 'next-auth';
 import { Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ModelSelector } from '@/components/model-selector';
 import { ApiKeyInput } from '@/components/api-key-input';
+import { CrustdataTokenInput } from '@/components/crustdata-token-input';
 
 export function ChatSettings({
   session,
@@ -36,6 +37,11 @@ export function ChatSettings({
   const [open, setOpen] = useState(false);
   const [temperature, setTemperature] = useState('1');
   const [maxTokens, setMaxTokens] = useState('1024');
+
+  // Auto-open settings if OpenAI key is missing
+  useEffect(() => {
+    if (!apiKey) setOpen(true);
+  }, [apiKey]);
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
@@ -56,7 +62,7 @@ export function ChatSettings({
           <AlertDialogHeader className="border-b px-6 py-4">
             <AlertDialogTitle>Settings</AlertDialogTitle>
             <AlertDialogDescription>
-              Configure your API key, model, and preferences.
+              {apiKey ? 'Configure your model and preferences.' : 'Please add your OpenAI API key.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -66,6 +72,14 @@ export function ChatSettings({
               <ApiKeyInput apiKey={apiKey} setApiKey={setApiKey} />
               <p className="text-xs text-muted-foreground">
                 Your key is stored as a browser cookie for this app only. You can clear it anytime.
+              </p>
+            </section>
+
+            <section className="space-y-2">
+              <h3 className="text-sm font-medium">Crustdata API Token</h3>
+              <CrustdataTokenInput />
+              <p className="text-xs text-muted-foreground">
+                Optional: add your Crustdata token to enable People/Company searches.
               </p>
             </section>
 

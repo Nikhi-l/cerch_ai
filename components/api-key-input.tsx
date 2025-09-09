@@ -4,13 +4,6 @@ import { startTransition, useMemo, useState } from 'react';
 import { saveOpenAIApiKeyAsCookie } from '@/app/(chat)/actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 export function ApiKeyInput({
@@ -22,88 +15,63 @@ export function ApiKeyInput({
   setApiKey: (key: string) => void;
   className?: string;
 }) {
-  const [mode, setMode] = useState(apiKey ? 'custom' : 'auto');
   const [value, setValue] = useState(apiKey);
   const [show, setShow] = useState(false);
 
   const isLikelyKey = useMemo(() => /^(sk|rk|sess)-/.test(value.trim()), [value]);
 
-  const handleModeChange = (val: string) => {
-    setMode(val);
-    if (val === 'auto') {
-      setValue('');
-      setApiKey('');
-      startTransition(() => {
-        saveOpenAIApiKeyAsCookie('');
-      });
-    }
-  };
-
   return (
     <div className={cn('flex flex-col gap-2', className)}>
-      <Select value={mode} onValueChange={handleModeChange}>
-        <SelectTrigger className="w-full md:w-48">
-          <SelectValue placeholder="API Key" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="auto">Auto</SelectItem>
-          <SelectItem value="custom">Custom</SelectItem>
-        </SelectContent>
-      </Select>
-      {mode === 'custom' && (
-        <div className="flex w-full items-center gap-2">
-          <Input
-            type={show ? 'text' : 'password'}
-            inputMode="text"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="Paste your OpenAI API key (sk-...)"
-            value={value}
-            onChange={(e) => setValue(e.target.value.trim())}
-            className="flex-1"
-          />
+      <div className="flex w-full items-center gap-2">
+        <Input
+          type={show ? 'text' : 'password'}
+          inputMode="text"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Paste your OpenAI API key (sk-...)"
+          value={value}
+          onChange={(e) => setValue(e.target.value.trim())}
+          className="flex-1"
+        />
+        <Button
+          variant="outline"
+          onClick={() => setShow((s) => !s)}
+          title={show ? 'Hide' : 'Show'}
+        >
+          {show ? 'Hide' : 'Show'}
+        </Button>
+        <Button
+          variant="default"
+          onClick={() => {
+            const trimmed = value.trim();
+            setApiKey(trimmed);
+            startTransition(() => {
+              saveOpenAIApiKeyAsCookie(trimmed);
+            });
+          }}
+          disabled={!isLikelyKey}
+        >
+          Save
+        </Button>
+        {(value || apiKey) && (
           <Button
-            variant="outline"
-            onClick={() => setShow((s) => !s)}
-            title={show ? 'Hide' : 'Show'}
-          >
-            {show ? 'Hide' : 'Show'}
-          </Button>
-          <Button
-            variant="default"
+            variant="ghost"
             onClick={() => {
-              const trimmed = value.trim();
-              setApiKey(trimmed);
+              setValue('');
+              setApiKey('');
               startTransition(() => {
-                saveOpenAIApiKeyAsCookie(trimmed);
+                saveOpenAIApiKeyAsCookie('');
               });
             }}
-            disabled={!isLikelyKey}
+            title="Clear key"
           >
-            Save
+            Clear
           </Button>
-          {value || apiKey ? (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setValue('');
-                setApiKey('');
-                startTransition(() => {
-                  saveOpenAIApiKeyAsCookie('');
-                });
-              }}
-              title="Clear key"
-            >
-              Clear
-            </Button>
-          ) : null}
-        </div>
-      )}
-      {mode === 'custom' && (
-        <p className={cn('text-xs', isLikelyKey ? 'text-muted-foreground' : 'text-amber-600')}>
-          {isLikelyKey ? 'Looks like a valid key format.' : 'Tip: keys usually start with sk-'}
-        </p>
-      )}
+        )}
+      </div>
+      <p className={cn('text-xs', isLikelyKey ? 'text-muted-foreground' : 'text-amber-600')}>
+        {isLikelyKey ? 'Looks like a valid key format.' : 'Tip: keys usually start with sk-'}
+      </p>
     </div>
   );
 }

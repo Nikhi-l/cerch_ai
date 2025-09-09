@@ -11,6 +11,7 @@ import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
 import { Weather } from './weather';
+import { PeopleFiltersCard } from './people-filters-card';
 import equal from 'fast-deep-equal';
 import { cn, sanitizeText } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -19,6 +20,7 @@ import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
 import { MessageReasoning } from './message-reasoning';
 import type { UseChatHelpers } from '@ai-sdk/react';
+import { CompanyFiltersCard } from './company-filters-card';
 
 const PurePreviewMessage = ({
   chatId,
@@ -27,6 +29,7 @@ const PurePreviewMessage = ({
   isLoading,
   setMessages,
   reload,
+  append,
   isReadonly,
   requiresScrollPadding,
 }: {
@@ -36,6 +39,7 @@ const PurePreviewMessage = ({
   isLoading: boolean;
   setMessages: UseChatHelpers['setMessages'];
   reload: UseChatHelpers['reload'];
+  append: UseChatHelpers['append'];
   isReadonly: boolean;
   requiresScrollPadding: boolean;
 }) => {
@@ -87,12 +91,20 @@ const PurePreviewMessage = ({
                 </div>
               )}
 
-            {message.parts?.map((part, index) => {
-              const { type } = part;
-              const key = `message-${message.id}-part-${index}`;
+            {(() => {
+              const parts = message.parts ?? [];
+              const firstFiltersToolIndex = parts.findIndex((p) =>
+                p.type === 'tool-invocation' &&
+                ((p as any).toolInvocation?.toolName === 'peopleFilters' ||
+                 (p as any).toolInvocation?.toolName === 'companyFilters')
+              );
 
-              if (type === 'reasoning') {
-                return (
+              return parts.map((part, index) => {
+                const { type } = part;
+                const key = `message-${message.id}-part-${index}`;
+
+                if (type === 'reasoning') {
+                  return (
                   <MessageReasoning
                     key={key}
                     isLoading={isLoading}
@@ -102,6 +114,14 @@ const PurePreviewMessage = ({
               }
 
               if (type === 'text') {
+                // Suppress assistant text that comes after the profile filter tool card
+                if (
+                  message.role === 'assistant' &&
+                  firstFiltersToolIndex !== -1 &&
+                  index > firstFiltersToolIndex
+                ) {
+                  return null;
+                }
                 if (mode === 'view') {
                   return (
                     <div key={key} className="flex flex-row gap-2 items-start">
@@ -128,7 +148,7 @@ const PurePreviewMessage = ({
                         className={cn('flex flex-col gap-4', {
                           'bg-[var(--user-bubble)] text-white px-3 py-2 rounded-xl':
                             message.role === 'user',
-                          'bg-white text-foreground px-3 py-2 rounded-xl':
+                          'bg-white text-foreground px-3 py-2 rounded-xl dark:bg-black dark:text-white':
                             message.role === 'assistant',
                         })}
                       >
@@ -166,11 +186,24 @@ const PurePreviewMessage = ({
                     <div
                       key={toolCallId}
                       className={cx({
-                        skeleton: ['getWeather'].includes(toolName),
+                        skeleton: ['getWeather', 'peopleFilters', 'companyFilters'].includes(toolName),
                       })}
                     >
                       {toolName === 'getWeather' ? (
                         <Weather />
+                      ) : toolName === 'peopleFilters' ? (
+                        <PeopleFiltersCard
+                          chatId={chatId}
+                          append={append}
+                          setMessages={setMessages}
+                          preset={{ baseQuery: (args as any)?.initialQuery || '' }}
+                        />
+                      ) : toolName === 'companyFilters' ? (
+                        <CompanyFiltersCard
+                          chatId={chatId}
+                          append={append}
+                          preset={{ baseQuery: (args as any)?.initialQuery || '' }}
+                        />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview isReadonly={isReadonly} args={args} />
                       ) : toolName === 'updateDocument' ? (
@@ -197,6 +230,10 @@ const PurePreviewMessage = ({
                     <div key={toolCallId}>
                       {toolName === 'getWeather' ? (
                         <Weather weatherAtLocation={result} />
+                      ) : toolName === 'peopleFilters' ? (
+                        <PeopleFiltersCard chatId={chatId} append={append} setMessages={setMessages} preset={result} />
+                      ) : toolName === 'companyFilters' ? (
+                        <CompanyFiltersCard chatId={chatId} append={append} preset={result} />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview
                           isReadonly={isReadonly}
@@ -221,7 +258,8 @@ const PurePreviewMessage = ({
                   );
                 }
               }
-            })}
+              });
+            })()}
 
             {!isReadonly && (
               <MessageActions
@@ -269,7 +307,7 @@ export const ThinkingMessage = () => {
           <SparklesIcon size={14} />
         </div>
 
-        <div className="flex flex-col gap-2 w-full bg-white text-foreground px-3 py-2 rounded-xl">
+        <div className="flex flex-col gap-2 w-full bg-white text-foreground px-3 py-2 rounded-xl dark:bg-black dark:text-white">
           <div className="flex flex-col gap-4 text-muted-foreground">
             Hmm...
           </div>

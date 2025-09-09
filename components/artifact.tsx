@@ -18,6 +18,7 @@ import { Button } from './ui/button';
 import { Toolbar } from './toolbar';
 import { VersionFooter } from './version-footer';
 import { ArtifactActions } from './artifact-actions';
+import { ArtifactIntegrations } from './artifact-integrations';
 import { ArtifactCloseButton } from './artifact-close-button';
 import { ArtifactMessages } from './artifact-messages';
 import { useSidebar } from './ui/sidebar';
@@ -474,6 +475,7 @@ function PureArtifact({
                 >
                   {isFullscreen ? 'Exit full screen' : 'Full screen'}
                 </Button>
+                <ArtifactIntegrations />
                 <ArtifactActions
                 artifact={artifact}
                 currentVersionIndex={currentVersionIndex}

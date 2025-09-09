@@ -2,6 +2,7 @@ export type SearchQuery = {
   q: string;
   filters?: Record<string, string | number | boolean>;
   limit?: number;
+  cursor?: string | null;
 };
 
 export type Person = {
@@ -43,6 +44,7 @@ export type ProviderResult<T> = {
   rows: T[];
   creditCost?: CreditCost;
   source: 'crustdata' | 'xi' | 'llm';
+  nextCursor?: string | null;
 };
 
 export interface PeopleProvider {
@@ -52,4 +54,3 @@ export interface PeopleProvider {
 export interface CompanyProvider {
   getCompanies(query: SearchQuery): Promise<ProviderResult<Company>>;
 }
-

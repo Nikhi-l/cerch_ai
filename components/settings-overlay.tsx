@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ModelSelector } from '@/components/model-selector';
 import { ApiKeyInput } from '@/components/api-key-input';
+import { CrustdataTokenInput } from '@/components/crustdata-token-input';
 import { Settings } from 'lucide-react';
 import type { Session } from 'next-auth';
 import { cn } from '@/lib/utils';
@@ -59,7 +60,7 @@ export function SettingsOverlay({
           <AlertDialogHeader className="border-b px-6 py-4">
             <AlertDialogTitle>Settings</AlertDialogTitle>
             <AlertDialogDescription>
-              Configure your API key, model, and preferences.
+              {apiKey ? 'Configure your model and preferences.' : 'Please add your OpenAI API key.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -69,6 +70,14 @@ export function SettingsOverlay({
               <ApiKeyInput apiKey={apiKey} setApiKey={setApiKey} />
               <p className="text-xs text-muted-foreground">
                 Your key is stored as a browser cookie for this app only. You can clear it anytime.
+              </p>
+            </section>
+
+            <section className="space-y-2">
+              <h3 className="text-sm font-medium">Crustdata API Token</h3>
+              <CrustdataTokenInput />
+              <p className="text-xs text-muted-foreground">
+                Optional: add your Crustdata token to enable People/Company searches.
               </p>
             </section>
 

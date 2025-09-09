@@ -17,7 +17,9 @@ export type DataStreamDelta = {
     | 'suggestion'
     | 'clear'
     | 'finish'
-    | 'kind';
+    | 'kind'
+    | 'status'
+    | 'error';
   content: string | Suggestion;
 };
 
@@ -32,19 +34,9 @@ export function DataStreamHandler({ id }: { id: string }) {
     const newDeltas = dataStream.slice(lastProcessedIndex.current + 1);
     lastProcessedIndex.current = dataStream.length - 1;
 
+    let currentKind: ArtifactKind = artifact.kind;
     (newDeltas as DataStreamDelta[]).forEach((delta: DataStreamDelta) => {
-      const artifactDefinition = artifactDefinitions.find(
-        (artifactDefinition) => artifactDefinition.kind === artifact.kind,
-      );
-
-      if (artifactDefinition?.onStreamPart) {
-        artifactDefinition.onStreamPart({
-          streamPart: delta,
-          setArtifact,
-          setMetadata,
-        });
-      }
-
+      // First, update core artifact state for standard events.
       setArtifact((draftArtifact) => {
         if (!draftArtifact) {
           return { ...initialArtifactData, status: 'streaming' };
@@ -89,6 +81,24 @@ export function DataStreamHandler({ id }: { id: string }) {
             return draftArtifact;
         }
       });
+
+      // Then, route the stream part to the correct artifact client based on the target kind for this delta.
+      if (delta.type === 'kind') {
+        currentKind = delta.content as ArtifactKind;
+      }
+      const targetKind = currentKind;
+
+      const artifactDefinition = artifactDefinitions.find(
+        (def) => def.kind === targetKind,
+      );
+
+      if (artifactDefinition?.onStreamPart) {
+        artifactDefinition.onStreamPart({
+          streamPart: delta,
+          setArtifact,
+          setMetadata,
+        });
+      }
     });
   }, [dataStream, setArtifact, setMetadata, artifact]);
 

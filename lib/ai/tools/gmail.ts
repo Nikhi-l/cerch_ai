@@ -1,6 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { getFreshAccessToken } from '@/lib/googleTokens';
+import { fetchWithTimeout } from '@/lib/network';
 
 type ResponsesResult = any;
 
@@ -43,24 +44,29 @@ export function gmailQueryTool({ apiKey }: { apiKey?: string }) {
         ],
       } as const;
 
-      const response = await fetch('https://api.openai.com/v1/responses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${key}`,
-        },
-        body: JSON.stringify(body),
-      });
+      try {
+        const response = await fetchWithTimeout('https://api.openai.com/v1/responses', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${key}`,
+          },
+          body: JSON.stringify(body),
+          timeoutMs: 60000,
+        });
 
-      if (!response.ok) {
-        const text = await response.text();
-        return { error: `Responses API error: ${response.status} ${text}` };
-      }
+        if (!response.ok) {
+          const text = await response.text();
+          return { error: `Responses API error: ${response.status} ${text}` };
+        }
 
-      const json = await response.json();
+        const json = await response.json();
 
       const outputText = (json as any).output_text || null;
       return outputText ? { output_text: outputText } : json;
+      } catch (err: any) {
+        return { error: `Responses API network error: ${err?.message || 'timeout'}` };
+      }
     },
   });
 }

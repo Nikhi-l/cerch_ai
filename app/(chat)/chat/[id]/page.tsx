@@ -12,7 +12,13 @@ import type { Attachment, UIMessage } from 'ai';
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const { id } = params;
-  const chat = await getChatById({ id });
+  let chat: Awaited<ReturnType<typeof getChatById>>;
+  try {
+    chat = await getChatById({ id });
+  } catch (_) {
+    // Gracefully fall back if DB is temporarily unavailable
+    redirect('/chat');
+  }
 
   if (!chat) {
     notFound();
@@ -34,9 +40,12 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     }
   }
 
-  const messagesFromDb = await getMessagesByChatId({
-    id,
-  });
+  let messagesFromDb: Awaited<ReturnType<typeof getMessagesByChatId>> = [];
+  try {
+    messagesFromDb = await getMessagesByChatId({ id });
+  } catch (_) {
+    messagesFromDb = [];
+  }
 
   function convertToUIMessages(messages: Array<DBMessage>): Array<UIMessage> {
     return messages.map((message) => ({

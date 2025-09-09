@@ -20,6 +20,11 @@ export async function saveOpenAIApiKeyAsCookie(apiKey: string) {
   cookieStore.set('openai-api-key', apiKey);
 }
 
+export async function saveCrustdataApiTokenAsCookie(token: string) {
+  const cookieStore = await cookies();
+  cookieStore.set('crustdata-api-token', token);
+}
+
 export async function generateTitleFromUserMessage({
   message,
   apiKey,

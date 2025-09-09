@@ -2,7 +2,7 @@
 
 import type { Attachment, UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { ChatHeader } from '@/components/chat-header';
 import type { Vote } from '@/lib/db/schema';
@@ -47,6 +47,8 @@ export function Chat({
     initialVisibilityType,
   });
 
+  const shouldRefreshHistoryRef = useRef<boolean>(initialMessages.length === 0);
+
   const {
     messages,
     setMessages,
@@ -74,7 +76,12 @@ export function Chat({
       apiKey,
     }),
     onFinish: () => {
-      mutate(unstable_serialize(getChatHistoryPaginationKey));
+      // Only refresh sidebar history when starting a brand-new chat (first assistant turn)
+      // to avoid redundant /api/history refetches after every message.
+      if (shouldRefreshHistoryRef.current) {
+        mutate(unstable_serialize(getChatHistoryPaginationKey));
+        shouldRefreshHistoryRef.current = false;
+      }
     },
     onError: (error) => {
       if (error instanceof ChatSDKError) {
@@ -85,6 +92,9 @@ export function Chat({
       }
     },
   });
+
+  // Determine whether this is a new chat (no prior messages at mount).
+  
 
   const searchParams = useSearchParams();
   const query = searchParams.get('query');
@@ -136,6 +146,7 @@ export function Chat({
           messages={messages}
           setMessages={setMessages}
           reload={reload}
+          append={append}
           isReadonly={isReadonly}
           isArtifactVisible={isArtifactVisible}
         />

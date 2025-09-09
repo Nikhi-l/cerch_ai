@@ -48,14 +48,20 @@ export function normalizeCompanyRows(rows: any[]): Company[] {
     const location = r.headquarters || r.hq_country || r.largest_headcount_country || r.location || '';
     const size = r.linkedin_headcount || r.headcount || '';
     const funding = r.crunchbase_total_investment_usd || r.last_funding_round_investment_usd || r.funding || '';
-    const logo_url = r.linkedin_logo_url || r.logo_url || r.logo || r.image || '';
+    const logo_url =
+      r.linkedin_logo_url ||
+      (r.logo_urls ? r.logo_urls.medium || r.logo_urls.small || r.logo_urls.large || '' : '') ||
+      r.logo_url ||
+      r.logo ||
+      r.image ||
+      '';
     const description = r.linkedin_company_description || r.description || '';
 
     return {
       name,
       industry,
       company_url: website,
-      linkedin_url: r.linkedin_profile_url || r.linkedin_url || r.linkedin || '',
+      linkedin_url: r.linkedin_company_url || r.linkedin_profile_url || r.linkedin_url || r.linkedin || '',
       location,
       size,
       funding,

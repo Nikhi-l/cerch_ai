@@ -236,6 +236,7 @@ function PureMultimodalInput({
         uploadQueue.length === 0 && (
           <SuggestedActions
             append={append}
+            setMessages={setMessages}
             chatId={chatId}
             selectedVisibilityType={selectedVisibilityType}
           />
@@ -280,7 +281,7 @@ function PureMultimodalInput({
         value={input}
         onChange={handleInput}
         className={cx(
-          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
+          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-[var(--user-bubble)] focus-visible:ring-[var(--user-bubble)] dark:focus-visible:ring-[var(--user-bubble)]',
           className,
         )}
         rows={2}
