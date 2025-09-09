@@ -1,16 +1,16 @@
 import type { Company, Person } from './types';
 
 export function toCSV(headers: string[], rows: Array<Record<string, any>>): string {
-  const escape = (v: any) => {
+  const escapeCsv = (v: any) => {
     const s = v == null ? '' : String(v);
     if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-      return '"' + s.replace(/"/g, '""') + '"';
+      return `"${s.replace(/"/g, '""')}"`;
     }
     return s;
   };
 
   const headerLine = headers.join(',');
-  const lines = rows.map((r) => headers.map((h) => escape(r[h])).join(','));
+  const lines = rows.map((r) => headers.map((h) => escapeCsv(r[h])).join(','));
   return [headerLine, ...lines].join('\n');
 }
 

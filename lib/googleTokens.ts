@@ -31,7 +31,7 @@ export async function getFreshAccessToken(): Promise<FreshTokens> {
   if (shouldRefresh) {
     try {
       const config = await getGoogleClient();
-      const refreshed = await refreshTokenGrant(config, refreshToken!);
+      const refreshed = await refreshTokenGrant(config, refreshToken ?? '');
       accessToken = refreshed.access_token || accessToken;
       refreshToken = refreshed.refresh_token || refreshToken;
       expiresAt =
