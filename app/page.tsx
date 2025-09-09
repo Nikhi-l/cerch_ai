@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Spline from '@splinetool/react-spline/next';

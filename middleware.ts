@@ -24,13 +24,17 @@ export async function middleware(request: NextRequest) {
   });
 
   // Block any legacy guest sessions (email like guest-<ts>)
-  if (token && typeof (token as any).email === 'string' && /^guest-\d+$/.test((token as any).email as string)) {
+  if (
+    token &&
+    typeof (token as any).email === 'string' &&
+    /^guest-\d+$/.test((token as any).email as string)
+  ) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
   if (!token) {
-    // Allow public access to home, login, && register without forcing guest auth
-    if (['/', '/login', '/register'].includes(pathname)) {
+    // Allow public access to home, landing page, login, && register without forcing guest auth
+    if (['/', '/landing.html', '/login', '/register'].includes(pathname)) {
       return NextResponse.next();
     }
     return NextResponse.redirect(new URL('/login', request.url));
