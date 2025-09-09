@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       }
     } catch {}
     // If Crustdata token is configured, fetch lots of results using Company Search
-    if (isCrustConfigured()) {
+    if (await isCrustConfigured()) {
       await sleep(800 + Math.floor(Math.random() * 400));
       const query: SearchQuery = {
         q: '',
