@@ -19,7 +19,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ModelSelector } from '@/components/model-selector';
 import { ApiKeyInput } from '@/components/api-key-input';
-import { CrustdataTokenInput } from '@/components/crustdata-token-input';
 
 export function ChatSettings({
   session,
@@ -75,13 +74,7 @@ export function ChatSettings({
               </p>
             </section>
 
-            <section className="space-y-2">
-              <h3 className="text-sm font-medium">Crustdata API Token</h3>
-              <CrustdataTokenInput />
-              <p className="text-xs text-muted-foreground">
-                Optional: add your Crustdata token to enable People/Company searches.
-              </p>
-            </section>
+            {/* Crustdata API Token field removed: token provided by backend */}
 
             <section className="space-y-2">
               <h3 className="text-sm font-medium">Model</h3>
