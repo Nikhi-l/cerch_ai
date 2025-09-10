@@ -16,6 +16,9 @@ The static landing page references `/landing.png`, but relying on a custom route
 ## Approach
 - Relocate `landing.png` to `public/` and delete `app/landing.png/route.ts` so the image is served as a standard static asset.
 
+## Follow-up
+- Temporarily comment out the landing page image element while investigating persistent load failures.
+
 ## Impacted Areas
 - `public/landing.png`
 - Removed: `app/landing.png/route.ts`
