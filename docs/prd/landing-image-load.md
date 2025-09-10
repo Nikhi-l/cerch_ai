@@ -1,7 +1,7 @@
-# PRD: Serve landing.png from the public directory
+# PRD: Serve landing screenshot reliably
 
 ## Context
-The static landing page references `/landing.png`, but relying on a custom route to read the file from the repository root fails once the app is built for a serverless environment, so the image never loads.
+The static landing page previously referenced `/landing.png`, but relying on a custom route to read the file from the repository root failed once the app was built for a serverless environment, so the image never loaded. Loading from the `public` folder also proved unreliable, so the screenshot is now hosted externally.
 
 ## Goals / Non-goals
 - Goals:
@@ -10,22 +10,22 @@ The static landing page references `/landing.png`, but relying on a custom route
   - Redesign the landing page or asset pipeline.
 
 ## Scope & Assumptions
-- Move the `landing.png` asset into the `public/` folder so it is bundled automatically.
+- Reference a remotely hosted screenshot to ensure the landing page renders an image even when the local asset pipeline fails.
 - Remove the custom image route.
 
 ## Approach
-- Relocate `landing.png` to `public/` and delete `app/landing.png/route.ts` so the image is served as a standard static asset.
+- Delete `app/landing.png/route.ts` and point the `<img>` element to `https://i.postimg.cc/Prgn5JYj/Screenshot-2025-09-10-at-3-12-24-AM.png`.
 
 ## Follow-up
-- Temporarily comment out the landing page image element while investigating persistent load failures.
+- Replace the temporary external link with a local asset once the image pipeline is stable.
 
 ## Impacted Areas
-- `public/landing.png`
+- `landing.html`
 - Removed: `app/landing.png/route.ts`
 
 ## Risks & Mitigations
-- **Risk:** Moving the asset could break existing references.
-  - **Mitigation:** The image continues to be referenced as `/landing.png`, which still resolves after relocation.
+- **Risk:** External host may become unavailable.
+  - **Mitigation:** Replace with a locally served asset when feasible.
 
 ## Validation
 - Execute `pnpm lint`, `pnpm test`, and `pnpm run build` to ensure no new regressions (known failures persist).
