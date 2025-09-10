@@ -34,6 +34,7 @@ interface WebsetTableProps {
   autoHideEmptyColumns?: boolean;
   hideImageUrlColumns?: boolean;
   onLoadMore?: () => void;
+  onSaveContent?: (updatedContent: string, debounce: boolean) => void;
 }
 
 export function WebsetTable({
@@ -42,6 +43,7 @@ export function WebsetTable({
   autoHideEmptyColumns,
   hideImageUrlColumns,
   onLoadMore,
+  onSaveContent,
 }: WebsetTableProps) {
   const hideEmpty = autoHideEmptyColumns ?? (variant === 'people');
   const hideImageCols = hideImageUrlColumns ?? (variant === 'people');
@@ -447,7 +449,7 @@ export function WebsetTable({
                 }
 
                 const newCsv = unparse([rawHeaders, ...dataRows]);
-                onSaveContent(newCsv, false);
+                onSaveContent?.(newCsv, false);
                 try { toast.success(`Enriched ${fillCount} cells`); } catch {}
               } catch (e) {
                 try { toast.error('Enrichment failed'); } catch {}
