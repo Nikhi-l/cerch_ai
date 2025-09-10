@@ -34,6 +34,7 @@ interface WebsetTableProps {
   autoHideEmptyColumns?: boolean;
   hideImageUrlColumns?: boolean;
   onLoadMore?: () => void;
+  onSaveContent?: (updatedContent: string, debounce: boolean) => void;
 }
 
 export function WebsetTable({
@@ -42,6 +43,7 @@ export function WebsetTable({
   autoHideEmptyColumns,
   hideImageUrlColumns,
   onLoadMore,
+  onSaveContent,
 }: WebsetTableProps) {
   const hideEmpty = autoHideEmptyColumns ?? (variant === 'people');
   const hideImageCols = hideImageUrlColumns ?? (variant === 'people');
@@ -111,7 +113,7 @@ export function WebsetTable({
       });
       return changed ? next : prev;
     });
-  }, [headers]);
+  }, [headers, NAME_DEFAULT_WIDTH]);
 
   const startResizing = (header: string) => (e: ReactMouseEvent) => {
     e.preventDefault();
@@ -447,7 +449,7 @@ export function WebsetTable({
                 }
 
                 const newCsv = unparse([rawHeaders, ...dataRows]);
-                onSaveContent(newCsv, false);
+                onSaveContent?.(newCsv, false);
                 try { toast.success(`Enriched ${fillCount} cells`); } catch {}
               } catch (e) {
                 try { toast.error('Enrichment failed'); } catch {}
@@ -478,7 +480,7 @@ export function WebsetTable({
                 <TableHead
                   key={header}
                   style={{ width: columnWidths[header] ?? (/\bname\b/i.test(header) ? NAME_DEFAULT_WIDTH : DEFAULT_COL_WIDTH) }}
-                  className="px-4 py-2 font-bold border-r border-b border-border bg-muted dark:bg-black sticky top-0 z-10 relative"
+                    className="px-4 py-2 font-bold border-r border-b border-border bg-muted dark:bg-black sticky top-0 z-10"
                 >
                   <div className="flex items-center justify-between gap-2 cursor-pointer select-none" onClick={() => {
                     if (sortedColumn === header) setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));

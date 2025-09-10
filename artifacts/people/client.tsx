@@ -87,6 +87,7 @@ export const peopleArtifact = new Artifact<'people', Metadata>({
           autoHideEmptyColumns
           hideImageUrlColumns
           onLoadMore={metadata?.cursor ? handleLoadMore : undefined}
+          onSaveContent={onSaveContent}
         />
       </div>
     );

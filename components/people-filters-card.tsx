@@ -11,7 +11,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useArtifact } from '@/hooks/use-artifact';
-import type { UseChatHelpers, UIMessage } from '@ai-sdk/react';
+import type { UseChatHelpers } from '@ai-sdk/react';
+import type { UIMessage } from 'ai';
 import { generateUUID } from '@/lib/utils';
 
 type PeopleFiltersPreset = {
