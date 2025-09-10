@@ -1,7 +1,7 @@
-# PRD: Load landing.png with bundler-aware path
+# PRD: Serve landing.png from the public directory
 
 ## Context
-The static landing page references `/landing.png`, but the Next.js route serving the image read it from `process.cwd()`, which fails in the serverless build, so the image never loads.
+The static landing page references `/landing.png`, but relying on a custom route to read the file from the repository root fails once the app is built for a serverless environment, so the image never loads.
 
 ## Goals / Non-goals
 - Goals:
@@ -10,21 +10,21 @@ The static landing page references `/landing.png`, but the Next.js route serving
   - Redesign the landing page or asset pipeline.
 
 ## Scope & Assumptions
-- Touches `app/landing.png/route.ts` only.
-- Assumes `landing.html` continues to live at the repository root.
+- Move the `landing.png` asset into the `public/` folder so it is bundled automatically.
+- Remove the custom image route.
 
 ## Approach
-- Resolve the image path relative to the route module using `new URL` and `fileURLToPath` so the bundler includes the asset.
+- Relocate `landing.png` to `public/` and delete `app/landing.png/route.ts` so the image is served as a standard static asset.
 
 ## Impacted Areas
-- `app/landing.png/route.ts`
+- `public/landing.png`
+- Removed: `app/landing.png/route.ts`
 
 ## Risks & Mitigations
-- **Risk:** Incorrect relative path still results in 404.
-  - **Mitigation:** Use `new URL('../../landing.png', import.meta.url)` tested locally.
+- **Risk:** Moving the asset could break existing references.
+  - **Mitigation:** The image continues to be referenced as `/landing.png`, which still resolves after relocation.
 
 ## Validation
-- Run ESLint on the route.
 - Execute `pnpm lint`, `pnpm test`, and `pnpm run build` to ensure no new regressions (known failures persist).
 
 ## Rollout / Rollback
