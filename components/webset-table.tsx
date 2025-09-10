@@ -384,7 +384,10 @@ export function WebsetTable({
                   const url = (row[linkedinIdx] || '').trim();
                   if (!url) continue;
                   urls.push(url);
-                  (urlToIndexes[url] ||= []).push(i);
+                  if (!urlToIndexes[url]) {
+                    urlToIndexes[url] = [];
+                  }
+                  urlToIndexes[url].push(i);
                 }
                 if (!urls.length) {
                   try { toast.error('No LinkedIn URLs found in missing rows'); } catch {}
@@ -478,7 +481,7 @@ export function WebsetTable({
                 <TableHead
                   key={header}
                   style={{ width: columnWidths[header] ?? (/\bname\b/i.test(header) ? NAME_DEFAULT_WIDTH : DEFAULT_COL_WIDTH) }}
-                  className="px-4 py-2 font-bold border-r border-b border-border bg-muted dark:bg-black sticky top-0 z-10 relative"
+                  className="px-4 py-2 font-bold border-r border-b border-border bg-muted dark:bg-black sticky top-0 z-10"
                 >
                   <div className="flex items-center justify-between gap-2 cursor-pointer select-none" onClick={() => {
                     if (sortedColumn === header) setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
