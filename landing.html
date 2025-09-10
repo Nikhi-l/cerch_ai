@@ -154,6 +154,24 @@
         .counter {
             animation: countUp 0.8s ease-out forwards;
         }
+
+        /* Inline video wrapper for YouTube privacy-mode embed */
+        .video-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 1rem; /* ~rounded-2xl */
+            overflow: hidden;
+        }
+
+        .video-wrap iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
     </style>
     <link id="all-fonts-link-font-geist" rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;display=swap">
@@ -524,8 +542,25 @@
                     </div>
 
                     <div class="w-full">
-                        <img src="https://i.postimg.cc/3wWqjHgB/Screenshot-2025-09-10-at-4-29-35-AM.png"
-                            alt="Cerch product screenshot" class="w-full h-auto rounded-2xl border border-white/10" />
+                        <div
+                            class="video-wrap border border-white/10 js-ytembed"
+                            data-videoid="QPH7cj_rL-o" data-title="Cerch AI Demo"
+                            style="background-image:url('https://i.postimg.cc/3wWqjHgB/Screenshot-2025-09-10-at-4-29-35-AM.png'); background-size:cover; background-position:center">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <button aria-label="Play demo"
+                                    class="hover:bg-white/20 transition-all bg-white/10 rounded-full p-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                        stroke-linejoin="round" data-lucide="play"
+                                        class="lucide lucide-play w-[20px] h-[20px] text-neutral-50"
+                                        style="width: 20px; height: 20px;">
+                                        <path
+                                            d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="grid lg:grid-cols-12 gap-6 hidden">
@@ -1188,21 +1223,7 @@
                         </aside>
                     </div>
 
-                    <!-- Floating action buttons -->
-                    <div class="absolute bottom-4 right-4 flex gap-2">
-                        <a href="https://youtu.be/QPH7cj_rL-o" target="_blank" rel="noopener noreferrer" aria-label="Watch demo"
-                           class="hover:bg-white/20 transition-all bg-white/10 rounded-full pt-3 pr-3 pb-3 pl-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                stroke-linejoin="round" data-lucide="play"
-                                class="lucide lucide-play w-[20px] h-[20px] text-neutral-50" data-icon-replaced="true"
-                                style="width: 20px; height: 20px;">
-                                <path
-                                    d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z">
-                                </path>
-                            </svg>
-                        </a>
-                    </div>
+                    
                 </div>
             </div>
         </section>
@@ -1622,6 +1643,25 @@
 
                 // Initialize counter animation
                 animateCounters();
+
+                // Lightweight YouTube embed: swap poster → iframe on click
+                document.querySelectorAll('.js-ytembed').forEach((wrap) => {
+                    const playBtn = wrap.querySelector('button[aria-label="Play demo"]');
+                    if (!playBtn) return;
+                    playBtn.addEventListener('click', () => {
+                        const id = wrap.getAttribute('data-videoid');
+                        const title = wrap.getAttribute('data-title') || 'Video';
+                        const params = 'autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&color=white';
+                        const iframe = document.createElement('iframe');
+                        iframe.setAttribute('src', `https://www.youtube-nocookie.com/embed/${id}?${params}`);
+                        iframe.setAttribute('title', title);
+                        iframe.setAttribute('loading', 'lazy');
+                        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+                        iframe.setAttribute('allowfullscreen', '');
+                        wrap.innerHTML = '';
+                        wrap.appendChild(iframe);
+                    }, { once: true });
+                });
             });
         </script>
 

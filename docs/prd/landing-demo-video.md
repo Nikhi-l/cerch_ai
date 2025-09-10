@@ -1,39 +1,40 @@
-# PRD: Watch Demo CTA linking to YouTube
+# PRD: Inline Demo Video with Poster (YouTube privacy‑mode)
 
 ## Context
-The landing page demo area previously cycled between a static screenshot, a YouTube embed, and a locally hosted `<video>`. To simplify and avoid embedding, revert the section to a static screenshot and add a clear “Watch Demo” CTA that opens the YouTube video.
+The landing page demo area now uses a poster‑first inline player: we render a static dashboard screenshot, and on click we swap to a privacy‑mode YouTube iframe that autoplays within the same frame. This avoids a hard redirect to YouTube.
 
 ## Goals / Non-goals
 - Goals:
-  - Use a prominent “Watch Demo” button that links to the YouTube demo in a new tab.
-  - Keep the screenshot visible within the demo section for quick visual context.
+  - Show the dashboard screenshot by default (fast, brand‑consistent).
+  - On click, inline‑play the YouTube demo in privacy‑mode with modest branding.
+  - Avoid channel/title overlays prior to user interaction.
 - Non-goals:
-  - Inline video embedding or player controls on the landing page.
+  - Building a full custom player; we still rely on YouTube iframe once playing.
 
 ## Scope & Assumptions
 - Update only `landing.html`:
-  - Restore demo area to an `<img>` screenshot.
-  - Add/enable a Watch Demo button pointing to YouTube.
+  - Wrap the screenshot in a `.video-wrap.js-ytembed` container with a play overlay.
+  - On click, replace with `youtube-nocookie.com/embed` iframe (`autoplay=1&modestbranding=1`).
 
 ## Approach
-- Replace the embedded video with the existing screenshot image element.
-- Enable the Watch Demo CTA as an `<a>` with `target="_blank"` and `rel="noopener noreferrer"` to `https://youtu.be/QPH7cj_rL-o`.
+- Add a small inline script that swaps the poster for an iframe on click.
 
 ## Impacted Areas
 - `landing.html`
 
 ## Risks & Mitigations
-- Risk: External video host (YouTube) may be blocked or unavailable.
-  - Mitigation: Keep static screenshot as baseline visual; alternative hosting can be added later.
+- Risk: External host (YouTube) blocked/unavailable.
+  - Mitigation: Poster remains; consider self‑hosted MP4/HLS fallback later.
 
 ## Validation
-- Load `/` and `/landing` and verify:
-  - Screenshot renders with rounded border and responsive sizing.
-  - Watch Demo button is visible and opens the video in a new tab.
+- Load `/` and verify:
+  - Poster renders with rounded border, 16:9 sizing.
+  - Click play: player swaps in‑place and auto‑plays.
+  - No channel/title shown before interaction; modest branding after.
 
 ## Rollout / Rollback
 - Rollout: Merge and deploy.
-- Rollback: Revert to previous video embedding if required.
+- Rollback: Set the wrapper back to a static `<img>` or link‑out CTA.
 
 ## Links
 - YouTube video: https://youtu.be/QPH7cj_rL-o
