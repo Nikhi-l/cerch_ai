@@ -108,6 +108,18 @@ export function ChatSettings({
                 />
               </div>
             </section>
+
+            <section className="space-y-2">
+              <h3 className="text-sm font-medium">Integrations</h3>
+              <p className="text-xs text-muted-foreground">
+                CRM integrations are available on paid plans. You can browse supported CRMs and learn about the flow.
+              </p>
+              <div>
+                <a href="/settings/integrations" className="inline-flex">
+                  <Button variant="outline" size="sm">Open Integrations settings</Button>
+                </a>
+              </div>
+            </section>
           </div>
 
           <AlertDialogFooter className="border-t px-6 py-4">

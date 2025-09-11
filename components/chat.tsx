@@ -17,6 +17,7 @@ import { getChatHistoryPaginationKey } from './sidebar-history';
 import { toast } from './toast';
 import type { Session } from 'next-auth';
 import { useSearchParams } from 'next/navigation';
+import { useArtifact } from '@/hooks/use-artifact';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
 import { useAutoResume } from '@/hooks/use-auto-resume';
 import { ChatSDKError } from '@/lib/errors';
@@ -98,20 +99,46 @@ export function Chat({
 
   const searchParams = useSearchParams();
   const query = searchParams.get('query');
+  const artifactToOpen = searchParams.get('artifact');
 
   const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
+  const [hasOpenedArtifact, setHasOpenedArtifact] = useState(false);
 
   useEffect(() => {
     if (query && !hasAppendedQuery) {
-      append({
-        role: 'user',
-        content: query,
-      });
-
+      append({ role: 'user', content: query });
       setHasAppendedQuery(true);
       window.history.replaceState({}, '', `/chat/${id}`);
     }
   }, [query, append, hasAppendedQuery, id]);
+
+  const { setArtifact } = useArtifact();
+  useEffect(() => {
+    const openArtifact = async (artifactId: string) => {
+      try {
+        const res = await fetch(`/api/document?id=${artifactId}`);
+        if (!res.ok) throw new Error('Failed to fetch document');
+        const docs = await res.json();
+        const latest = docs?.[docs.length - 1];
+        if (!latest) return;
+        setArtifact({
+          title: latest.title,
+          documentId: latest.id,
+          kind: latest.kind,
+          content: latest.content ?? '',
+          isVisible: true,
+          status: 'idle',
+          boundingBox: { top: 0, left: 0, width: 0, height: 0 },
+        });
+      } catch {}
+    };
+
+    if (artifactToOpen && !hasOpenedArtifact) {
+      openArtifact(artifactToOpen);
+      setHasOpenedArtifact(true);
+      window.history.replaceState({}, '', `/chat/${id}`);
+    }
+  }, [artifactToOpen, hasOpenedArtifact, id, setArtifact]);
 
   const { data: votes } = useSWR<Array<Vote>>(
     messages.length >= 2 ? `/api/vote?chatId=${id}` : null,

@@ -20,8 +20,11 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { Plus, Search as SearchIcon } from 'lucide-react';
 import type { Chat } from '@/lib/db/schema';
 import { fetcher } from '@/lib/utils';
 import { ChatItem } from './sidebar-history-item';
@@ -114,6 +117,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  // Quick actions above; no dedicated Set history section anymore.
+
   const hasReachedEnd = paginatedChatHistories
     ? paginatedChatHistories.some((page) => page.hasMore === false)
     : false;
@@ -196,9 +201,10 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     return (
       <SidebarGroup>
         <SidebarGroupContent>
-        <div className="px-2 text-zinc-500 dark:text-white w-full flex flex-row justify-center items-center text-sm gap-2">
-          Your conversations will appear here once you start chatting!
-        </div>
+          <div className="px-2 pb-1 text-xs text-sidebar-foreground/60 dark:text-sidebar-foreground">Chat history</div>
+          <div className="px-2 text-zinc-500 dark:text-white w-full flex flex-row justify-center items-center text-sm gap-2">
+            Your conversations will appear here once you start chatting!
+          </div>
         </SidebarGroupContent>
       </SidebarGroup>
     );
@@ -209,6 +215,37 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
+            {/* Quick actions */}
+            {user && (
+              <>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => {
+                      setOpenMobile(false);
+                      router.push('/chat');
+                      router.refresh();
+                    }}
+                  >
+                    <Plus className="h-4 w-4 text-sidebar-foreground/60" />
+                    <span>New search</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => {
+                      setOpenMobile(false);
+                      router.push('/dashboard');
+                    }}
+                  >
+                    <SearchIcon className="h-4 w-4 text-sidebar-foreground/60" />
+                    <span>Search past datasets</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <div className="h-2" />
+              </>
+            )}
+            <div className="px-2 pb-1 text-xs text-sidebar-foreground/60 dark:text-sidebar-foreground">Chat history</div>
+
             {paginatedChatHistories &&
               (() => {
                 const chatsFromHistory = paginatedChatHistories.flatMap(

@@ -38,7 +38,6 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                 Cerch Ai
               </span>
             </Link>
-
             <div className="ml-auto flex items-center gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>

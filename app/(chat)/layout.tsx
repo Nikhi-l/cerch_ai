@@ -6,6 +6,7 @@ import { auth } from '../(auth)/auth';
 import Script from 'next/script';
 import { getRemainingCredits } from '@/lib/providers/crustdata/client';
 import { Coins } from 'lucide-react';
+import { CreditsButton } from '@/components/credits-button';
 
 export const experimental_ppr = true;
 
@@ -30,15 +31,8 @@ export default async function Layout({
       <div className="chat-theme">
         <SidebarProvider defaultOpen={!isCollapsed}>
           <AppSidebar user={session?.user} />
-          {/* Top-right credits pill */}
-          {typeof credits === 'number' && (
-            <div className="fixed top-2 right-14 md:right-20 z-50">
-              <div className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-md border bg-background">
-                <Coins className="h-4 w-4" />
-                <span>Credits: {credits}</span>
-              </div>
-            </div>
-          )}
+          {/* Top-right credits button with popup */}
+          {typeof credits === 'number' && <CreditsButton credits={credits} />}
           <SidebarInset>{children}</SidebarInset>
         </SidebarProvider>
       </div>

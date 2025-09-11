@@ -10,6 +10,7 @@ import {
   gte,
   inArray,
   lt,
+  sql,
   type SQL,
 } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -50,6 +51,55 @@ export async function getUser(email: string): Promise<Array<User>> {
       'bad_request:database',
       'Failed to get user by email',
     );
+  }
+}
+
+export async function getDocumentsByUserId({
+  id,
+  kinds,
+}: {
+  id: string;
+  kinds?: Array<ArtifactKind>;
+}) {
+  try {
+    const where = kinds && kinds.length > 0
+      ? and(eq(document.userId, id), inArray(document.kind as any, kinds as any))
+      : eq(document.userId, id);
+
+    return await db
+      .select()
+      .from(document)
+      .where(where)
+      .orderBy(desc(document.createdAt));
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to get documents by user id');
+  }
+}
+
+export async function getChatIdByDocumentId({ id }: { id: string }) {
+  try {
+    const result = await db.execute(sql`
+      SELECT "chatId"
+      FROM "Message_v2"
+      WHERE EXISTS (
+        SELECT 1
+        FROM json_array_elements("parts") AS p
+        WHERE p->>'type' = 'tool-invocation'
+          AND p->'toolInvocation'->>'state' = 'result'
+          AND p->'toolInvocation'->>'toolName' = 'createDocument'
+          AND p->'toolInvocation'->'result'->>'id' = ${id}
+      )
+      ORDER BY "createdAt" DESC
+      LIMIT 1;
+    `);
+
+    // drizzle returns rows as array of objects { chatId: '...' }
+    // normalize casing just in case
+    const row = (result as any)?.rows?.[0] || (result as any)?.[0];
+    if (!row) return null;
+    return row.chatId ?? row.chatid ?? null;
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to get chat id by document id');
   }
 }
 

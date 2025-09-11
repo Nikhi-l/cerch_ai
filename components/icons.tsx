@@ -477,6 +477,30 @@ export const MoreIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
+export const DashboardIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      strokeLinejoin="round"
+      viewBox="0 0 16 16"
+      width={size}
+      style={{ color: 'currentcolor' }}
+    >
+      <g fill="currentColor">
+        <rect x="2" y="2" width="3" height="3" rx="0.5" />
+        <rect x="6.5" y="2" width="3" height="3" rx="0.5" />
+        <rect x="11" y="2" width="3" height="3" rx="0.5" />
+        <rect x="2" y="6.5" width="3" height="3" rx="0.5" />
+        <rect x="6.5" y="6.5" width="3" height="3" rx="0.5" />
+        <rect x="11" y="6.5" width="3" height="3" rx="0.5" />
+        <rect x="2" y="11" width="3" height="3" rx="0.5" />
+        <rect x="6.5" y="11" width="3" height="3" rx="0.5" />
+        <rect x="11" y="11" width="3" height="3" rx="0.5" />
+      </g>
+    </svg>
+  );
+};
+
 export const TrashIcon = ({ size = 16 }: { size?: number }) => {
   return (
     <svg
