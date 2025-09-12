@@ -128,6 +128,9 @@
     }
 }
 
+/* Disable horizontal page navigation gestures when hovered over guarded regions */
+/* removed swipe-x guard */
+
 /* Selection highlight: use dark violet in dark mode */
 @layer base {
   ::selection {

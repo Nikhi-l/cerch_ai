@@ -16,7 +16,7 @@ export type IntegrationItem = {
   colorClass: string; // bg/text classes for icon chip
 };
 
-const DEFAULT_ITEMS: IntegrationItem[] = [
+export const DEFAULT_INTEGRATIONS: IntegrationItem[] = [
   {
     key: 'hubspot',
     name: 'HubSpot',
@@ -88,7 +88,7 @@ const DEFAULT_ITEMS: IntegrationItem[] = [
 ];
 
 export function IntegrationsGrid({ items }: { items?: IntegrationItem[] }) {
-  const integrations = useMemo(() => items ?? DEFAULT_ITEMS, [items]);
+  const integrations = useMemo(() => items ?? DEFAULT_INTEGRATIONS, [items]);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [warningOpen, setWarningOpen] = useState(false);
 
@@ -155,4 +155,3 @@ export function IntegrationsGrid({ items }: { items?: IntegrationItem[] }) {
     </>
   );
 }
-

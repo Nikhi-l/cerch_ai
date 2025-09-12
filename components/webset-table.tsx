@@ -76,10 +76,9 @@ export function WebsetTable({
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortedColumn, setSortedColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  // Initial widths for all columns; smaller default to fit more on screen
-  const DEFAULT_COL_WIDTH = 120;
-  const NAME_MULTIPLIER = 2;
-  const NAME_DEFAULT_WIDTH = Math.round(DEFAULT_COL_WIDTH * NAME_MULTIPLIER);
+  // Initial widths for all columns
+  // Increase by 50% from previous default (120 -> 180)
+  const DEFAULT_COL_WIDTH = 180;
   const MIN_COL_WIDTH = 80;
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({});
@@ -100,20 +99,15 @@ export function WebsetTable({
     setColumnWidths((prev) => {
       const next = { ...prev } as Record<string, number>;
       let changed = false;
-      const nameHeader = headers.find((h) => /(^|\b)name(\b|$)/i.test(h));
       headers.forEach((h) => {
         if (next[h] == null) {
-          if (nameHeader && h === nameHeader) {
-            next[h] = NAME_DEFAULT_WIDTH;
-          } else {
-            next[h] = DEFAULT_COL_WIDTH;
-          }
+          next[h] = DEFAULT_COL_WIDTH;
           changed = true;
         }
       });
       return changed ? next : prev;
     });
-  }, [headers, NAME_DEFAULT_WIDTH]);
+  }, [headers, DEFAULT_COL_WIDTH]);
 
   const startResizing = (header: string) => (e: ReactMouseEvent) => {
     e.preventDefault();
@@ -178,7 +172,7 @@ export function WebsetTable({
   }, [searchedRows, headers, sortedColumn, sortDirection]);
 
   const nameIdx = useMemo(
-    () => headers.findIndex((h) => /name/i.test(h)),
+    () => headers.findIndex((h) => /(^|\b)name(\b|$)/i.test(h)),
     [headers],
   );
   const titleIdx = useMemo(
@@ -465,8 +459,7 @@ export function WebsetTable({
           <colgroup>
             <col style={{ width: 48 }} />
             {headers.map((h) => {
-              const isName = /(^|\b)name(\b|$)/i.test(h);
-              const w = columnWidths[h] ?? (isName ? NAME_DEFAULT_WIDTH : DEFAULT_COL_WIDTH);
+              const w = columnWidths[h] ?? DEFAULT_COL_WIDTH;
               return <col key={`col-${h}`} style={{ width: w }} />;
             })}
             <col style={{ width: 48 }} />
@@ -476,12 +469,16 @@ export function WebsetTable({
               <TableHead className="sticky left-0 z-10 bg-white dark:bg-black w-12 text-center px-4 py-2 font-bold border-r border-b border-border">
                 #
               </TableHead>
-              {headers.map((header) => (
-                <TableHead
-                  key={header}
-                  style={{ width: columnWidths[header] ?? (/\bname\b/i.test(header) ? NAME_DEFAULT_WIDTH : DEFAULT_COL_WIDTH) }}
-                    className="px-4 py-2 font-bold border-r border-b border-border bg-muted dark:bg-black sticky top-0 z-10"
-                >
+              {headers.map((header) => {
+                const isNameHeader = /(^|\b)name(\b|$)/i.test(header);
+                const width = columnWidths[header] ?? DEFAULT_COL_WIDTH;
+                const stickyLeft = (variant === 'people' || variant === 'company') && isNameHeader ? 48 : undefined;
+                return (
+                  <TableHead
+                    key={header}
+                    style={{ width, left: stickyLeft }}
+                    className={`px-4 py-2 font-bold border-r border-b border-border bg-muted dark:bg-black sticky top-0 ${stickyLeft != null ? 'z-20 left-12' : 'z-10'}`}
+                  >
                   <div className="flex items-center justify-between gap-2 cursor-pointer select-none" onClick={() => {
                     if (sortedColumn === header) setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'));
                     else setSortedColumn(header);
@@ -500,8 +497,9 @@ export function WebsetTable({
                       onMouseDown={startResizing(header)}
                     />
                   </div>
-                </TableHead>
-              ))}
+                  </TableHead>
+                );
+              })}
               <TableHead className="w-10 px-4 py-2 border-b border-border">
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Plus className="h-4 w-4" />
@@ -525,11 +523,12 @@ export function WebsetTable({
                   const isLogo = header.toLowerCase().match(/image|avatar|logo/);
                   const isName = cellIdx === nameIdx;
                   const content = cell || "";
+                  const stickyLeft = (variant === 'people' || variant === 'company') && isName ? 48 : undefined;
                   return (
                     <TableCell
                       key={`${headers[cellIdx] ?? cellIdx}-${content}`}
-                      style={{ width: columnWidths[header] ?? (/\bname\b/i.test(header) ? NAME_DEFAULT_WIDTH : DEFAULT_COL_WIDTH) }}
-                      className="text-sm px-4 py-2 border-r border-border overflow-hidden whitespace-nowrap"
+                      style={{ width: columnWidths[header] ?? DEFAULT_COL_WIDTH, left: stickyLeft }}
+                      className={`text-sm px-4 py-2 border-r border-border overflow-hidden whitespace-nowrap ${stickyLeft != null ? 'sticky z-20 bg-white dark:bg-black' : ''}`}
                     >
                       {isLogo ? (
                         content && (
