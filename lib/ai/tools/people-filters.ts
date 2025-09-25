@@ -13,11 +13,13 @@ export const peopleFiltersTool = tool({
   execute: async ({ initialQuery }) => {
     // Infer conservative defaults for people filters; UI can refine further.
     const inferred = parsePeopleQuery(initialQuery, 50);
+    const rawFilters = (inferred.filters || {}) as Record<string, string | number | boolean>;
+    const inferredFilters = { ...rawFilters };
 
     return {
       baseQuery: initialQuery,
-      inferredFilters: inferred.filters || {},
-      hint: {},
+      inferredFilters,
+      hint: { ...inferredFilters },
       limit: inferred.limit || 50,
     } as const;
   },

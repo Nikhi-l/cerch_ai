@@ -2,7 +2,11 @@ import { auth } from '@/app/(auth)/auth';
 import { ChatSDKError } from '@/lib/errors';
 import { saveDocument, saveMessages, saveChat, getChatById } from '@/lib/db/queries';
 import { generateUUID } from '@/lib/utils';
-import { crustCompanyProvider, isCrustConfigured } from '@/lib/providers/crustdata/client';
+import {
+  crustCompanyProvider,
+  isCrustConfigured,
+  CrustdataError,
+} from '@/lib/providers/crustdata/client';
 import type { SearchQuery } from '@/lib/providers/types';
 
 export async function POST(request: Request) {
@@ -31,7 +35,25 @@ export async function POST(request: Request) {
         limit: 100,
         filters: filters || {},
       };
-      const result = await crustCompanyProvider.getCompanies(query);
+      let result;
+      try {
+        result = await crustCompanyProvider.getCompanies(query);
+      } catch (error: any) {
+        if (error instanceof CrustdataError) {
+          return Response.json(
+            {
+              ok: false,
+              error:
+                error.status === 401 || error.status === 403
+                  ? 'Your Crustdata token is invalid or missing. Update it in settings to fetch live company data.'
+                  : error.message,
+            },
+            { status: error.status && error.status >= 400 ? error.status : 502 },
+          );
+        }
+        console.error('[CERCH:COMPANY] unexpected error', error?.message || error);
+        return Response.json({ ok: false, error: 'Crustdata company search failed. Please try again.' }, { status: 502 });
+      }
       const headers = ['name','industry','company_url','linkedin_url','location','size','funding','logo_url','description','tags'];
       const rows = (result.rows || []).map((r: any) => [
         r.name || '', r.industry || '', r.company_url || '', r.linkedin_url || '', r.location || '', r.size || '', r.funding || '', r.logo_url || '', r.description || '', r.tags || ''

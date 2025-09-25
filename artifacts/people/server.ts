@@ -42,7 +42,9 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
     const result = await aggregatePeople(query, [crustPeopleProvider]);
     dbg('onCreateDocument: provider result count', result.rows.length);
     if (result.rows.length === 0) {
-      dataStream.writeData({ type: 'error', content: 'No people found or provider denied access (check Crustdata token/credits).' });
+      const message = 'No people matched your filters. Try loosening the titles, region, or industry.';
+      dataStream.writeData({ type: 'error', content: message });
+      throw new Error(message);
     }
     dataStream.writeData({
       type: 'status',
@@ -98,7 +100,9 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
     const result = await aggregatePeople(query, [crustPeopleProvider]);
     dbg('onUpdateDocument: provider result count', result.rows.length);
     if (result.rows.length === 0) {
-      dataStream.writeData({ type: 'error', content: 'No people found or provider denied access (check Crustdata token/credits).' });
+      const message = 'No people matched your updated filters. Try broadening the search.';
+      dataStream.writeData({ type: 'error', content: message });
+      throw new Error(message);
     }
     dataStream.writeData({
       type: 'status',

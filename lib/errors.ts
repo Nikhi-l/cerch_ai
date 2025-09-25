@@ -81,6 +81,8 @@ export function getMessageByErrorCode(errorCode: ErrorCode): string {
   switch (errorCode) {
     case 'bad_request:api':
       return "The request couldn't be processed. Please check your input and try again.";
+    case 'unauthorized:api':
+      return 'An OpenAI API key is required. Add it in Settings or set the OPENAI_API_KEY environment variable.';
 
     case 'unauthorized:auth':
       return 'You need to sign in before continuing.';

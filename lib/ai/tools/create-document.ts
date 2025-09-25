@@ -26,26 +26,6 @@ export const createDocument = ({ session, dataStream, apiKey }: CreateDocumentPr
       if (debug) console.log('[ARTIFACTS] createDocument invoked', { title, kind });
       const id = generateUUID();
 
-      dataStream.writeData({
-        type: 'kind',
-        content: kind,
-      });
-
-      dataStream.writeData({
-        type: 'id',
-        content: id,
-      });
-
-      dataStream.writeData({
-        type: 'title',
-        content: title,
-      });
-
-      dataStream.writeData({
-        type: 'clear',
-        content: '',
-      });
-
       const documentHandler = documentHandlersByArtifactKind.find(
         (documentHandlerByArtifactKind) =>
           documentHandlerByArtifactKind.kind === kind,
@@ -56,13 +36,24 @@ export const createDocument = ({ session, dataStream, apiKey }: CreateDocumentPr
       }
 
       if (debug) console.log('[ARTIFACTS] handler found', { kind: documentHandler.kind });
-      await documentHandler.onCreateDocument({
-        id,
-        title,
-        dataStream,
-        session,
-        apiKey,
-      });
+
+      dataStream.writeData({ type: 'kind', content: kind });
+      dataStream.writeData({ type: 'id', content: id });
+      dataStream.writeData({ type: 'title', content: title });
+      dataStream.writeData({ type: 'clear', content: '' });
+
+      try {
+        await documentHandler.onCreateDocument({
+          id,
+          title,
+          dataStream,
+          session,
+          apiKey,
+        });
+      } catch (error) {
+        dataStream.writeData({ type: 'finish', content: '' });
+        throw error;
+      }
 
       dataStream.writeData({ type: 'finish', content: '' });
 

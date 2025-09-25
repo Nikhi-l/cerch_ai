@@ -1,6 +1,30 @@
+export type FilterOperator =
+  | '='
+  | '!='
+  | 'in'
+  | 'not_in'
+  | '>'
+  | '<'
+  | '=>'
+  | '=<'
+  | '(.)';
+
+export type CrustFilterCondition = {
+  column: string;
+  type: FilterOperator;
+  value: string | number | boolean | Array<string | number | boolean>;
+};
+
+export type CrustFilterGroup = {
+  op: 'and' | 'or';
+  conditions: CrustFilterNode[];
+};
+
+export type CrustFilterNode = CrustFilterCondition | CrustFilterGroup;
+
 export type SearchQuery = {
-  q: string;
-  filters?: Record<string, string | number | boolean>;
+  q?: string;
+  filters?: Record<string, string | number | boolean> | CrustFilterNode;
   limit?: number;
   cursor?: string | null;
 };

@@ -1,10 +1,33 @@
 import { parsePeopleQuery } from './parse';
 import type { SearchQuery } from './types';
-import { resolveRegion, resolveTitle } from './crustdata/client';
+import { buildPeopleSearchQuery, type PeopleFilterSpec } from './crustdata/people-filters';
 
 function sanitize(text: string): string {
   // Drop column/spec suffixes and extra punctuation the LLM sometimes adds
   return text.split('— columns:')[0].split('-- columns:')[0].trim();
+}
+
+function mergeStringList(
+  existing: string | string[] | undefined,
+  next: string[],
+): string[] {
+  const base = Array.isArray(existing)
+    ? existing
+    : existing
+      ? [existing]
+      : [];
+  const combined = [...base, ...next]
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of combined) {
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(value);
+  }
+  return result;
 }
 
 function inferTitles(text: string): string[] {
@@ -32,23 +55,65 @@ export async function buildPeopleQuery(
   const raw = sanitize(text);
   // Start with heuristic parse
   const base = parsePeopleQuery(raw, limit);
-  const filters: Record<string, any> = { ...(base.filters || {}) };
+  const spec: PeopleFilterSpec = {};
+
+  if (base.filters?.region && typeof base.filters.region === 'string') {
+    spec.region = base.filters.region;
+  }
+
+  if (base.filters?.title && typeof base.filters.title === 'string') {
+    spec.title = base.filters.title;
+  }
+
+  if (base.filters?.company && typeof base.filters.company === 'string') {
+    spec.company = base.filters.company;
+  }
+
+  if (base.filters?.industry && typeof base.filters.industry === 'string') {
+    const values = base.filters.industry
+      .split(/[,|]/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (values.length) {
+      spec.industry = mergeStringList(spec.industry, values);
+    }
+  }
+
+  if (base.filters?.skills && typeof base.filters.skills === 'string') {
+    const initialSkills = mergeStringList(
+      undefined,
+      base.filters.skills
+        .split(/[,|]/)
+        .map((value) => value.trim())
+        .filter(Boolean),
+    );
+    if (initialSkills.length) {
+      spec.skills = initialSkills.join(', ');
+    }
+  }
+
+  if (base.filters?.languages && typeof base.filters.languages === 'string') {
+    const langs = base.filters.languages
+      .split(/[,|]/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (langs.length) spec.languages = mergeStringList(undefined, langs);
+  }
 
   // Title candidates from text; resolve to canonical if possible
   const titleList = inferTitles(raw);
   if (titleList.length) {
-    // Resolve the first title to canonical; include the raw list as fallbacks
-    const canonical = await resolveTitle(titleList[0]);
-    const values = canonical ? [canonical, ...titleList] : titleList;
-    // Use 'in' semantics via multiple conditions on the provider side (we map later if needed)
-    filters.title = values.join('|'); // provider will split into multiple OR conditions
+    const uniqueTitles = Array.from(new Set(titleList));
+    spec.title = spec.title
+      ? [spec.title, ...uniqueTitles].flat()
+      : uniqueTitles;
   }
 
   // Region canonicalization
-  const regionText = (filters.region as string) || '';
-  if (regionText) {
-    const canonicalRegion = await resolveRegion(regionText);
-    if (canonicalRegion) filters.region = canonicalRegion;
+  const regionText = spec.region || '';
+  if (!regionText) {
+    const inferredRegion = base.filters?.region as string | undefined;
+    if (inferredRegion) spec.region = inferredRegion;
   }
 
   // Parse additional key:value hints if present in the text (from the UI card)
@@ -61,22 +126,32 @@ export async function buildPeopleQuery(
     const val = m[2].trim();
     switch (keyRaw) {
       case 'industry':
-        filters.industry = val;
+        spec.industry = mergeStringList(spec.industry, [val]);
         break;
       case 'company':
-        filters.company = val;
+        spec.company = val;
         break;
       case 'skills':
-        filters.skills = val;
+        const skillTokens = val
+          .split(/[,|]/)
+          .map((value) => value.trim())
+          .filter(Boolean);
+        if (skillTokens.length) {
+          const merged = mergeStringList(spec.skills, skillTokens);
+          if (merged.length) spec.skills = merged.join(', ');
+        }
         break;
       case 'languages': {
         const langs = val.split(/[,|]/).map((s) => s.trim()).filter(Boolean);
-        if (langs.length) filters.languages = langs.join('|');
+        if (langs.length) {
+          const merged = mergeStringList(spec.languages, langs);
+          if (merged.length) spec.languages = merged;
+        }
         break;
       }
       case 'min_connections': {
         const n = Number(val.replace(/[^0-9]/g, ''));
-        if (!Number.isNaN(n)) filters.min_connections = n;
+        if (!Number.isNaN(n)) spec.minConnections = n;
         break;
       }
       case 'size_range': {
@@ -84,21 +159,18 @@ export async function buildPeopleQuery(
         if (mm) {
           const lo = mm[1].toLowerCase() === 'any' ? undefined : Number(mm[1]);
           const hi = mm[2].toLowerCase() === 'any' ? undefined : Number(mm[2]);
-          if (lo != null && !Number.isNaN(lo)) filters.employer_size_min = lo;
-          if (hi != null && !Number.isNaN(hi)) filters.employer_size_max = hi;
+          if (lo != null && !Number.isNaN(lo)) spec.employerSizeMin = lo;
+          if (hi != null && !Number.isNaN(hi)) spec.employerSizeMax = hi;
         }
         break;
       }
       case 'experience': {
-        // Map common buckets to a minimum years_of_experience_raw
         const t = val.toLowerCase();
-        let min = 0;
-        if (/less\s+than\s*1/.test(t)) min = 0;
-        else if (/1\s*to\s*2/.test(t)) min = 1;
-        else if (/3\s*to\s*5/.test(t)) min = 3;
-        else if (/6\s*to\s*10/.test(t)) min = 6;
-        else if (/more\s+than\s*10/.test(t)) min = 10;
-        if (min > 0) filters.years_of_experience_raw_min = min;
+        if (/less\s+than\s*1/.test(t)) spec.experienceBucket = 'Less than 1 year';
+        else if (/1\s*to\s*2/.test(t)) spec.experienceBucket = '1 to 2 years';
+        else if (/3\s*to\s*5/.test(t)) spec.experienceBucket = '3 to 5 years';
+        else if (/6\s*to\s*10/.test(t)) spec.experienceBucket = '6 to 10 years';
+        else if (/more\s+than\s*10/.test(t)) spec.experienceBucket = 'More than 10 years';
         break;
       }
       default:
@@ -106,8 +178,5 @@ export async function buildPeopleQuery(
     }
   }
 
-  // If we now have filters, drop q to avoid over-constraining
-  const q = Object.keys(filters).length ? '' : raw;
-
-  return { q, filters: Object.keys(filters).length ? filters : undefined, limit };
+  return buildPeopleSearchQuery(spec, limit, raw);
 }

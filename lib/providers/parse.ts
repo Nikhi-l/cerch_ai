@@ -3,68 +3,198 @@
 
 import type { SearchQuery } from './types';
 
-function normalizeText(text: string): string {
-  return text.toLowerCase();
+const TITLE_SUFFIXES = [
+  'developer',
+  'engineer',
+  'specialist',
+  'expert',
+  'architect',
+  'designer',
+  'scientist',
+  'manager',
+  'lead',
+  'consultant',
+  'analyst',
+  'head',
+  'director',
+  'founder',
+];
+
+const INDUSTRY_KEYWORDS: Array<{ pattern: RegExp; value: string }> = [
+  { pattern: /(augmented reality|virtual reality|\bar\/vr\b|mixed reality|extended reality|\bxr\b)/i, value: 'Augmented Reality' },
+  { pattern: /(artificial intelligence|\bai\b|machine learning|ml\b)/i, value: 'Artificial Intelligence' },
+  { pattern: /(fintech|financial technology|financial services)/i, value: 'Financial Services' },
+  { pattern: /(healthtech|health tech|medical|health care|healthcare|medtech)/i, value: 'Healthcare' },
+  { pattern: /(e-?commerce|retail|marketplace)/i, value: 'E-commerce' },
+  { pattern: /(marketing|martech|advertising|adtech)/i, value: 'Marketing & Advertising' },
+  { pattern: /(gaming|game studio|game development)/i, value: 'Gaming' },
+  { pattern: /(blockchain|crypto|web3)/i, value: 'Blockchain' },
+];
+
+const LANGUAGE_KEYWORDS = [
+  'english',
+  'spanish',
+  'french',
+  'german',
+  'hindi',
+  'mandarin',
+  'portuguese',
+  'japanese',
+  'korean',
+  'arabic',
+  'italian',
+];
+
+function normalize(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
 }
 
-function inferLocation(text: string): string | undefined {
-  const t = normalizeText(text);
-  if (/(san\s+francisco\s+bay\s+area|sf\s*bay\s*area|bay\s*area)/.test(t))
-    return 'San Francisco Bay Area';
-  if (/(^|\b)(sf|sfo|sfs|san francisco)(\b|$)/.test(t)) return 'San Francisco';
-  if (/(washington[,\s-]*dc|\bdc\b|district of columbia)/.test(t))
-    return 'Washington, District of Columbia';
-  if (/(^|\b)(nyc|new york)(\b|$)/.test(t)) return 'New York';
-  if (/(^|\b)(seattle)(\b|$)/.test(t)) return 'Seattle';
-  if (/(^|\b)(london)(\b|$)/.test(t)) return 'London';
-  if (/(^|\b)(toronto)(\b|$)/.test(t)) return 'Toronto';
-  return undefined;
+function titleCase(value: string): string {
+  if (!value) return value;
+  return value
+    .split(' ')
+    .map((word) => {
+      if (word.toUpperCase() === word) return word;
+      if (word.includes('/')) return word; // keep tokens like AR/VR
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ')
+    .trim();
 }
 
-function inferTitle(text: string): string | undefined {
-  const t = normalizeText(text);
-  // Simple role extraction based on common dev terms
-  if (
-    /chief\s+technology\s+officer|\bcto\b|tech\s*lead|head\s+of\s+engineering|software\s+developer|developer|software\s+engineer|engineer|frontend|backend/.test(
-      t,
-    )
-  ) {
-    // Return the most specific matching role
-    if (/chief\s+technology\s+officer|\bcto\b/.test(t)) return 'CTO';
-    if (/head\s+of\s+engineering/.test(t)) return 'Head of Engineering';
-    if (/tech\s*lead/.test(t)) return 'Tech Lead';
-    if (/frontend/.test(t)) return 'frontend developer';
-    if (/backend/.test(t)) return 'backend developer';
-    if (/software\s+engineer/.test(t)) return 'software engineer';
-    if (/software\s+developer/.test(t)) return 'software developer';
-    if (/engineer/.test(t)) return 'engineer';
-    if (/developer/.test(t)) return 'developer';
+function captureRegion(text: string): string | undefined {
+  const normalized = text.replace(/\s+/g, ' ');
+  const prepositionRegex = /\b(?:in|within|based in|from|around|near|located in)\s+([A-Za-z][A-Za-z\s&.'-]{2,})/i;
+  const match = normalized.match(prepositionRegex);
+  if (match) {
+    let candidate = match[1]
+      .split(/(?=\bwith\b|\bwho\b|\bthat\b|\bfor\b|\bworking\b|\blooking\b|,|\.)/i)[0]
+      .trim();
+    candidate = candidate.replace(/^(the\s+)/i, '').trim();
+    if (candidate) return titleCase(candidate);
+  }
+
+  const fallback = inferLocationKeyword(text.toLowerCase());
+  return fallback ? titleCase(fallback) : undefined;
+}
+
+function inferLocationKeyword(text: string): string | undefined {
+  const lookup: Record<string, string> = {
+    'san francisco bay area': 'San Francisco Bay Area',
+    'san francisco': 'San Francisco',
+    sf: 'San Francisco',
+    sfo: 'San Francisco',
+    seattle: 'Seattle',
+    london: 'London',
+    toronto: 'Toronto',
+    nyc: 'New York',
+    'new york': 'New York',
+    'washington dc': 'Washington, District of Columbia',
+    'district of columbia': 'Washington, District of Columbia',
+    bangalore: 'Bangalore',
+    bengaluru: 'Bangalore',
+    mumbai: 'Mumbai',
+    delhi: 'Delhi',
+    berlin: 'Berlin',
+    paris: 'Paris',
+  };
+
+  for (const key of Object.keys(lookup)) {
+    if (text.includes(key)) {
+      return lookup[key];
+    }
   }
   return undefined;
 }
 
 function inferCompany(text: string): string | undefined {
-  const t = text.trim();
-  // Patterns like: employees at Google, people at OpenAI, folks from Meta
-  let m = t.match(/\b(?:employees|people|folks)\s+(?:at|from|of)\s+([A-Z][A-Za-z0-9&.'\- ]{1,60})\b/);
-  if (m) return m[1].trim();
-  // Patterns like: Google employees, OpenAI people
-  m = t.match(/\b([A-Z][A-Za-z0-9&.'\- ]{1,60})\s+(?:employees|people|folks)\b/);
-  if (m) return m[1].trim();
-  // Patterns like: engineers at Google, title present but still capture company
-  m = t.match(/\bat\s+([A-Z][A-Za-z0-9&.'\- ]{1,60})\b/);
-  if (m) return m[1].trim();
+  const trimmed = text.trim();
+  let match = trimmed.match(/\b(?:employees|people|folks)\s+(?:at|from|of)\s+([A-Z][A-Za-z0-9&.'\- ]{1,60})\b/);
+  if (match) return match[1].trim();
+  match = trimmed.match(/\b([A-Z][A-Za-z0-9&.'\- ]{1,60})\s+(?:employees|people|folks)\b/);
+  if (match) return match[1].trim();
+  match = trimmed.match(/\bat\s+([A-Z][A-Za-z0-9&.'\- ]{1,60})\b/);
+  if (match) return match[1].trim();
   return undefined;
+}
+
+function extractTitleCandidates(text: string): string[] {
+  const titles = new Set<string>();
+  const regex = new RegExp(
+    `([A-Za-z0-9+/&'\\- ]{2,})\\s+(${TITLE_SUFFIXES.join('|')})s?`,
+    'gi',
+  );
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text))) {
+    const descriptor = titleCase(match[1].trim());
+    const suffix = titleCase(match[2]);
+    const combined = descriptor ? `${descriptor} ${suffix}` : suffix;
+    titles.add(combined.replace(/\s+/g, ' ').trim());
+  }
+
+  const genericRegex = new RegExp(`\b(${TITLE_SUFFIXES.join('|')})s?\b`, 'gi');
+  while ((match = genericRegex.exec(text))) {
+    titles.add(titleCase(match[1]));
+  }
+
+  return Array.from(titles);
+}
+
+function extractIndustry(text: string): string | undefined {
+  for (const { pattern, value } of INDUSTRY_KEYWORDS) {
+    if (pattern.test(text)) return value;
+  }
+  return undefined;
+}
+
+function extractSkills(text: string): string[] {
+  const skills = new Set<string>();
+  if (/(\b| )(ar\/vr|augmented reality|virtual reality|xr|mixed reality)(\b| )/i.test(text)) {
+    skills.add('AR/VR');
+    skills.add('Augmented Reality');
+    skills.add('Virtual Reality');
+  }
+  if (/(machine learning|ml\b|artificial intelligence|\bai\b)/i.test(text)) {
+    skills.add('Machine Learning');
+  }
+  if (/(computer vision)/i.test(text)) skills.add('Computer Vision');
+  if (/(unity3d?|unreal engine)/i.test(text)) skills.add('Game Engines');
+  return Array.from(skills);
+}
+
+function extractLanguages(text: string): string[] {
+  const matches = new Set<string>();
+  for (const lang of LANGUAGE_KEYWORDS) {
+    const regex = new RegExp(`\\b${lang}\\b`, 'i');
+    if (regex.test(text)) matches.add(titleCase(lang));
+  }
+  return Array.from(matches);
 }
 
 export function parsePeopleQuery(text: string, limit = 50): SearchQuery {
   const filters: Record<string, string | number | boolean> = {};
-  const location = inferLocation(text);
-  const title = inferTitle(text);
+  const normalizedText = normalize(text);
+  const lower = normalizedText.toLowerCase();
+
+  const region = captureRegion(text);
+  if (region) filters.region = region;
+
+  const titles = extractTitleCandidates(normalizedText);
+  if (titles.length) {
+    filters.title = titles[0];
+  }
+
   const company = inferCompany(text);
-  if (location) filters.region = location;
-  if (title) filters.title = title;
   if (company) filters.company = company;
+
+  const industry = extractIndustry(lower);
+  if (industry) filters.industry = industry;
+
+  const skills = extractSkills(lower);
+  if (skills.length) filters.skills = skills.join(', ');
+
+  const languages = extractLanguages(lower);
+  if (languages.length) filters.languages = languages.join(', ');
 
   return {
     q: text,
@@ -73,60 +203,57 @@ export function parsePeopleQuery(text: string, limit = 50): SearchQuery {
   };
 }
 
-function inferIndustry(text: string): string | undefined {
-  const t = normalizeText(text);
-  if (/saas|software/i.test(t)) return 'Information Technology and Services';
-  if (/fintech|financial/i.test(t)) return 'FinTech';
-  if (/healthtech|health care|healthcare|medtech/i.test(t)) return 'Healthcare';
-  if (/ai|artificial intelligence|machine learning/i.test(t)) return 'AI';
-  if (/e[-\s]?commerce|retail/i.test(t)) return 'Retail';
-  if (/marketing|adtech|advertis/i.test(t)) return 'Marketing & Advertising';
+function inferIndustryCompany(text: string): string | undefined {
+  for (const { pattern, value } of INDUSTRY_KEYWORDS) {
+    if (pattern.test(text)) return value;
+  }
   return undefined;
 }
 
 function inferCountry(text: string): string | undefined {
-  const t = normalizeText(text);
-  if (/(^|\b)(usa|us|united states)(\b|$)/.test(t)) return 'United States';
-  if (/(^|\b)(canada|ca)(\b|$)/.test(t)) return 'Canada';
-  if (/(^|\b)(uk|united kingdom|england|london)(\b|$)/.test(t)) return 'United Kingdom';
+  const lower = text.toLowerCase();
+  if (/(^|\b)(usa|us|united states)(\b|$)/.test(lower)) return 'United States';
+  if (/(^|\b)(canada|ca)(\b|$)/.test(lower)) return 'Canada';
+  if (/(^|\b)(uk|united kingdom|england|london)(\b|$)/.test(lower)) return 'United Kingdom';
+  if (/(^|\b)(india|indian)(\b|$)/.test(lower)) return 'India';
   return undefined;
 }
 
 function inferSizeRange(text: string): { size_min?: number; size_max?: number } {
-  const t = normalizeText(text);
-  const m = t.match(/(\d{1,6})\s*[-–to]{1,3}\s*(\d{1,6})\s*(employees|people|headcount)?/i);
-  if (m) {
-    const a = Number(m[1]);
-    const b = Number(m[2]);
+  const lower = text.toLowerCase();
+  const between = lower.match(/(\d{1,6})\s*[-–to]{1,3}\s*(\d{1,6})\s*(employees|people|headcount)?/i);
+  if (between) {
+    const a = Number(between[1]);
+    const b = Number(between[2]);
     const [min, max] = a <= b ? [a, b] : [b, a];
     return { size_min: min, size_max: max };
   }
-  const minMatch = t.match(/(at least|min(?:imum)?|over|>=?)\s*(\d{1,6})\s*(employees|people|headcount)?/i);
+  const minMatch = lower.match(/(at least|min(?:imum)?|over|>=?)\s*(\d{1,6})\s*(employees|people|headcount)?/i);
   if (minMatch) return { size_min: Number(minMatch[2]) };
-  const maxMatch = t.match(/(at most|max(?:imum)?|under|<=?)\s*(\d{1,6})\s*(employees|people|headcount)?/i);
+  const maxMatch = lower.match(/(at most|max(?:imum)?|under|<=?)\s*(\d{1,6})\s*(employees|people|headcount)?/i);
   if (maxMatch) return { size_max: Number(maxMatch[2]) };
   return {};
 }
 
 function inferYearFounded(text: string): { year_founded_min?: number; year_founded_max?: number } {
-  const t = normalizeText(text);
-  const after = t.match(/(after|since|post)\s*(\d{4})/i);
+  const lower = text.toLowerCase();
+  const after = lower.match(/(after|since|post)\s*(\d{4})/i);
   if (after) return { year_founded_min: Number(after[2]) };
-  const before = t.match(/(before|pre)\s*(\d{4})/i);
+  const before = lower.match(/(before|pre)\s*(\d{4})/i);
   if (before) return { year_founded_max: Number(before[2]) };
   return {};
 }
 
 export function parseCompanyQuery(text: string, limit = 100): SearchQuery {
   const filters: Record<string, string | number | boolean> = {};
-  const industry = inferIndustry(text);
-  const hq = inferLocation(text);
+  const industry = inferIndustryCompany(text);
+  const hq = captureRegion(text) || inferLocationKeyword(text.toLowerCase());
   const country = inferCountry(text);
   const size = inferSizeRange(text);
   const founded = inferYearFounded(text);
 
   if (industry) filters.industry = industry;
-  if (hq) filters.hq = hq;
+  if (hq) filters.hq = titleCase(hq);
   if (country) filters.country = country;
   if (size.size_min != null) filters.size_min = size.size_min;
   if (size.size_max != null) filters.size_max = size.size_max;

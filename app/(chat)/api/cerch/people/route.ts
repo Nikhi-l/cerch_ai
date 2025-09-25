@@ -3,7 +3,11 @@ import { ChatSDKError } from '@/lib/errors';
 import { saveDocument, saveMessages, saveChat, getChatById } from '@/lib/db/queries';
 import { generateUUID } from '@/lib/utils';
 import { aggregatePeople } from '@/lib/providers';
-import { crustPeopleProvider, isCrustConfigured } from '@/lib/providers/crustdata/client';
+import {
+  crustPeopleProvider,
+  isCrustConfigured,
+  CrustdataError,
+} from '@/lib/providers/crustdata/client';
 import { toCSV } from '@/lib/providers/normalize';
 import { sortPeopleByImage } from '@/lib/providers/sort';
 import { buildPeopleSearchQuery, type PeopleFilterSpec } from '@/lib/providers/crustdata/people-filters';
@@ -32,7 +36,7 @@ export async function POST(request: Request) {
       }
     } catch {}
 
-    if (!isCrustConfigured()) {
+    if (!(await isCrustConfigured())) {
       // Simulate network/processing latency for demo feel
       await sleep(1400 + Math.floor(Math.random() * 600));
       // Demo fallback: create a small hardcoded CSV so it works without API keys
@@ -125,9 +129,33 @@ export async function POST(request: Request) {
     }
     const query = buildPeopleSearchQuery(spec, 50, baseQuery);
     await sleep(600 + Math.floor(Math.random() * 400));
-    const result = await crustPeopleProvider.getPeople(query);
+    let result;
+    try {
+      result = await crustPeopleProvider.getPeople(query);
+    } catch (error: any) {
+      if (error instanceof CrustdataError) {
+        return Response.json(
+          {
+            ok: false,
+            error:
+              error.status === 401 || error.status === 403
+                ? 'Your Crustdata token is invalid or missing. Update it in settings to run live searches.'
+                : error.message,
+          },
+          { status: error.status && error.status >= 400 ? error.status : 502 },
+        );
+      }
+      console.error('[CERCH:PEOPLE] unexpected error', error?.message || error);
+      return Response.json({ ok: false, error: 'Crustdata search failed. Please try again.' }, { status: 502 });
+    }
     if (!result.rows?.length) {
-      return Response.json({ ok: false, error: 'No profiles found' }, { status: 200 });
+      return Response.json(
+        {
+          ok: false,
+          error: 'No profiles matched your filters. Try widening the region, titles, or employer size.',
+        },
+        { status: 200 },
+      );
     }
 
     const headers = [

@@ -36,38 +36,45 @@ export function PeopleFiltersCard({
   skeleton?: boolean;
 }) {
   const { setArtifact, setMetadata } = useArtifact() as any;
+  const stringHint = (value?: string | number | boolean) =>
+    typeof value === 'string'
+      ? value.replace(/\|/g, ', ').trim()
+      : value != null
+        ? String(value)
+        : '';
   const [region, setRegion] = useState<string>(
-    (preset?.hint?.region as string) || (preset?.inferredFilters?.region as string) || '',
+    stringHint(preset?.hint?.region) || stringHint(preset?.inferredFilters?.region) || '',
   );
   const [title, setTitle] = useState<string>(
-    (preset?.hint?.title as string) || (preset?.inferredFilters?.title as string) || '',
+    stringHint(preset?.hint?.title) || stringHint(preset?.inferredFilters?.title) || '',
   );
   const [industry, setIndustry] = useState<string>(
-    (preset?.hint?.industry as string) || '',
+    stringHint(preset?.hint?.industry) || stringHint(preset?.inferredFilters?.industry),
   );
   const [company, setCompany] = useState<string>(
-    (preset?.hint?.company as string) || '',
+    stringHint(preset?.hint?.company) || stringHint(preset?.inferredFilters?.company),
   );
   const [skills, setSkills] = useState<string>(
-    (preset?.hint?.skills as string) || '',
+    stringHint(preset?.hint?.skills) || stringHint(preset?.inferredFilters?.skills),
   );
   const [languages, setLanguages] = useState<string>(
-    (preset?.hint?.languages as string) || '',
+    stringHint(preset?.hint?.languages) || stringHint(preset?.inferredFilters?.languages),
   );
   const [minConnections, setMinConnections] = useState<string>(
-    preset?.hint?.minConnections ? String(preset.hint.minConnections) : '',
+    stringHint(preset?.hint?.minConnections) || stringHint(preset?.inferredFilters?.min_connections),
   );
   const [yearsOfExperience, setYearsOfExperience] = useState<string>(
-    (preset?.hint?.yearsOfExperience as string) || '',
+    stringHint(preset?.hint?.yearsOfExperience) || stringHint(preset?.inferredFilters?.years_of_experience_raw_min),
   );
   const [sizeMin, setSizeMin] = useState<string>(
-    preset?.hint?.sizeMin ? String(preset.hint.sizeMin) : '',
+    stringHint(preset?.hint?.sizeMin) || stringHint(preset?.inferredFilters?.employer_size_min),
   );
   const [sizeMax, setSizeMax] = useState<string>(
-    preset?.hint?.sizeMax ? String(preset.hint.sizeMax) : '',
+    stringHint(preset?.hint?.sizeMax) || stringHint(preset?.inferredFilters?.employer_size_max),
   );
   const [isSearching, setIsSearching] = useState(false);
   const [errorText, setErrorText] = useState('');
+
 
   const baseQuery = preset?.baseQuery || '';
 

@@ -26,20 +26,21 @@ export function getProvider(apiKey?: string) {
 
   const key = apiKey || process.env.OPENAI_API_KEY;
   const openai = createOpenAI({ apiKey: key });
+  const modelConfig = { temperature: 0.1 } as const;
 
   return customProvider({
     languageModels: {
       // Primary chat model
-      'chat-model': openai('gpt-5'),
+      'chat-model': openai('gpt-5', modelConfig),
       // Reasoning variant with thinking trace extraction
       'chat-model-reasoning': wrapLanguageModel({
-        model: openai('gpt-5-reasoning'),
+        model: openai('gpt-5-reasoning', modelConfig),
         middleware: extractReasoningMiddleware({ tagName: 'think' }),
       }),
       // Title generation model
-      'title-model': openai('gpt-5'),
+      'title-model': openai('gpt-5', modelConfig),
       // Artifact generation (text/code/sheet/webset)
-      'artifact-model': openai('gpt-5'),
+      'artifact-model': openai('gpt-5', modelConfig),
     },
     imageModels: {
       'small-model': openai.image('gpt-image-1'),

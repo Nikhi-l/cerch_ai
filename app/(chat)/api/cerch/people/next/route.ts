@@ -1,6 +1,10 @@
 import { auth } from '@/app/(auth)/auth';
 import { ChatSDKError } from '@/lib/errors';
-import { crustPeopleProvider, isCrustConfigured } from '@/lib/providers/crustdata/client';
+import {
+  crustPeopleProvider,
+  isCrustConfigured,
+  CrustdataError,
+} from '@/lib/providers/crustdata/client';
 import { sortPeopleByImage } from '@/lib/providers/sort';
 import { buildPeopleSearchQuery, type PeopleFilterSpec } from '@/lib/providers/crustdata/people-filters';
 
@@ -16,13 +20,31 @@ export async function POST(request: Request) {
     if (!spec || !cursor) {
       return Response.json({ ok: false, error: 'Missing spec or cursor' }, { status: 400 });
     }
-    if (!isCrustConfigured()) {
+    if (!(await isCrustConfigured())) {
       return Response.json({ ok: false, error: 'Crustdata token is not configured' }, { status: 200 });
     }
 
     const query = buildPeopleSearchQuery(spec as PeopleFilterSpec, limit, '');
     (query as any).cursor = cursor;
-    const result = await crustPeopleProvider.getPeople(query);
+    let result;
+    try {
+      result = await crustPeopleProvider.getPeople(query);
+    } catch (error: any) {
+      if (error instanceof CrustdataError) {
+        return Response.json(
+          {
+            ok: false,
+            error:
+              error.status === 401 || error.status === 403
+                ? 'Your Crustdata token is invalid or missing.'
+                : error.message,
+          },
+          { status: error.status && error.status >= 400 ? error.status : 502 },
+        );
+      }
+      console.error('[CERCH:PEOPLE:NEXT] unexpected error', error?.message || error);
+      return Response.json({ ok: false, error: 'Crustdata pagination failed. Please retry.' }, { status: 502 });
+    }
     if (!result.rows?.length) {
       return Response.json({ ok: false, error: 'No more profiles' }, { status: 200 });
     }

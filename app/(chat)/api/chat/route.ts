@@ -153,7 +153,12 @@ export async function POST(request: Request) {
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
-    const provider = getProvider(apiKey);
+    const resolvedApiKey = apiKey || process.env.OPENAI_API_KEY;
+    if (!resolvedApiKey) {
+      throw new ChatSDKError('unauthorized:api');
+    }
+
+    const provider = getProvider(resolvedApiKey);
 
     const stream = createDataStream({
       execute: (dataStream) => {

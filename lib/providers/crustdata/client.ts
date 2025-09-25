@@ -5,30 +5,30 @@ import type {
   PeopleProvider,
   ProviderResult,
   SearchQuery,
+  CrustFilterCondition,
+  CrustFilterNode,
 } from '../types';
 import { normalizeCompanyRows, normalizePeopleRows } from '../normalize';
 import { fetchWithTimeout } from '@/lib/network';
 import { cookies } from 'next/headers';
+
+export class CrustdataError extends Error {
+  status?: number;
+  body?: unknown;
+
+  constructor(message: string, status?: number, body?: unknown) {
+    super(message);
+    this.name = 'CrustdataError';
+    this.status = status;
+    this.body = body;
+  }
+}
 
 const API_BASE = process.env.CRUSTDATA_API_BASE || 'https://api.crustdata.com';
 const PEOPLE_PATH = process.env.CRUSTDATA_PEOPLE_PATH || '/screener/persondb/search/';
 // Use the Company Search API for companies
 const COMPANY_DISCOVERY_PATH =
   process.env.CRUSTDATA_COMPANY_SEARCH_PATH || '/screener/company/search';
-
-function buildParams(query: SearchQuery): string {
-  const params = new URLSearchParams();
-  if (query.q) params.set('q', query.q);
-  if (query.limit != null) params.set('limit', String(query.limit));
-  if (query.filters) {
-    for (const [k, v] of Object.entries(query.filters)) {
-      if (v === undefined || v === null) continue;
-      params.set(k, String(v));
-    }
-  }
-  const s = params.toString();
-  return s ? `?${s}` : '';
-}
 
 async function getCrustToken(): Promise<string> {
   try {
@@ -46,6 +46,9 @@ async function getCrustToken(): Promise<string> {
 async function crustFetch<T>(path: string): Promise<T> {
   const url = `${API_BASE}${path}`;
   const token = await getCrustToken();
+  if (!token) {
+    throw new CrustdataError('Crustdata API token is not configured.', 401);
+  }
   const res = await fetchWithTimeout(url, {
     headers: {
       Authorization: `Token ${token}`,
@@ -53,19 +56,15 @@ async function crustFetch<T>(path: string): Promise<T> {
     cache: 'no-store',
     timeoutMs: 60000,
   });
-  if (!res.ok) {
-    const msg = `Crust Data request failed: ${res.status}`;
-    if (res.status === 401 || res.status === 403) {
-      console.error('[CRUSTDATA:CLIENT]', msg, '- Check CRUSTDATA_API_TOKEN and account permissions/credits.');
-    }
-    throw new Error(msg);
-  }
-  return (await res.json()) as T;
+  return await handleCrustResponse<T>(res);
 }
 
 async function crustPost<T>(path: string, body: any): Promise<T> {
   const url = `${API_BASE}${path}`;
   const token = await getCrustToken();
+  if (!token) {
+    throw new CrustdataError('Crustdata API token is not configured.', 401);
+  }
   const res = await fetchWithTimeout(url, {
     method: 'POST',
     headers: {
@@ -76,14 +75,46 @@ async function crustPost<T>(path: string, body: any): Promise<T> {
     cache: 'no-store',
     timeoutMs: 60000,
   });
+  return await handleCrustResponse<T>(res);
+}
+
+async function handleCrustResponse<T>(res: Response): Promise<T> {
+  const contentType = res.headers.get('content-type') || '';
+  const text = await res.text();
+  let payload: unknown;
+
+  if (text && contentType.includes('application/json')) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = text;
+    }
+  } else {
+    payload = text;
+  }
+
   if (!res.ok) {
-    const msg = `Crust Data request failed: ${res.status}`;
+    const detail =
+      (payload as any)?.detail ||
+      (payload as any)?.message ||
+      (payload as any)?.error ||
+      (typeof payload === 'string' && payload.trim().length ? payload : null);
+    const msg = detail
+      ? `Crustdata request failed: ${detail}`
+      : `Crustdata request failed with status ${res.status}`;
     if (res.status === 401 || res.status === 403) {
       console.error('[CRUSTDATA:CLIENT]', msg, '- Check CRUSTDATA_API_TOKEN and account permissions/credits.');
+    } else {
+      console.error('[CRUSTDATA:CLIENT]', msg);
     }
-    throw new Error(msg);
+    throw new CrustdataError(msg, res.status, payload);
   }
-  return (await res.json()) as T;
+
+  if (payload == null || payload === '') {
+    return {} as T;
+  }
+
+  return payload as T;
 }
 
 function debugEnabled() {
@@ -92,6 +123,165 @@ function debugEnabled() {
 
 function dbg(...args: any[]) {
   if (debugEnabled()) console.log('[CRUSTDATA:CLIENT]', ...args);
+}
+
+const TEXT_SEARCH_COLUMNS = [
+  'headline',
+  'summary',
+  'skills',
+  'current_employers.title',
+  'current_employers.name',
+  'name',
+];
+
+function makeCondition(
+  column: string,
+  type: CrustFilterCondition['type'],
+  value: CrustFilterCondition['value'],
+): CrustFilterCondition {
+  return { column, type, value };
+}
+
+function asAndGroup(nodes: CrustFilterNode[]): CrustFilterNode | undefined {
+  if (!nodes.length) return undefined;
+  if (nodes.length === 1) return nodes[0];
+  return { op: 'and', conditions: nodes };
+}
+
+function textSearchNode(term: string): CrustFilterNode {
+  return {
+    op: 'or',
+    conditions: TEXT_SEARCH_COLUMNS.map((column) =>
+      makeCondition(column, '(.)', term),
+    ),
+  };
+}
+
+function uniqueStrings(values: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(trimmed);
+  }
+  return result;
+}
+
+function splitValues(value: string | string[]): string[] {
+  if (Array.isArray(value)) return value;
+  return value
+    .split(/[,|]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function isCrustFilterNode(value: any): value is CrustFilterNode {
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    (Object.prototype.hasOwnProperty.call(value, 'column') ||
+      Object.prototype.hasOwnProperty.call(value, 'op'))
+  );
+}
+
+function recordToFilterNode(
+  record: Record<string, string | number | boolean>,
+  fallbackTerm: string,
+): CrustFilterNode {
+  const nodes: CrustFilterNode[] = [];
+
+  for (const [key, raw] of Object.entries(record)) {
+    if (raw === undefined || raw === null || raw === '') continue;
+    switch (key) {
+      case 'title': {
+        const titles = splitValues(String(raw));
+        if (titles.length) {
+          const titleConditions = titles.map((title) =>
+            makeCondition('current_employers.title', '(.)', title),
+          );
+          nodes.push(
+            titleConditions.length === 1
+              ? titleConditions[0]
+              : ({ op: 'or', conditions: titleConditions } as CrustFilterNode),
+          );
+        }
+        break;
+      }
+      case 'company':
+        nodes.push(makeCondition('current_employers.name', '(.)', String(raw)));
+        break;
+      case 'region':
+      case 'location':
+        nodes.push(makeCondition('region', '(.)', String(raw)));
+        break;
+      case 'skills':
+        {
+          const tokens = splitValues(String(raw));
+          if (tokens.length) {
+            const skillConditions = uniqueStrings(tokens).map((token) =>
+              makeCondition('skills', '(.)', token),
+            );
+            nodes.push(
+              skillConditions.length === 1
+                ? skillConditions[0]
+                : ({ op: 'or', conditions: skillConditions } as CrustFilterNode),
+            );
+          }
+        }
+        break;
+      case 'languages': {
+        const values = splitValues(String(raw));
+        if (values.length) nodes.push(makeCondition('languages', 'in', values));
+        break;
+      }
+      case 'min_connections':
+        nodes.push(makeCondition('num_of_connections', '=>', Number(raw)));
+        break;
+      case 'years_of_experience_raw_min':
+        nodes.push(makeCondition('years_of_experience_raw', '=>', Number(raw)));
+        break;
+      case 'years_of_experience_raw_max':
+        nodes.push(makeCondition('years_of_experience_raw', '=<', Number(raw)));
+        break;
+      case 'employer_size_min':
+        nodes.push(
+          makeCondition('current_employers.company_headcount_latest', '=>', Number(raw)),
+        );
+        break;
+      case 'employer_size_max':
+        nodes.push(
+          makeCondition('current_employers.company_headcount_latest', '=<', Number(raw)),
+        );
+        break;
+      case 'industry': {
+        const values = splitValues(String(raw));
+        if (values.length) {
+          const industryConditions = uniqueStrings(values).map((value) =>
+            makeCondition('all_employers.company_industries', '(.)', value),
+          );
+          nodes.push(
+            industryConditions.length === 1
+              ? industryConditions[0]
+              : ({ op: 'or', conditions: industryConditions } as CrustFilterNode),
+          );
+        }
+        break;
+      }
+      default:
+        nodes.push(makeCondition('headline', '(.)', String(raw)));
+    }
+  }
+
+  if (!nodes.length) {
+    const term = fallbackTerm.trim();
+    return term ? textSearchNode(term) : makeCondition('headline', '(.)', 'engineer');
+  }
+
+  return asAndGroup(nodes) ?? makeCondition('headline', '(.)', 'engineer');
 }
 
 export async function isCrustConfigured(): Promise<boolean> {
@@ -135,169 +325,37 @@ export async function enrichPeopleBasicProfile(linkedinUrls: string[]): Promise<
   }
 }
 
-// --- Filters Autocomplete helpers ---
-type FilterType = 'region' | 'title' | 'industry' | 'school';
-type AutocompleteItem = { value?: string; label?: string } | string;
-
-export async function autocompleteFilter(
-  filterType: FilterType,
-  query: string,
-  count = 10,
-): Promise<string[]> {
-  const url = `${API_BASE}/screener/linkedin_filter/autocomplete?filter_type=${encodeURIComponent(
-    filterType,
-  )}&query=${encodeURIComponent(query)}&count=${count}`;
-
-  try {
-    const token = await getCrustToken();
-    const res = await fetchWithTimeout(url, {
-      headers: { Authorization: `Token ${token}` },
-      cache: 'no-store',
-      timeoutMs: 15000,
-    });
-    if (!res.ok) return [];
-    const json = (await res.json()) as { results?: AutocompleteItem[] } | any[];
-    const arr: AutocompleteItem[] = Array.isArray(json)
-      ? (json as any[])
-      : Array.isArray((json as any).results)
-        ? ((json as any).results as any[])
-        : [];
-    return arr
-      .map((it) => (typeof it === 'string' ? it : it.value || it.label || ''))
-      .filter(Boolean) as string[];
-  } catch {
-    return [];
-  }
-}
-
-export async function resolveRegion(input: string): Promise<string | undefined> {
-  if (!input) return undefined;
-  const q = input.trim();
-  const suggestions = await autocompleteFilter('region', q, 8);
-  if (!suggestions.length) return undefined;
-  const lower = q.toLowerCase();
-  const exact = suggestions.find((s) => s.toLowerCase() === lower);
-  if (exact) return exact;
-  const starts = suggestions.find((s) => s.toLowerCase().startsWith(lower));
-  if (starts) return starts;
-  return suggestions[0];
-}
-
-export async function resolveTitle(input: string): Promise<string | undefined> {
-  if (!input) return undefined;
-  const q = input.trim();
-  const suggestions = await autocompleteFilter('title', q, 8);
-  if (!suggestions.length) return undefined;
-  const lower = q.toLowerCase();
-  const exact = suggestions.find((s) => s.toLowerCase() === lower);
-  if (exact) return exact;
-  const starts = suggestions.find((s) => s.toLowerCase().startsWith(lower));
-  if (starts) return starts;
-  return suggestions[0];
-}
-
 export const crustPeopleProvider: PeopleProvider = {
   async getPeople(query: SearchQuery): Promise<ProviderResult<Person>> {
     try {
       const limit = query.limit ?? 50;
+      const payload: any = { limit };
+      const fallbackTerm = (query.q || '').trim();
 
-      // Build a basic OR search across common text fields if q is concise and no filters present
-      const shouldUseQ = Boolean(
-        query.q && (!query.filters || (query.q && query.q.length <= 80)),
-      );
-      const qConditions = shouldUseQ
-        ? [
-            { column: 'name', type: '(.)', value: query.q },
-            { column: 'headline', type: '(.)', value: query.q },
-            { column: 'current_employers.title', type: '(.)', value: query.q },
-            { column: 'current_employers.name', type: '(.)', value: query.q },
-            { column: 'region', type: '(.)', value: query.q },
-          ]
-        : [];
-
-      const filterConditions: any[] = [];
-      if (query.filters) {
-        for (const [k, v] of Object.entries(query.filters)) {
-          if (v === undefined || v === null || v === '') continue;
-          switch (k) {
-            case 'title':
-              if (typeof v === 'string' && v.includes('|')) {
-                const parts = v.split('|').map((s) => s.trim()).filter(Boolean);
-                if (parts.length) {
-                  filterConditions.push({
-                    op: 'or',
-                    conditions: parts.map((p) => ({ column: 'current_employers.title', type: '(.)', value: p })),
-                  } as any);
-                }
-              } else {
-                filterConditions.push({ column: 'current_employers.title', type: '(.)', value: v });
-              }
-              break;
-            case 'company':
-              filterConditions.push({ column: 'current_employers.name', type: '(.)', value: v });
-              break;
-            case 'region':
-            case 'location':
-              filterConditions.push({ column: 'region', type: '(.)', value: v });
-              break;
-            case 'languages':
-              if (typeof v === 'string' && v.includes('|')) {
-                const parts = v.split('|').map((s) => s.trim()).filter(Boolean);
-                filterConditions.push({ column: 'languages', type: 'in', value: parts });
-              } else {
-                filterConditions.push({ column: 'languages', type: 'in', value: Array.isArray(v) ? v : [v] });
-              }
-              break;
-            case 'min_connections':
-              filterConditions.push({ column: 'num_of_connections', type: '=>', value: v });
-              break;
-            case 'skills':
-              filterConditions.push({ column: 'skills', type: '(.)', value: v });
-              break;
-            case 'industry':
-              if (typeof v === 'string' && v.includes('|')) {
-                const parts = v.split('|').map((s) => s.trim()).filter(Boolean);
-                filterConditions.push({ column: 'all_employers.company_industries', type: 'in', value: parts });
-              } else {
-                filterConditions.push({ column: 'all_employers.company_industries', type: 'in', value: [String(v)] });
-              }
-              break;
-            case 'years_of_experience_raw_min':
-              filterConditions.push({ column: 'years_of_experience_raw', type: '=>', value: v });
-              break;
-            case 'years_of_experience_raw_max':
-              filterConditions.push({ column: 'years_of_experience_raw', type: '=<', value: v });
-              break;
-            case 'employer_size_min':
-              filterConditions.push({ column: 'current_employers.company_headcount_latest', type: '=>', value: v });
-              break;
-            case 'employer_size_max':
-              filterConditions.push({ column: 'current_employers.company_headcount_latest', type: '=<', value: v });
-              break;
-            default:
-              // Fallback to text match on headline
-              filterConditions.push({ column: 'headline', type: '(.)', value: v });
-          }
-        }
+      let filtersNode: CrustFilterNode | undefined;
+      if (isCrustFilterNode(query.filters)) {
+        filtersNode = query.filters as CrustFilterNode;
+      } else if (query.filters && typeof query.filters === 'object') {
+        filtersNode = recordToFilterNode(
+          query.filters as Record<string, string | number | boolean>,
+          fallbackTerm,
+        );
       }
 
-      const filters: any = {
-        op: 'and',
-        conditions: [
-          ...(filterConditions.length ? filterConditions : []),
-          ...(qConditions.length ? [{ op: 'or', conditions: qConditions }] : []),
-        ],
-      };
+      if (!filtersNode) {
+        const term = fallbackTerm || 'engineer';
+        filtersNode = textSearchNode(term);
+      }
 
-      const payload: any = { filters, limit };
+      payload.filters = filtersNode;
       if ((query as any).cursor) payload.cursor = (query as any).cursor;
       dbg('getPeople: POST', {
         path: PEOPLE_PATH,
         limit,
-        hasFilters: !!filters,
-        q: shouldUseQ ? query.q ?? '' : '',
+        hasFilters: !!filtersNode,
+        q: fallbackTerm,
       });
-      dbg('getPeople: filters payload', filters);
+      dbg('getPeople: filters payload', payload.filters);
       const json = await crustPost<any>(PEOPLE_PATH, payload);
       const rawRows = Array.isArray(json?.profiles) ? json.profiles : extractArray(json);
       dbg('getPeople: response keys', Object.keys(json || {}));
@@ -305,8 +363,9 @@ export const crustPeopleProvider: PeopleProvider = {
       dbg('getPeople: normalized rows', rows.length);
       return { rows, nextCursor: json?.next_cursor ?? null, source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
     } catch (error: any) {
-      console.error('[CRUSTDATA:CLIENT] getPeople: error', error?.message || error);
-      return { rows: [], source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
+      const message = error instanceof CrustdataError ? error.message : error?.message || String(error);
+      console.error('[CRUSTDATA:CLIENT] getPeople: error', message);
+      throw error;
     }
   },
 };
@@ -322,7 +381,10 @@ export const crustCompanyProvider: CompanyProvider = {
         | { filter_type: 'COMPANY_HEADCOUNT'; type: 'in'; value: string[] };
 
       const filters: CompanyFilter[] = [];
-      const qFilters = query.filters || {};
+      const qFilters =
+        query.filters && !isCrustFilterNode(query.filters)
+          ? (query.filters as Record<string, string | number | boolean>)
+          : {};
 
       if (qFilters.industry) {
         filters.push({ filter_type: 'INDUSTRY', type: 'in', value: [String(qFilters.industry)] });
@@ -376,8 +438,9 @@ export const crustCompanyProvider: CompanyProvider = {
       dbg('getCompanies: normalized rows', rows.length);
       return { rows, source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
     } catch (error: any) {
-      console.error('[CRUSTDATA:CLIENT] getCompanies: error', error?.message || error);
-      return { rows: [], source: 'crustdata', creditCost: { provider: 'crustdata', estimated: 0 } };
+      const message = error instanceof CrustdataError ? error.message : error?.message || String(error);
+      console.error('[CRUSTDATA:CLIENT] getCompanies: error', message);
+      throw error;
     }
   },
 };
