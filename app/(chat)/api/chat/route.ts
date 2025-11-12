@@ -166,7 +166,7 @@ export async function POST(request: Request) {
           model: provider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
-          maxSteps: 5,
+          maxSteps: 8, // Increased from 5 to 8 for better multi-step query handling
           experimental_activeTools:
             selectedChatModel === 'chat-model-reasoning'
               ? []

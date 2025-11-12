@@ -1,31 +1,31 @@
 /**
- * Improved People Artifact Handler with:
- * - Progressive CSV streaming (stream rows as they arrive)
- * - Better status updates throughout the process
- * - Partial result preservation on error
- * - Better integration with improved CrustData client
+ * Improved Company Artifact Handler with:
+ * - Progressive CSV streaming
+ * - Better status updates
+ * - Credit checking
+ * - Enhanced error handling
  */
 
-import { createDocumentHandler } from '@/lib/artifacts/server';
-import { aggregatePeople } from '@/lib/providers';
+import { createDocumentHandler } from '@/lib/artifacts/server-improved';
+import { aggregateCompanies } from '@/lib/providers';
 import {
-  crustPeopleProvider,
+  crustCompanyProvider,
   isCrustConfigured,
   getRemainingCredits,
-} from '@/lib/providers/crustdata/client';
+} from '@/lib/providers/crustdata/client-improved';
 import { toCSV } from '@/lib/providers/normalize';
-import { buildPeopleQuery } from '@/lib/providers/people-extract';
+import { parseCompanyQuery } from '@/lib/providers/parse';
 
 function debugEnabled() {
   return process.env.DEBUG_CRUSTDATA === 'true';
 }
 
 function dbg(...args: any[]) {
-  if (debugEnabled()) console.log('[CRUSTDATA:PEOPLE]', ...args);
+  if (debugEnabled()) console.log('[CRUSTDATA:COMPANY]', ...args);
 }
 
 /**
- * Stream CSV rows progressively instead of building entire CSV first
+ * Stream CSV rows progressively
  */
 function streamCSVRows(
   headers: string[],
@@ -33,18 +33,14 @@ function streamCSVRows(
   dataStream: any,
   chunkSize: number = 10
 ): string {
-  // Send headers first
   const csvLines: string[] = [headers.join(',')];
 
-  // Stream rows in chunks for better UX
   for (let i = 0; i < rows.length; i += chunkSize) {
     const chunk = rows.slice(i, i + chunkSize);
 
-    // Convert chunk to CSV lines
     const chunkLines = chunk.map(row => {
       return headers.map(h => {
         const value = row[h] ?? '';
-        // Escape CSV values
         const escaped = String(value).replace(/"/g, '""');
         return escaped.includes(',') || escaped.includes('\n') || escaped.includes('"')
           ? `"${escaped}"`
@@ -54,15 +50,13 @@ function streamCSVRows(
 
     csvLines.push(...chunkLines);
 
-    // Stream this chunk
     const partialCSV = csvLines.join('\n');
     dataStream.writeData({ type: 'sheet-delta', content: partialCSV });
 
-    // Update status
     if (i + chunkSize < rows.length) {
       dataStream.writeData({
         type: 'status',
-        content: `Processed ${Math.min(i + chunkSize, rows.length)} of ${rows.length} profiles...`,
+        content: `Processed ${Math.min(i + chunkSize, rows.length)} of ${rows.length} companies...`,
       });
     }
   }
@@ -70,14 +64,14 @@ function streamCSVRows(
   return csvLines.join('\n');
 }
 
-export const peopleDocumentHandler = createDocumentHandler<'people'>({
-  kind: 'people',
+export const companyDocumentHandler = createDocumentHandler<'company'>({
+  kind: 'company',
   onCreateDocument: async ({ title, dataStream }) => {
     try {
-      // Step 1: Check configuration
+      // Step 1: Initialize
       dataStream.writeData({
         type: 'status',
-        content: 'Initializing people search...',
+        content: 'Initializing company search...',
       });
 
       if (!(await isCrustConfigured())) {
@@ -97,9 +91,8 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       dbg('onCreateDocument: available credits', credits);
 
       if (credits < 10) {
-        const errorMsg = `Low credits (${credits} remaining). You may not be able to complete this search.`;
-        dataStream.writeData({ type: 'error', content: errorMsg });
-        // Don't throw - let user proceed if they want
+        const warningMsg = `Low credits (${credits} remaining). Search may be limited.`;
+        dataStream.writeData({ type: 'status', content: warningMsg });
       } else {
         dataStream.writeData({
           type: 'status',
@@ -110,21 +103,24 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       // Step 3: Parse query
       dataStream.writeData({
         type: 'status',
-        content: 'Analyzing your search criteria...',
+        content: 'Analyzing company search criteria...',
       });
 
-      const query = await buildPeopleQuery(title, 50);
+      const query = parseCompanyQuery(title, 50);
       dbg('onCreateDocument: parsed query', { title, query });
 
-      // Step 4: Show what we're searching for
+      // Step 4: Show search parameters
       const filterDescription = [];
       if (query.filters) {
         const filters = query.filters as any;
-        if (filters.title) filterDescription.push(`Title: ${filters.title}`);
-        if (filters.company) filterDescription.push(`Company: ${filters.company}`);
-        if (filters.region || filters.location)
-          filterDescription.push(`Location: ${filters.region || filters.location}`);
         if (filters.industry) filterDescription.push(`Industry: ${filters.industry}`);
+        if (filters.hq || filters.location || filters.country) {
+          filterDescription.push(`Location: ${filters.hq || filters.location || filters.country}`);
+        }
+        if (filters.size_min || filters.size_max) {
+          const sizeRange = `${filters.size_min || 0}-${filters.size_max || '∞'}`;
+          filterDescription.push(`Size: ${sizeRange} employees`);
+        }
       }
 
       if (filterDescription.length > 0) {
@@ -137,53 +133,51 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       // Step 5: Execute search
       dataStream.writeData({
         type: 'status',
-        content: 'Searching 200M+ professional profiles...',
+        content: 'Scanning company databases...',
       });
 
-      const result = await aggregatePeople(query, [crustPeopleProvider]);
+      const result = await aggregateCompanies(query, [crustCompanyProvider]);
       dbg('onCreateDocument: provider result count', result.rows.length);
 
       // Step 6: Handle results
       if (result.rows.length === 0) {
         const message =
-          'No profiles matched your search criteria. Try:\n• Using broader job titles\n• Expanding the location\n• Removing some filters';
+          'No companies matched your criteria. Try:\n• Broadening the industry\n• Expanding the location\n• Adjusting size ranges';
         dataStream.writeData({ type: 'error', content: message });
         throw new Error(message);
       }
 
       dataStream.writeData({
         type: 'status',
-        content: `Found ${result.rows.length} matching profiles. Preparing results...`,
+        content: `Found ${result.rows.length} matching companies. Preparing list...`,
       });
 
-      // Step 7: Prepare and stream CSV progressively
+      // Step 7: Stream CSV progressively
       const headers = [
         'name',
-        'title',
-        'company',
         'industry',
-        'location',
+        'company_url',
         'linkedin_url',
-        'website',
-        'profile_image_url',
+        'location',
+        'size',
+        'funding',
+        'logo_url',
         'description',
         'tags',
       ];
 
       dbg('onCreateDocument: streaming CSV progressively');
 
-      // Stream CSV in chunks
       const csv = streamCSVRows(headers, result.rows as any[], dataStream, 10);
-
       dbg('onCreateDocument: total CSV length', csv.length);
 
       // Step 8: Final status
       dataStream.writeData({
         type: 'status',
-        content: `✓ Successfully loaded ${result.rows.length} profiles`,
+        content: `✓ Successfully loaded ${result.rows.length} companies`,
       });
 
-      // Show remaining credits if available
+      // Show remaining credits
       if (result.creditCost) {
         const remainingCredits = await getRemainingCredits();
         dataStream.writeData({
@@ -195,7 +189,6 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       return csv;
     } catch (error: any) {
       dbg('onCreateDocument: error', error?.message || error);
-      // Re-throw to let the handler process it
       throw error;
     }
   },
@@ -205,7 +198,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       // Step 1: Initialize
       dataStream.writeData({
         type: 'status',
-        content: 'Updating search criteria...',
+        content: 'Updating company search...',
       });
 
       if (!(await isCrustConfigured())) {
@@ -227,45 +220,44 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       // Step 3: Parse updated query
       dataStream.writeData({
         type: 'status',
-        content: 'Analyzing updated search criteria...',
+        content: 'Analyzing updated criteria...',
       });
 
       const text = description || document.title;
-      const query = await buildPeopleQuery(text, 50);
+      const query = parseCompanyQuery(text, 50);
       dbg('onUpdateDocument: parsed query', { text, query });
 
       // Step 4: Execute search
       dataStream.writeData({
         type: 'status',
-        content: 'Searching with new criteria...',
+        content: 'Searching with updated criteria...',
       });
 
-      const result = await aggregatePeople(query, [crustPeopleProvider]);
+      const result = await aggregateCompanies(query, [crustCompanyProvider]);
       dbg('onUpdateDocument: provider result count', result.rows.length);
 
       // Step 5: Handle results
       if (result.rows.length === 0) {
-        const message =
-          'No profiles matched your updated criteria. Try less restrictive filters.';
+        const message = 'No companies matched your updated criteria. Try less restrictive filters.';
         dataStream.writeData({ type: 'error', content: message });
         throw new Error(message);
       }
 
       dataStream.writeData({
         type: 'status',
-        content: `Found ${result.rows.length} profiles with updated criteria...`,
+        content: `Found ${result.rows.length} companies with updated criteria...`,
       });
 
       // Step 6: Stream updated CSV
       const headers = [
         'name',
-        'title',
-        'company',
         'industry',
-        'location',
+        'company_url',
         'linkedin_url',
-        'website',
-        'profile_image_url',
+        'location',
+        'size',
+        'funding',
+        'logo_url',
         'description',
         'tags',
       ];
@@ -276,7 +268,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       // Step 7: Final status
       dataStream.writeData({
         type: 'status',
-        content: `✓ Updated with ${result.rows.length} profiles`,
+        content: `✓ Updated with ${result.rows.length} companies`,
       });
 
       return csv;

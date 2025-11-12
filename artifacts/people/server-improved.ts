@@ -6,13 +6,13 @@
  * - Better integration with improved CrustData client
  */
 
-import { createDocumentHandler } from '@/lib/artifacts/server';
+import { createDocumentHandler } from '@/lib/artifacts/server-improved';
 import { aggregatePeople } from '@/lib/providers';
 import {
   crustPeopleProvider,
   isCrustConfigured,
   getRemainingCredits,
-} from '@/lib/providers/crustdata/client';
+} from '@/lib/providers/crustdata/client-improved';
 import { toCSV } from '@/lib/providers/normalize';
 import { buildPeopleQuery } from '@/lib/providers/people-extract';
 
