@@ -116,7 +116,7 @@ export async function buildPeopleQuery(
 
   // Region canonicalization
   const regionText = spec.region || '';
-  if (!regionText && baseFilters) {
+  if (!regionText && baseFilters && typeof baseFilters === 'object' && !('op' in baseFilters) && !('column' in baseFilters)) {
     const inferredRegion = baseFilters.region as string | undefined;
     if (inferredRegion) spec.region = inferredRegion;
   }
