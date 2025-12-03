@@ -662,7 +662,7 @@ export async function checkUserCredits({
 
   if (remaining < requiredCredits) {
     throw new ChatSDKError(
-      'payment_required',
+      'forbidden:database',
       `Insufficient credits. You have ${remaining} credits remaining, but ${requiredCredits} are required. Please upgrade your plan to continue.`,
     );
   }

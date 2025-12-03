@@ -212,9 +212,31 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
     }
   },
 
-  onUpdateDocument: async ({ document, description, dataStream }) => {
+  onUpdateDocument: async ({ document, description, dataStream, session }) => {
     try {
-      // Step 1: Initialize
+      // Step 1: Check user credits (10 credits required for people search)
+      dataStream.writeData({
+        type: 'status',
+        content: 'Checking your credits...',
+      });
+
+      const requiredCredits = 10;
+      const remainingCredits = await getRemainingUserCredits({ userId: session.user.id });
+      dbg('onUpdateDocument: user credits', { remaining: remainingCredits, required: requiredCredits });
+
+      if (remainingCredits < requiredCredits) {
+        const errorMsg = `Insufficient credits. You have ${remainingCredits} credits remaining, but ${requiredCredits} are required. Please upgrade your plan to continue.`;
+        dataStream.writeData({ type: 'error', content: errorMsg });
+        dataStream.writeData({ type: 'finish', content: '' });
+        throw new Error(errorMsg);
+      }
+
+      dataStream.writeData({
+        type: 'status',
+        content: `Credits: ${remainingCredits} available`,
+      });
+
+      // Step 2: Initialize
       dataStream.writeData({
         type: 'status',
         content: 'Updating search criteria...',
@@ -225,15 +247,6 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
           'Crustdata API is not configured. Please add your API token in Settings → API Keys.';
         dataStream.writeData({ type: 'error', content: errorMsg });
         throw new Error(errorMsg);
-      }
-
-      // Step 2: Check credits
-      const credits = await getRemainingCredits();
-      dbg('onUpdateDocument: available credits', credits);
-
-      if (credits < 10) {
-        const warningMsg = `Low credits (${credits} remaining).`;
-        dataStream.writeData({ type: 'status', content: warningMsg });
       }
 
       // Step 3: Parse updated query
@@ -286,10 +299,21 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       const csv = streamCSVRows(headers, result.rows as any[], dataStream, 10);
       dbg('onUpdateDocument: streamed CSV length', csv.length);
 
-      // Step 7: Final status
+      // Step 7: Deduct credits for successful update
+      await deductUserCredits({ userId: session.user.id, amount: requiredCredits });
+      dbg('onUpdateDocument: deducted credits', requiredCredits);
+
+      const newRemainingCredits = await getRemainingUserCredits({ userId: session.user.id });
+
+      // Step 8: Final status
       dataStream.writeData({
         type: 'status',
         content: `✓ Updated with ${result.rows.length} profiles`,
+      });
+
+      dataStream.writeData({
+        type: 'status',
+        content: `Credits remaining: ${newRemainingCredits}`,
       });
 
       return csv;
