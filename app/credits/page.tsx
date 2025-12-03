@@ -40,7 +40,7 @@ export default async function CreditsPage() {
         {remainingCredits < 20 && remainingCredits > 0 && (
           <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
             <p className="text-sm text-yellow-600 dark:text-yellow-400">
-              ⚠️ You're running low on credits. Upgrade your plan to continue using people and company search features.
+              ⚠️ You&apos;re running low on credits. Upgrade your plan to continue using people and company search features.
             </p>
           </div>
         )}
@@ -48,7 +48,7 @@ export default async function CreditsPage() {
         {remainingCredits === 0 && (
           <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-md">
             <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-2">
-              ❌ You've used all your free credits
+              ❌ You&apos;ve used all your free credits
             </p>
             <p className="text-sm text-red-600/80 dark:text-red-400/80 mb-3">
               Upgrade your plan to get more credits and continue using advanced search features.
