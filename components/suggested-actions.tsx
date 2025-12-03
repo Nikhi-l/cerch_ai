@@ -79,16 +79,6 @@ function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityT
             onClick={async () => {
               window.history.replaceState({}, '', `/chat/${chatId}`);
               setLoadingKey(`${suggestedAction.title}-${index}`);
-              // First, write the user's natural query into chat
-              if (suggestedAction.query && setMessages) {
-                const userMsg: UIMessage = {
-                  id: generateUUID(),
-                  role: 'user',
-                  content: '',
-                  parts: [{ type: 'text', text: suggestedAction.query } as any],
-                } as any;
-                setMessages((msgs) => [...msgs, userMsg]);
-              }
 
               if (suggestedAction.type === 'people-demo') {
                 try {
@@ -99,8 +89,14 @@ function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityT
                   });
                   const json = await res.json();
                   if (json?.ok) {
-                    // Optimistically append assistant tool-result to chat
+                    // Add both user message and assistant tool-result to chat
                     if (setMessages) {
+                      const userMsg: UIMessage = {
+                        id: generateUUID(),
+                        role: 'user',
+                        content: '',
+                        parts: [{ type: 'text', text: suggestedAction.query } as any],
+                      } as any;
                       const toolMsg: UIMessage = {
                         id: generateUUID(),
                         role: 'assistant',
@@ -117,7 +113,7 @@ function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityT
                           },
                         ],
                       } as any;
-                      setMessages((msgs) => [...msgs, toolMsg]);
+                      setMessages((msgs) => [...msgs, userMsg, toolMsg]);
                     }
                     setArtifact({
                       documentId: json.id,
@@ -130,8 +126,24 @@ function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityT
                     });
                     setLoadingKey(null);
                     return;
+                  } else {
+                    // API returned error, fall back to normal chat flow with AI
+                    setLoadingKey(null);
+                    await append({
+                      role: 'user',
+                      content: suggestedAction.query,
+                    });
+                    return;
                   }
-                } catch {}
+                } catch {
+                  // Network error, fall back to normal chat flow with AI
+                  setLoadingKey(null);
+                  await append({
+                    role: 'user',
+                    content: suggestedAction.query,
+                  });
+                  return;
+                }
               } else if (suggestedAction.type === 'company-demo') {
                 try {
                   const res = await fetch('/api/cerch/company', {
@@ -141,7 +153,14 @@ function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityT
                   });
                   const json = await res.json();
                   if (json?.ok) {
+                    // Add both user message and assistant tool-result to chat
                     if (setMessages) {
+                      const userMsg: UIMessage = {
+                        id: generateUUID(),
+                        role: 'user',
+                        content: '',
+                        parts: [{ type: 'text', text: suggestedAction.query } as any],
+                      } as any;
                       const toolMsg: UIMessage = {
                         id: generateUUID(),
                         role: 'assistant',
@@ -158,7 +177,7 @@ function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityT
                           },
                         ],
                       } as any;
-                      setMessages((msgs) => [...msgs, toolMsg]);
+                      setMessages((msgs) => [...msgs, userMsg, toolMsg]);
                     }
                     setArtifact({
                       documentId: json.id,
@@ -171,11 +190,25 @@ function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityT
                     });
                     setLoadingKey(null);
                     return;
+                  } else {
+                    // API returned error, fall back to normal chat flow with AI
+                    setLoadingKey(null);
+                    await append({
+                      role: 'user',
+                      content: suggestedAction.query,
+                    });
+                    return;
                   }
-                } catch {}
+                } catch {
+                  // Network error, fall back to normal chat flow with AI
+                  setLoadingKey(null);
+                  await append({
+                    role: 'user',
+                    content: suggestedAction.query,
+                  });
+                  return;
+                }
               }
-              // No LLM fallback; keep chat clean if background route fails
-              setLoadingKey(null);
             }}
             className="group text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start hover:text-white"
             disabled={loadingKey === `${suggestedAction.title}-${index}`}
