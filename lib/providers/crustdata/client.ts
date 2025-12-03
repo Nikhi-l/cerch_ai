@@ -242,29 +242,27 @@ async function handleCrustResponse<T>(res: Response): Promise<T> {
 
     switch (res.status) {
       case 401:
-        userMessage = 'Invalid Crustdata API token. Please check your credentials in settings.';
+        userMessage = 'Oops! Something went wrong on our end. We\'re looking into it. Please check back later.';
         break;
       case 403:
-        userMessage = 'Access denied. Your Crustdata account may not have permission for this operation.';
+        userMessage = 'Oops! Something went wrong on our end. Our team has been notified and we\'ll fix this soon. Please try again later.';
         break;
       case 402:
-        userMessage = 'Insufficient Crustdata credits. Please upgrade your plan.';
+        userMessage = 'Oops! Something went wrong on our end. We\'re looking into it. Please check back later.';
         break;
       case 429:
-        userMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
+        userMessage = 'Our systems are experiencing high load. Please wait a moment and try again.';
         isRetryable = true;
         break;
       case 500:
       case 502:
       case 503:
       case 504:
-        userMessage = 'Crustdata service is temporarily unavailable. Please try again in a moment.';
+        userMessage = 'Oops! Something went wrong on our end. We\'re working on it. Please try again in a few minutes.';
         isRetryable = true;
         break;
       default:
-        userMessage = detail
-          ? `Crustdata API error: ${detail}`
-          : `Request failed with status ${res.status}. Please contact support if this persists.`;
+        userMessage = 'Oops! Something unexpected happened. Our team has been notified. Please try again later.';
     }
 
     if (res.status === 401 || res.status === 403) {

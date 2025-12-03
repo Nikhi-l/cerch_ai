@@ -144,6 +144,7 @@ export const companyDocumentHandler = createDocumentHandler<'company'>({
         const message =
           'No companies matched your criteria. Try:\n• Broadening the industry\n• Expanding the location\n• Adjusting size ranges';
         dataStream.writeData({ type: 'error', content: message });
+        dataStream.writeData({ type: 'finish', content: '' });
         throw new Error(message);
       }
 
@@ -189,6 +190,14 @@ export const companyDocumentHandler = createDocumentHandler<'company'>({
       return csv;
     } catch (error: any) {
       dbg('onCreateDocument: error', error?.message || error);
+
+      // Send user-friendly error message
+      const userMessage = error?.message || 'Oops! Something went wrong on our end. Our team has been notified. Please try again later.';
+      dataStream.writeData({ type: 'error', content: userMessage });
+
+      // Send finish message to prevent artifact from getting stuck in streaming state
+      dataStream.writeData({ type: 'finish', content: '' });
+
       throw error;
     }
   },
@@ -240,6 +249,7 @@ export const companyDocumentHandler = createDocumentHandler<'company'>({
       if (result.rows.length === 0) {
         const message = 'No companies matched your updated criteria. Try less restrictive filters.';
         dataStream.writeData({ type: 'error', content: message });
+        dataStream.writeData({ type: 'finish', content: '' });
         throw new Error(message);
       }
 
@@ -274,6 +284,14 @@ export const companyDocumentHandler = createDocumentHandler<'company'>({
       return csv;
     } catch (error: any) {
       dbg('onUpdateDocument: error', error?.message || error);
+
+      // Send user-friendly error message
+      const userMessage = error?.message || 'Oops! Something went wrong on our end. Our team has been notified. Please try again later.';
+      dataStream.writeData({ type: 'error', content: userMessage });
+
+      // Send finish message to prevent artifact from getting stuck in streaming state
+      dataStream.writeData({ type: 'finish', content: '' });
+
       throw error;
     }
   },

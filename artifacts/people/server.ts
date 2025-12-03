@@ -148,6 +148,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
         const message =
           'No profiles matched your search criteria. Try:\n• Using broader job titles\n• Expanding the location\n• Removing some filters';
         dataStream.writeData({ type: 'error', content: message });
+        dataStream.writeData({ type: 'finish', content: '' });
         throw new Error(message);
       }
 
@@ -195,7 +196,14 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       return csv;
     } catch (error: any) {
       dbg('onCreateDocument: error', error?.message || error);
-      // Re-throw to let the handler process it
+
+      // Send user-friendly error message
+      const userMessage = error?.message || 'Oops! Something went wrong on our end. Our team has been notified. Please try again later.';
+      dataStream.writeData({ type: 'error', content: userMessage });
+
+      // Send finish message to prevent artifact from getting stuck in streaming state
+      dataStream.writeData({ type: 'finish', content: '' });
+
       throw error;
     }
   },
@@ -248,6 +256,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
         const message =
           'No profiles matched your updated criteria. Try less restrictive filters.';
         dataStream.writeData({ type: 'error', content: message });
+        dataStream.writeData({ type: 'finish', content: '' });
         throw new Error(message);
       }
 
@@ -282,6 +291,14 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       return csv;
     } catch (error: any) {
       dbg('onUpdateDocument: error', error?.message || error);
+
+      // Send user-friendly error message
+      const userMessage = error?.message || 'Oops! Something went wrong on our end. Our team has been notified. Please try again later.';
+      dataStream.writeData({ type: 'error', content: userMessage });
+
+      // Send finish message to prevent artifact from getting stuck in streaming state
+      dataStream.writeData({ type: 'finish', content: '' });
+
       throw error;
     }
   },
