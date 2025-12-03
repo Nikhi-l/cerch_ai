@@ -12,7 +12,7 @@ interface CreditsPopupProps {
   maxCredits?: number;
 }
 
-export function CreditsPopup({ isOpen, onClose, currentCredits, maxCredits = 10000 }: CreditsPopupProps) {
+export function CreditsPopup({ isOpen, onClose, currentCredits, maxCredits = 100 }: CreditsPopupProps) {
   const safeMax = Math.max(1, maxCredits);
   const used = Math.max(0, Math.min(currentCredits, safeMax));
   const progressValue = Math.min((used / safeMax) * 100, 100);

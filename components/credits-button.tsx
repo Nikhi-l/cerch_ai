@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Coins } from 'lucide-react';
 import { CreditsPopup } from '@/components/credits-popup';
 
-export function CreditsButton({ credits, maxCredits = 10000 }: { credits: number; maxCredits?: number }) {
+export function CreditsButton({ credits, maxCredits = 100 }: { credits: number; maxCredits?: number }) {
   const [open, setOpen] = useState(false);
 
   return (
