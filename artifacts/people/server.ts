@@ -11,10 +11,10 @@ import { aggregatePeople } from '@/lib/providers';
 import {
   crustPeopleProvider,
   isCrustConfigured,
-  getRemainingCredits,
 } from '@/lib/providers/crustdata/client';
 import { toCSV } from '@/lib/providers/normalize';
 import { buildPeopleQuery } from '@/lib/providers/people-extract';
+import { checkUserCredits, deductUserCredits, getRemainingUserCredits } from '@/lib/db/queries';
 
 function debugEnabled() {
   return process.env.DEBUG_CRUSTDATA === 'true';
@@ -72,9 +72,31 @@ function streamCSVRows(
 
 export const peopleDocumentHandler = createDocumentHandler<'people'>({
   kind: 'people',
-  onCreateDocument: async ({ title, dataStream }) => {
+  onCreateDocument: async ({ title, dataStream, session }) => {
     try {
-      // Step 1: Check configuration
+      // Step 1: Check user credits (10 credits required for people search)
+      dataStream.writeData({
+        type: 'status',
+        content: 'Checking your credits...',
+      });
+
+      const requiredCredits = 10;
+      const remainingCredits = await getRemainingUserCredits({ userId: session.user.id });
+      dbg('onCreateDocument: user credits', { remaining: remainingCredits, required: requiredCredits });
+
+      if (remainingCredits < requiredCredits) {
+        const errorMsg = `Insufficient credits. You have ${remainingCredits} credits remaining, but ${requiredCredits} are required. Please upgrade your plan to continue.`;
+        dataStream.writeData({ type: 'error', content: errorMsg });
+        dataStream.writeData({ type: 'finish', content: '' });
+        throw new Error(errorMsg);
+      }
+
+      dataStream.writeData({
+        type: 'status',
+        content: `Credits: ${remainingCredits} available`,
+      });
+
+      // Step 2: Check configuration
       dataStream.writeData({
         type: 'status',
         content: 'Initializing people search...',
@@ -85,26 +107,6 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
           'Crustdata API is not configured. Please add your API token in Settings → API Keys.';
         dataStream.writeData({ type: 'error', content: errorMsg });
         throw new Error(errorMsg);
-      }
-
-      // Step 2: Check credits
-      dataStream.writeData({
-        type: 'status',
-        content: 'Checking available credits...',
-      });
-
-      const credits = await getRemainingCredits();
-      dbg('onCreateDocument: available credits', credits);
-
-      if (credits < 10) {
-        const errorMsg = `Low credits (${credits} remaining). You may not be able to complete this search.`;
-        dataStream.writeData({ type: 'error', content: errorMsg });
-        // Don't throw - let user proceed if they want
-      } else {
-        dataStream.writeData({
-          type: 'status',
-          content: `Credits available: ${credits}`,
-        });
       }
 
       // Step 3: Parse query
@@ -178,20 +180,22 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
 
       dbg('onCreateDocument: total CSV length', csv.length);
 
-      // Step 8: Final status
+      // Step 8: Deduct credits for successful search
+      await deductUserCredits({ userId: session.user.id, amount: requiredCredits });
+      dbg('onCreateDocument: deducted credits', requiredCredits);
+
+      const newRemainingCredits = await getRemainingUserCredits({ userId: session.user.id });
+
+      // Step 9: Final status
       dataStream.writeData({
         type: 'status',
         content: `✓ Successfully loaded ${result.rows.length} profiles`,
       });
 
-      // Show remaining credits if available
-      if (result.creditCost) {
-        const remainingCredits = await getRemainingCredits();
-        dataStream.writeData({
-          type: 'status',
-          content: `Credits remaining: ${remainingCredits}`,
-        });
-      }
+      dataStream.writeData({
+        type: 'status',
+        content: `Credits remaining: ${newRemainingCredits}`,
+      });
 
       return csv;
     } catch (error: any) {

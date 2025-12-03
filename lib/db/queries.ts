@@ -28,6 +28,8 @@ import {
   type DBMessage,
   type Chat,
   stream,
+  userCredits,
+  type UserCredits,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
 import { generateUUID } from '../utils';
@@ -583,6 +585,147 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to get stream ids by chat id',
+    );
+  }
+}
+
+// ========================================
+// CREDITS MANAGEMENT
+// ========================================
+
+/**
+ * Get or create user credits record
+ * All new users start with 100 free credits
+ */
+export async function getUserCredits({ userId }: { userId: string }): Promise<UserCredits> {
+  try {
+    // Try to get existing credits record
+    const [credits] = await db
+      .select()
+      .from(userCredits)
+      .where(eq(userCredits.userId, userId))
+      .execute();
+
+    if (credits) {
+      return credits;
+    }
+
+    // Create new credits record with 100 free credits
+    const [newCredits] = await db
+      .insert(userCredits)
+      .values({
+        userId,
+        totalCredits: 100,
+        usedCredits: 0,
+        lastResetAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning()
+      .execute();
+
+    return newCredits;
+  } catch (error) {
+    console.error('[getUserCredits] Error:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get user credits',
+    );
+  }
+}
+
+/**
+ * Get remaining credits for a user
+ */
+export async function getRemainingUserCredits({ userId }: { userId: string }): Promise<number> {
+  try {
+    const credits = await getUserCredits({ userId });
+    return Math.max(0, credits.totalCredits - credits.usedCredits);
+  } catch (error) {
+    console.error('[getRemainingUserCredits] Error:', error);
+    return 0;
+  }
+}
+
+/**
+ * Check if user has enough credits
+ * Throws an error if not enough credits available
+ */
+export async function checkUserCredits({
+  userId,
+  requiredCredits
+}: {
+  userId: string;
+  requiredCredits: number;
+}): Promise<void> {
+  const remaining = await getRemainingUserCredits({ userId });
+
+  if (remaining < requiredCredits) {
+    throw new ChatSDKError(
+      'payment_required',
+      `Insufficient credits. You have ${remaining} credits remaining, but ${requiredCredits} are required. Please upgrade your plan to continue.`,
+    );
+  }
+}
+
+/**
+ * Deduct credits from user account
+ */
+export async function deductUserCredits({
+  userId,
+  amount
+}: {
+  userId: string;
+  amount: number;
+}): Promise<void> {
+  try {
+    const credits = await getUserCredits({ userId });
+    const newUsedCredits = credits.usedCredits + amount;
+
+    await db
+      .update(userCredits)
+      .set({
+        usedCredits: newUsedCredits,
+        updatedAt: new Date(),
+      })
+      .where(eq(userCredits.userId, userId))
+      .execute();
+  } catch (error) {
+    console.error('[deductUserCredits] Error:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to deduct user credits',
+    );
+  }
+}
+
+/**
+ * Add credits to user account (for upgrades/top-ups)
+ */
+export async function addUserCredits({
+  userId,
+  amount
+}: {
+  userId: string;
+  amount: number;
+}): Promise<void> {
+  try {
+    const credits = await getUserCredits({ userId });
+    const newTotalCredits = credits.totalCredits + amount;
+
+    await db
+      .update(userCredits)
+      .set({
+        totalCredits: newTotalCredits,
+        updatedAt: new Date(),
+      })
+      .where(eq(userCredits.userId, userId))
+      .execute();
+  } catch (error) {
+    console.error('[addUserCredits] Error:', error);
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to add user credits',
     );
   }
 }
