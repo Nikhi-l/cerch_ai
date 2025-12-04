@@ -88,8 +88,9 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
         const errorMsg = `Insufficient credits. You have ${remainingCredits} credits remaining, but ${requiredCredits} are required. Please upgrade your plan to continue.`;
         dataStream.writeData({ type: 'error', content: errorMsg });
         dataStream.writeData({ type: 'finish', content: '' });
-        // Return empty CSV so document gets saved and artifact is accessible from chat
-        return '';
+        // Save error in CSV format so it persists and can be displayed when reopened
+        const errorCsv = `ERROR\n"${errorMsg.replace(/"/g, '""')}"`;
+        return errorCsv;
       }
 
       dataStream.writeData({
@@ -108,7 +109,8 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
           'Crustdata API is not configured. Please add your API token in Settings → API Keys.';
         dataStream.writeData({ type: 'error', content: errorMsg });
         dataStream.writeData({ type: 'finish', content: '' });
-        return '';
+        const errorCsv = `ERROR\n"${errorMsg.replace(/"/g, '""')}"`;
+        return errorCsv;
       }
 
       // Step 3: Parse query
@@ -153,7 +155,8 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
           'No profiles matched your search criteria. Try:\n• Using broader job titles\n• Expanding the location\n• Removing some filters';
         dataStream.writeData({ type: 'error', content: message });
         dataStream.writeData({ type: 'finish', content: '' });
-        return '';
+        const errorCsv = `ERROR\n"${message.replace(/"/g, '""')}"`;
+        return errorCsv;
       }
 
       dataStream.writeData({
@@ -210,8 +213,9 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       // Send finish message to prevent artifact from getting stuck in streaming state
       dataStream.writeData({ type: 'finish', content: '' });
 
-      // Return empty CSV so document gets saved and artifact is accessible from chat
-      return '';
+      // Save error in CSV format so it persists and can be displayed when reopened
+      const errorCsv = `ERROR\n"${userMessage.replace(/"/g, '""')}"`;
+      return errorCsv;
     }
   },
 

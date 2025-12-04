@@ -82,8 +82,9 @@ export const companyDocumentHandler = createDocumentHandler<'company'>({
         const errorMsg = `Insufficient credits. You have ${remainingCredits} credits remaining, but ${requiredCredits} are required. Please upgrade your plan to continue.`;
         dataStream.writeData({ type: 'error', content: errorMsg });
         dataStream.writeData({ type: 'finish', content: '' });
-        // Return empty CSV so document gets saved and artifact is accessible from chat
-        return '';
+        // Save error in CSV format so it persists and can be displayed when reopened
+        const errorCsv = `ERROR\n"${errorMsg.replace(/"/g, '""')}"`;
+        return errorCsv;
       }
 
       dataStream.writeData({
@@ -102,7 +103,8 @@ export const companyDocumentHandler = createDocumentHandler<'company'>({
           'Crustdata API is not configured. Please add your API token in Settings → API Keys.';
         dataStream.writeData({ type: 'error', content: errorMsg });
         dataStream.writeData({ type: 'finish', content: '' });
-        return '';
+        const errorCsv = `ERROR\n"${errorMsg.replace(/"/g, '""')}"`;
+        return errorCsv;
       }
 
       // Step 3: Parse query
@@ -150,7 +152,8 @@ export const companyDocumentHandler = createDocumentHandler<'company'>({
           'No companies matched your criteria. Try:\n• Broadening the industry\n• Expanding the location\n• Adjusting size ranges';
         dataStream.writeData({ type: 'error', content: message });
         dataStream.writeData({ type: 'finish', content: '' });
-        return '';
+        const errorCsv = `ERROR\n"${message.replace(/"/g, '""')}"`;
+        return errorCsv;
       }
 
       dataStream.writeData({
@@ -205,8 +208,9 @@ export const companyDocumentHandler = createDocumentHandler<'company'>({
       // Send finish message to prevent artifact from getting stuck in streaming state
       dataStream.writeData({ type: 'finish', content: '' });
 
-      // Return empty CSV so document gets saved and artifact is accessible from chat
-      return '';
+      // Save error in CSV format so it persists and can be displayed when reopened
+      const errorCsv = `ERROR\n"${userMessage.replace(/"/g, '""')}"`;
+      return errorCsv;
     }
   },
 
