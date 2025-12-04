@@ -231,7 +231,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
         const errorMsg = `Insufficient credits. You have ${remainingCredits} credits remaining, but ${requiredCredits} are required. Please upgrade your plan to continue.`;
         dataStream.writeData({ type: 'error', content: errorMsg });
         dataStream.writeData({ type: 'finish', content: '' });
-        return document.content;
+        return document.content || '';
       }
 
       dataStream.writeData({
@@ -250,7 +250,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
           'Crustdata API is not configured. Please add your API token in Settings → API Keys.';
         dataStream.writeData({ type: 'error', content: errorMsg });
         dataStream.writeData({ type: 'finish', content: '' });
-        return document.content;
+        return document.content || '';
       }
 
       // Step 3: Parse updated query
@@ -278,7 +278,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
           'No profiles matched your updated criteria. Try less restrictive filters.';
         dataStream.writeData({ type: 'error', content: message });
         dataStream.writeData({ type: 'finish', content: '' });
-        return document.content;
+        return document.content || '';
       }
 
       dataStream.writeData({
@@ -332,7 +332,7 @@ export const peopleDocumentHandler = createDocumentHandler<'people'>({
       dataStream.writeData({ type: 'finish', content: '' });
 
       // Return existing content so document is accessible from chat
-      return document.content;
+      return document.content || '';
     }
   },
 });
