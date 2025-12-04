@@ -201,6 +201,13 @@ async function crustPost<T>(path: string, body: any): Promise<T> {
         false
       );
     }
+    // Log token presence (not value) for debugging
+    console.log('[CRUSTDATA:CLIENT] Making POST request:', {
+      url,
+      hasToken: !!token,
+      tokenLength: token.length,
+      tokenPrefix: token.substring(0, 8) + '...',
+    });
     const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
@@ -265,10 +272,25 @@ async function handleCrustResponse<T>(res: Response): Promise<T> {
         userMessage = 'Oops! Something unexpected happened. Our team has been notified. Please try again later.';
     }
 
+    // Enhanced error logging with full details for debugging
     if (res.status === 401 || res.status === 403) {
-      console.error('[CRUSTDATA:CLIENT]', userMessage, '- Check CRUSTDATA_API_TOKEN and account permissions/credits.');
+      console.error('[CRUSTDATA:CLIENT] Authentication/Authorization Error:', {
+        status: res.status,
+        url: res.url,
+        statusText: res.statusText,
+        apiDetail: detail,
+        fullPayload: payload,
+        userMessage,
+        hint: 'Check CRUSTDATA_API_TOKEN and account permissions/credits'
+      });
     } else {
-      console.error('[CRUSTDATA:CLIENT]', userMessage);
+      console.error('[CRUSTDATA:CLIENT] API Error:', {
+        status: res.status,
+        url: res.url,
+        statusText: res.statusText,
+        apiDetail: detail,
+        userMessage
+      });
     }
 
     throw new CrustdataError(userMessage, res.status, payload, isRetryable);
@@ -548,6 +570,15 @@ export const crustPeopleProvider: PeopleProvider = {
       });
       dbg('getPeople: filters payload', JSON.stringify(payload.filters, null, 2));
 
+      // Always log request details for debugging 403 errors
+      console.log('[CRUSTDATA:CLIENT] getPeople request:', {
+        url: `${API_BASE}${PEOPLE_PATH}`,
+        limit: payload.limit,
+        hasCursor: !!payload.cursor,
+        filtersType: typeof payload.filters,
+        filtersStructure: payload.filters,
+      });
+
       const json = await crustPost<any>(PEOPLE_PATH, payload);
       const rawRows = Array.isArray(json?.profiles) ? json.profiles : extractArray(json);
 
@@ -646,6 +677,16 @@ export const crustCompanyProvider: CompanyProvider = {
         hasFilters: !!payload.filters,
         hasPrompt: !!payload.gpt_prompt,
         q: query.q ?? '',
+      });
+
+      // Always log request details for debugging 403 errors
+      console.log('[CRUSTDATA:CLIENT] getCompanies request:', {
+        url: `${API_BASE}${COMPANY_DISCOVERY_PATH}`,
+        page: payload.page,
+        hasFilters: !!payload.filters,
+        hasPrompt: !!payload.gpt_prompt,
+        filtersStructure: payload.filters,
+        gptPrompt: payload.gpt_prompt,
       });
 
       const json = await crustPost<any>(COMPANY_DISCOVERY_PATH, payload);
