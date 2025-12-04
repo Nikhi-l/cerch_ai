@@ -26,24 +26,23 @@ export function getProvider(apiKey?: string) {
 
   const key = apiKey || process.env.OPENAI_API_KEY;
   const openai = createOpenAI({ apiKey: key });
-  const modelConfig = { temperature: 0.1 } as const;
 
   return customProvider({
     languageModels: {
-      // Primary chat model
-      'chat-model': openai('gpt-5', modelConfig),
+      // Primary chat model - GPT-4o (most capable, fastest)
+      'chat-model': openai('gpt-4o'),
       // Reasoning variant with thinking trace extraction
       'chat-model-reasoning': wrapLanguageModel({
-        model: openai('gpt-5-reasoning', modelConfig),
+        model: openai('gpt-4o'),
         middleware: extractReasoningMiddleware({ tagName: 'think' }),
       }),
-      // Title generation model
-      'title-model': openai('gpt-5', modelConfig),
+      // Title generation model - faster model for simple tasks
+      'title-model': openai('gpt-4o-mini'),
       // Artifact generation (text/code/sheet/webset)
-      'artifact-model': openai('gpt-5', modelConfig),
+      'artifact-model': openai('gpt-4o'),
     },
     imageModels: {
-      'small-model': openai.image('gpt-image-1'),
+      'small-model': openai.image('dall-e-3'),
     },
   });
 }

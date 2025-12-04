@@ -4,7 +4,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { auth } from '../(auth)/auth';
 import Script from 'next/script';
-import { getRemainingCredits } from '@/lib/providers/crustdata/client';
+import { getRemainingUserCredits } from '@/lib/db/queries';
 import { Coins } from 'lucide-react';
 import { CreditsButton } from '@/components/credits-button';
 
@@ -15,11 +15,13 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore, credits] = await Promise.all([
-    auth(),
-    cookies(),
-    getRemainingCredits().catch(() => null),
-  ]);
+  const session = await auth();
+  const cookieStore = await cookies();
+
+  // Get user-specific credits from database
+  const credits = session?.user?.id
+    ? await getRemainingUserCredits({ userId: session.user.id }).catch(() => null)
+    : null;
   const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
 
   return (

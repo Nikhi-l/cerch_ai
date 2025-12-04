@@ -51,13 +51,25 @@ function getStreamContext() {
         waitUntil: after,
       });
     } catch (error: any) {
-      if (error.message.includes('REDIS_URL')) {
+      // Gracefully handle all Redis connection errors
+      // Common errors: REDIS_URL missing, DNS resolution (ENOTFOUND), connection refused, etc.
+      const isRedisError =
+        error.message?.includes('REDIS_URL') ||
+        error.code === 'ENOTFOUND' ||
+        error.code === 'ECONNREFUSED' ||
+        error.syscall === 'getaddrinfo';
+
+      if (isRedisError) {
         console.log(
-          ' > Resumable streams are disabled due to missing REDIS_URL',
+          ' > Resumable streams are disabled due to Redis connection issue:',
+          error.code || error.message
         );
       } else {
-        console.error(error);
+        console.error(' > Unexpected error creating stream context:', error);
       }
+
+      // Ensure globalStreamContext remains null on any error
+      globalStreamContext = null;
     }
   }
 
@@ -166,7 +178,7 @@ export async function POST(request: Request) {
           model: provider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
-          maxSteps: 5,
+          maxSteps: 8, // Increased from 5 to 8 for better multi-step query handling
           experimental_activeTools:
             selectedChatModel === 'chat-model-reasoning'
               ? []

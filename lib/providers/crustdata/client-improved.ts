@@ -201,13 +201,6 @@ async function crustPost<T>(path: string, body: any): Promise<T> {
         false
       );
     }
-    // Log token presence (not value) for debugging
-    console.log('[CRUSTDATA:CLIENT] Making POST request:', {
-      url,
-      hasToken: !!token,
-      tokenLength: token.length,
-      tokenPrefix: token.substring(0, 8) + '...',
-    });
     const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
@@ -249,48 +242,35 @@ async function handleCrustResponse<T>(res: Response): Promise<T> {
 
     switch (res.status) {
       case 401:
-        userMessage = 'Oops! Something went wrong on our end. We\'re looking into it. Please check back later.';
+        userMessage = 'Invalid Crustdata API token. Please check your credentials in settings.';
         break;
       case 403:
-        userMessage = 'Oops! Something went wrong on our end. Our team has been notified and we\'ll fix this soon. Please try again later.';
+        userMessage = 'Access denied. Your Crustdata account may not have permission for this operation.';
         break;
       case 402:
-        userMessage = 'Oops! Something went wrong on our end. We\'re looking into it. Please check back later.';
+        userMessage = 'Insufficient Crustdata credits. Please upgrade your plan.';
         break;
       case 429:
-        userMessage = 'Our systems are experiencing high load. Please wait a moment and try again.';
+        userMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
         isRetryable = true;
         break;
       case 500:
       case 502:
       case 503:
       case 504:
-        userMessage = 'Oops! Something went wrong on our end. We\'re working on it. Please try again in a few minutes.';
+        userMessage = 'Crustdata service is temporarily unavailable. Please try again in a moment.';
         isRetryable = true;
         break;
       default:
-        userMessage = 'Oops! Something unexpected happened. Our team has been notified. Please try again later.';
+        userMessage = detail
+          ? `Crustdata API error: ${detail}`
+          : `Request failed with status ${res.status}. Please contact support if this persists.`;
     }
 
-    // Enhanced error logging with full details for debugging
     if (res.status === 401 || res.status === 403) {
-      console.error('[CRUSTDATA:CLIENT] Authentication/Authorization Error:', {
-        status: res.status,
-        url: res.url,
-        statusText: res.statusText,
-        apiDetail: detail,
-        fullPayload: payload,
-        userMessage,
-        hint: 'Check CRUSTDATA_API_TOKEN and account permissions/credits'
-      });
+      console.error('[CRUSTDATA:CLIENT]', userMessage, '- Check CRUSTDATA_API_TOKEN and account permissions/credits.');
     } else {
-      console.error('[CRUSTDATA:CLIENT] API Error:', {
-        status: res.status,
-        url: res.url,
-        statusText: res.statusText,
-        apiDetail: detail,
-        userMessage
-      });
+      console.error('[CRUSTDATA:CLIENT]', userMessage);
     }
 
     throw new CrustdataError(userMessage, res.status, payload, isRetryable);
@@ -570,15 +550,6 @@ export const crustPeopleProvider: PeopleProvider = {
       });
       dbg('getPeople: filters payload', JSON.stringify(payload.filters, null, 2));
 
-      // Always log request details for debugging 403 errors
-      console.log('[CRUSTDATA:CLIENT] getPeople request:', {
-        url: `${API_BASE}${PEOPLE_PATH}`,
-        limit: payload.limit,
-        hasCursor: !!payload.cursor,
-        filtersType: typeof payload.filters,
-        filtersStructure: payload.filters,
-      });
-
       const json = await crustPost<any>(PEOPLE_PATH, payload);
       const rawRows = Array.isArray(json?.profiles) ? json.profiles : extractArray(json);
 
@@ -677,16 +648,6 @@ export const crustCompanyProvider: CompanyProvider = {
         hasFilters: !!payload.filters,
         hasPrompt: !!payload.gpt_prompt,
         q: query.q ?? '',
-      });
-
-      // Always log request details for debugging 403 errors
-      console.log('[CRUSTDATA:CLIENT] getCompanies request:', {
-        url: `${API_BASE}${COMPANY_DISCOVERY_PATH}`,
-        page: payload.page,
-        hasFilters: !!payload.filters,
-        hasPrompt: !!payload.gpt_prompt,
-        filtersStructure: payload.filters,
-        gptPrompt: payload.gpt_prompt,
       });
 
       const json = await crustPost<any>(COMPANY_DISCOVERY_PATH, payload);

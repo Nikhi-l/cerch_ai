@@ -57,47 +57,52 @@ export async function buildPeopleQuery(
   const base = parsePeopleQuery(raw, limit);
   const spec: PeopleFilterSpec = {};
 
-  if (base.filters?.region && typeof base.filters.region === 'string') {
-    spec.region = base.filters.region;
-  }
+  // Type guard to check if filters is a plain object (not CrustFilterNode)
+  const baseFilters = base.filters as Record<string, any> | undefined;
 
-  if (base.filters?.title && typeof base.filters.title === 'string') {
-    spec.title = base.filters.title;
-  }
-
-  if (base.filters?.company && typeof base.filters.company === 'string') {
-    spec.company = base.filters.company;
-  }
-
-  if (base.filters?.industry && typeof base.filters.industry === 'string') {
-    const values = base.filters.industry
-      .split(/[,|]/)
-      .map((value) => value.trim())
-      .filter(Boolean);
-    if (values.length) {
-      spec.industry = mergeStringList(spec.industry, values);
+  if (baseFilters && typeof baseFilters === 'object' && !('op' in baseFilters) && !('column' in baseFilters)) {
+    if (baseFilters.region && typeof baseFilters.region === 'string') {
+      spec.region = baseFilters.region;
     }
-  }
 
-  if (base.filters?.skills && typeof base.filters.skills === 'string') {
-    const initialSkills = mergeStringList(
-      undefined,
-      base.filters.skills
+    if (baseFilters.title && typeof baseFilters.title === 'string') {
+      spec.title = baseFilters.title;
+    }
+
+    if (baseFilters.company && typeof baseFilters.company === 'string') {
+      spec.company = baseFilters.company;
+    }
+
+    if (baseFilters.industry && typeof baseFilters.industry === 'string') {
+      const values = baseFilters.industry
         .split(/[,|]/)
-        .map((value) => value.trim())
-        .filter(Boolean),
-    );
-    if (initialSkills.length) {
-      spec.skills = initialSkills.join(', ');
+        .map((value: string) => value.trim())
+        .filter(Boolean);
+      if (values.length) {
+        spec.industry = mergeStringList(spec.industry, values);
+      }
     }
-  }
 
-  if (base.filters?.languages && typeof base.filters.languages === 'string') {
-    const langs = base.filters.languages
-      .split(/[,|]/)
-      .map((value) => value.trim())
-      .filter(Boolean);
-    if (langs.length) spec.languages = mergeStringList(undefined, langs);
+    if (baseFilters.skills && typeof baseFilters.skills === 'string') {
+      const initialSkills = mergeStringList(
+        undefined,
+        baseFilters.skills
+          .split(/[,|]/)
+          .map((value: string) => value.trim())
+          .filter(Boolean),
+      );
+      if (initialSkills.length) {
+        spec.skills = initialSkills.join(', ');
+      }
+    }
+
+    if (baseFilters.languages && typeof baseFilters.languages === 'string') {
+      const langs = baseFilters.languages
+        .split(/[,|]/)
+        .map((value: string) => value.trim())
+        .filter(Boolean);
+      if (langs.length) spec.languages = mergeStringList(undefined, langs);
+    }
   }
 
   // Title candidates from text; resolve to canonical if possible
@@ -111,8 +116,8 @@ export async function buildPeopleQuery(
 
   // Region canonicalization
   const regionText = spec.region || '';
-  if (!regionText) {
-    const inferredRegion = base.filters?.region as string | undefined;
+  if (!regionText && baseFilters && typeof baseFilters === 'object' && !('op' in baseFilters) && !('column' in baseFilters)) {
+    const inferredRegion = baseFilters.region as string | undefined;
     if (inferredRegion) spec.region = inferredRegion;
   }
 

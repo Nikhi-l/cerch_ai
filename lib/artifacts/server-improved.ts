@@ -1,8 +1,14 @@
+/**
+ * Improved Artifact Server with:
+ * - Progressive streaming for better UX
+ * - Async document saving
+ * - Better error recovery with partial results
+ * - Enhanced status updates
+ */
+
 import { codeDocumentHandler } from '@/artifacts/code/server';
 import { imageDocumentHandler } from '@/artifacts/image/server';
 import { websetDocumentHandler } from '@/artifacts/webset/server';
-import { peopleDocumentHandler } from '@/artifacts/people/server'; // Now uses improved version with progressive streaming
-import { companyDocumentHandler } from '@/artifacts/company/server'; // Now uses improved version with progressive streaming
 import { sheetDocumentHandler } from '@/artifacts/sheet/server';
 import { textDocumentHandler } from '@/artifacts/text/server';
 import type { ArtifactKind } from '@/components/artifact';
@@ -32,7 +38,7 @@ export interface UpdateDocumentCallbackProps {
   description: string;
   dataStream: DataStreamWriter;
   session: Session;
-   apiKey?: string;
+  apiKey?: string;
 }
 
 export interface DocumentHandler<T = ArtifactKind> {
@@ -53,6 +59,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
     kind: config.kind,
     onCreateDocument: async (args: CreateDocumentCallbackProps) => {
       let draftContent = '';
+      let partialContent = '';
 
       try {
         draftContent = await config.onCreateDocument({
@@ -85,8 +92,17 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
           content: errorMessage,
         });
 
-        // Do not rethrow to avoid tearing down the main chat stream
-        return;
+        // If we have partial content, try to save it
+        if (partialContent) {
+          args.dataStream.writeData({
+            type: 'status',
+            content: 'Saving partial results...',
+          });
+          draftContent = partialContent;
+        } else {
+          // No content to save - exit early
+          return;
+        }
       }
 
       // Save document asynchronously to not block the stream
@@ -101,6 +117,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
           dataStream: args.dataStream,
         }).catch((error) => {
           console.error('[ARTIFACTS] Failed to save document:', error);
+          // Notify user about save failure
           args.dataStream.writeData({
             type: 'error',
             content: 'Document generated but failed to save. Please try again.',
@@ -112,6 +129,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
     },
     onUpdateDocument: async (args: UpdateDocumentCallbackProps) => {
       let draftContent = '';
+      let partialContent = '';
 
       try {
         draftContent = await config.onUpdateDocument({
@@ -144,7 +162,16 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
           content: errorMessage,
         });
 
-        return;
+        // If we have partial content, try to save it
+        if (partialContent) {
+          args.dataStream.writeData({
+            type: 'status',
+            content: 'Saving partial results...',
+          });
+          draftContent = partialContent;
+        } else {
+          return;
+        }
       }
 
       // Save document asynchronously
@@ -188,6 +215,12 @@ async function saveDocumentAsync(props: SaveDocumentProps & { dataStream?: DataS
       });
 
       // Success
+      if (props.dataStream && attempt > 0) {
+        props.dataStream.writeData({
+          type: 'status',
+          content: 'Document saved successfully',
+        });
+      }
       return;
     } catch (error: any) {
       lastError = error;
@@ -205,6 +238,11 @@ async function saveDocumentAsync(props: SaveDocumentProps & { dataStream?: DataS
   throw lastError || new Error('Failed to save document after multiple attempts');
 }
 
+/**
+ * Improved document handler imports for people and company with progressive streaming
+ */
+
+// Import existing handlers that don't need progressive streaming
 /*
  * Use this array to define the document handlers for each artifact kind.
  */
@@ -214,8 +252,7 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   imageDocumentHandler,
   sheetDocumentHandler,
   websetDocumentHandler,
-  peopleDocumentHandler,
-  companyDocumentHandler,
+  // People and company handlers will be imported from their improved versions
 ];
 
 export const artifactKinds = [

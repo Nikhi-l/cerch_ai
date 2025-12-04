@@ -19,7 +19,7 @@ import { useArtifact } from '@/hooks/use-artifact';
 import { LoaderIcon } from './icons';
 
 function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityType }: SuggestedActionsProps) {
-  const { setArtifact } = useArtifact();
+  const { setArtifact, setMetadata } = useArtifact();
   const suggestedActions = [
     {
       title: 'Software developers at Google (Bengaluru)',
@@ -44,18 +44,26 @@ function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityT
       },
     },
     {
-      title: 'Seed‑stage AI startups (UK)',
-      label: 'Companies • VC dealflow example',
-      type: 'company-demo',
-      query: 'List seed‑stage AI startups in the UK. Include name, industry, website, LinkedIn, size, and description.',
-      payload: { title: 'Seed‑stage AI startups in the UK' },
+      title: 'Marketing managers in healthcare (London)',
+      label: 'People • Account-based marketing',
+      type: 'people-demo',
+      query: 'Find 100 marketing managers working in healthcare companies in London. Include name, title, company, location, and LinkedIn URL.',
+      payload: {
+        title: 'Marketing managers in healthcare (London)',
+        baseQuery: 'marketing managers in healthcare companies in London',
+        filters: { region: 'London', title: 'Marketing Manager', industry: 'Healthcare' },
+      },
     },
     {
-      title: 'Fintech companies in SF (50–500 employees)',
-      label: 'Companies • Account planning example',
-      type: 'company-demo',
-      query: 'Find fintech companies in San Francisco with 50–500 employees. Include name, industry, website, LinkedIn, size, and description.',
-      payload: { title: 'Fintech in SF with 50–500 employees' },
+      title: 'AI/ML engineers with Python skills (SF Bay)',
+      label: 'People • Technical recruiting',
+      type: 'people-demo',
+      query: 'Find 150 AI and machine learning engineers with Python skills in San Francisco Bay Area. Include name, title, company, location, and LinkedIn URL.',
+      payload: {
+        title: 'AI/ML engineers with Python (SF Bay)',
+        baseQuery: 'AI ML machine learning engineers Python San Francisco Bay Area',
+        filters: { region: 'San Francisco', title: 'AI Engineer|ML Engineer|Machine Learning Engineer', skills: 'Python' },
+      },
     },
   ];
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
@@ -79,103 +87,73 @@ function PureSuggestedActions({ chatId, append, setMessages, selectedVisibilityT
             onClick={async () => {
               window.history.replaceState({}, '', `/chat/${chatId}`);
               setLoadingKey(`${suggestedAction.title}-${index}`);
-              // First, write the user's natural query into chat
-              if (suggestedAction.query && setMessages) {
-                const userMsg: UIMessage = {
-                  id: generateUUID(),
-                  role: 'user',
-                  content: '',
-                  parts: [{ type: 'text', text: suggestedAction.query } as any],
-                } as any;
-                setMessages((msgs) => [...msgs, userMsg]);
-              }
 
-              if (suggestedAction.type === 'people-demo') {
-                try {
-                  const res = await fetch('/api/cerch/people', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chatId, ...suggestedAction.payload, userMessage: suggestedAction.query }),
-                  });
-                  const json = await res.json();
-                  if (json?.ok) {
-                    // Optimistically append assistant tool-result to chat
-                    if (setMessages) {
-                      const toolMsg: UIMessage = {
-                        id: generateUUID(),
-                        role: 'assistant',
-                        content: '',
-                        parts: [
-                          {
-                            type: 'tool-invocation',
-                            toolInvocation: {
-                              toolName: 'createDocument',
-                              toolCallId: generateUUID(),
-                              state: 'result',
-                              result: { id: json.id, title: json.title, kind: 'people' },
-                            },
-                          },
-                        ],
-                      } as any;
-                      setMessages((msgs) => [...msgs, toolMsg]);
-                    }
-                    setArtifact({
-                      documentId: json.id,
-                      kind: 'people',
-                      title: json.title,
+              // All suggestions are now people-demo type
+              try {
+                const res = await fetch('/api/cerch/people', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ chatId, ...suggestedAction.payload, userMessage: suggestedAction.query }),
+                });
+                const json = await res.json();
+                if (json?.ok) {
+                  // Add both user message and assistant tool-result to chat
+                  if (setMessages) {
+                    const userMsg: UIMessage = {
+                      id: generateUUID(),
+                      role: 'user',
                       content: '',
-                      isVisible: true,
-                      status: 'idle',
-                      boundingBox: { top: 0, left: 0, width: 320, height: 48 },
-                    });
-                    setLoadingKey(null);
-                    return;
-                  }
-                } catch {}
-              } else if (suggestedAction.type === 'company-demo') {
-                try {
-                  const res = await fetch('/api/cerch/company', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chatId, ...suggestedAction.payload, userMessage: suggestedAction.query }),
-                  });
-                  const json = await res.json();
-                  if (json?.ok) {
-                    if (setMessages) {
-                      const toolMsg: UIMessage = {
-                        id: generateUUID(),
-                        role: 'assistant',
-                        content: '',
-                        parts: [
-                          {
-                            type: 'tool-invocation',
-                            toolInvocation: {
-                              toolName: 'createDocument',
-                              toolCallId: generateUUID(),
-                              state: 'result',
-                              result: { id: json.id, title: json.title, kind: 'company' },
-                            },
-                          },
-                        ],
-                      } as any;
-                      setMessages((msgs) => [...msgs, toolMsg]);
-                    }
-                    setArtifact({
-                      documentId: json.id,
-                      kind: 'company',
-                      title: json.title,
+                      parts: [{ type: 'text', text: suggestedAction.query } as any],
+                    } as any;
+                    const toolMsg: UIMessage = {
+                      id: generateUUID(),
+                      role: 'assistant',
                       content: '',
-                      isVisible: true,
-                      status: 'idle',
-                      boundingBox: { top: 0, left: 0, width: 320, height: 48 },
-                    });
-                    setLoadingKey(null);
-                    return;
+                      parts: [
+                        {
+                          type: 'tool-invocation',
+                          toolInvocation: {
+                            toolName: 'createDocument',
+                            toolCallId: generateUUID(),
+                            state: 'result',
+                            result: { id: json.id, title: json.title, kind: 'people' },
+                          },
+                        },
+                      ],
+                    } as any;
+                    setMessages((msgs) => [...msgs, userMsg, toolMsg]);
                   }
-                } catch {}
+                  setArtifact({
+                    documentId: json.id,
+                    kind: 'people',
+                    title: json.title,
+                    content: '',
+                    isVisible: true,
+                    status: 'idle',
+                    boundingBox: { top: 0, left: 0, width: 320, height: 48 },
+                  });
+                  // Set metadata with cursor and spec for Load More functionality
+                  setMetadata({ cursor: json.cursor ?? null, spec: json.spec, limit: 50 });
+                  setLoadingKey(null);
+                  return;
+                } else {
+                  // API returned error, fall back to normal chat flow with AI
+                  setLoadingKey(null);
+                  await append({
+                    role: 'user',
+                    content: suggestedAction.query,
+                  });
+                  return;
+                }
+              } catch {
+                // Network error, fall back to normal chat flow with AI
+                setLoadingKey(null);
+                await append({
+                  role: 'user',
+                  content: suggestedAction.query,
+                });
+                return;
               }
-              // No LLM fallback; keep chat clean if background route fails
-              setLoadingKey(null);
             }}
             className="group text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start hover:text-white"
             disabled={loadingKey === `${suggestedAction.title}-${index}`}
