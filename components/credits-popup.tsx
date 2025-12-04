@@ -75,7 +75,10 @@ export function CreditsPopup({ isOpen, onClose, currentCredits, maxCredits = 100
           </div>
 
           {/* Upgrade Button */}
-          <Button className="w-full">
+          <Button
+            className="w-full"
+            onClick={() => window.open('https://cal.com/cerchai', '_blank')}
+          >
             <ArrowUp className="w-4 h-4 mr-2" /> Upgrade
           </Button>
         </div>

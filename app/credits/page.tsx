@@ -53,7 +53,10 @@ export default async function CreditsPage() {
             <p className="text-sm text-red-600/80 dark:text-red-400/80 mb-3">
               Upgrade your plan to get more credits and continue using advanced search features.
             </p>
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">
+            <button
+              onClick={() => window.open('https://cal.com/cerchai', '_blank')}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
               Upgrade Plan
             </button>
           </div>
