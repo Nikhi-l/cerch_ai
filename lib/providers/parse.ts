@@ -107,14 +107,64 @@ function inferLocationKeyword(text: string): string | undefined {
   return undefined;
 }
 
+// Well-known company names for case-insensitive matching
+const KNOWN_COMPANIES = [
+  'Google', 'Microsoft', 'Apple', 'Amazon', 'Meta', 'Facebook', 'Netflix', 'Tesla',
+  'Uber', 'Lyft', 'Airbnb', 'Stripe', 'Shopify', 'Salesforce', 'Oracle', 'IBM',
+  'Intel', 'AMD', 'Nvidia', 'Adobe', 'Spotify', 'Twitter', 'LinkedIn', 'Snap',
+  'Pinterest', 'Reddit', 'Discord', 'Slack', 'Zoom', 'Dropbox', 'GitHub', 'GitLab',
+  'Atlassian', 'Notion', 'Figma', 'Canva', 'Asana', 'Monday', 'Trello', 'Jira',
+  'OpenAI', 'Anthropic', 'DeepMind', 'Databricks', 'Snowflake', 'Palantir',
+  'Coinbase', 'Robinhood', 'Square', 'Block', 'PayPal', 'Plaid', 'Klarna',
+  'DoorDash', 'Instacart', 'Grubhub', 'Postmates', 'SpaceX', 'Neuralink',
+  'ByteDance', 'TikTok', 'Alibaba', 'Tencent', 'Baidu', 'Samsung', 'Sony',
+  'Dell', 'HP', 'Cisco', 'VMware', 'ServiceNow', 'Workday', 'Twilio', 'Cloudflare',
+];
+
 function inferCompany(text: string): string | undefined {
   const trimmed = text.trim();
+
+  // Pattern 1: "employees/people/folks at/from/of [Company]"
   let match = trimmed.match(/\b(?:employees|people|folks)\s+(?:at|from|of)\s+([A-Z][A-Za-z0-9&.'\- ]{1,60})\b/);
   if (match) return match[1].trim();
+
+  // Pattern 2: "[Company] employees/people/folks"
   match = trimmed.match(/\b([A-Z][A-Za-z0-9&.'\- ]{1,60})\s+(?:employees|people|folks)\b/);
   if (match) return match[1].trim();
+
+  // Pattern 3: "at [Company]" (original)
   match = trimmed.match(/\bat\s+([A-Z][A-Za-z0-9&.'\- ]{1,60})\b/);
   if (match) return match[1].trim();
+
+  // Pattern 4: "working at/in/for [Company]"
+  match = trimmed.match(/\bworking\s+(?:at|in|for)\s+([A-Za-z][A-Za-z0-9&.'\- ]{1,60})\b/i);
+  if (match) return titleCase(match[1].trim());
+
+  // Pattern 5: "who work at/in/for [Company]"
+  match = trimmed.match(/\bwho\s+work\s+(?:at|in|for)\s+([A-Za-z][A-Za-z0-9&.'\- ]{1,60})\b/i);
+  if (match) return titleCase(match[1].trim());
+
+  // Pattern 6: "from [Company]"
+  match = trimmed.match(/\bfrom\s+([A-Z][A-Za-z0-9&.'\- ]{1,60})(?:\s|$)/);
+  if (match) return match[1].trim();
+
+  // Pattern 7: Case-insensitive matching for known companies
+  const lowerText = text.toLowerCase();
+  for (const company of KNOWN_COMPANIES) {
+    const lowerCompany = company.toLowerCase();
+    // Check for various patterns with the company name
+    const patterns = [
+      new RegExp(`\\b(?:at|in|from|for)\\s+${lowerCompany}\\b`, 'i'),
+      new RegExp(`\\b${lowerCompany}\\s+(?:employees|people|team|engineers)\\b`, 'i'),
+      new RegExp(`\\bworking\\s+(?:at|in|for)\\s+${lowerCompany}\\b`, 'i'),
+    ];
+    for (const pattern of patterns) {
+      if (pattern.test(lowerText)) {
+        return company; // Return the properly cased version
+      }
+    }
+  }
+
   return undefined;
 }
 

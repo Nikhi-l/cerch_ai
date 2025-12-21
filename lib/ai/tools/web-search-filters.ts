@@ -77,21 +77,48 @@ function inferGeolocation(query: string): WebSearchGeolocation | undefined {
 }
 
 /**
+ * Detect GitHub profile search intent
+ */
+function isGitHubProfileSearch(query: string): boolean {
+  const lowerQuery = query.toLowerCase();
+  const githubKeywords = ['github', 'github profile', 'github.com'];
+  const profileKeywords = ['profile', 'developer', 'programmer', 'contributor', 'repo', 'repository', 'open source'];
+
+  const hasGitHub = githubKeywords.some(kw => lowerQuery.includes(kw));
+  const hasProfileIntent = profileKeywords.some(kw => lowerQuery.includes(kw));
+
+  // Direct GitHub profile search
+  if (hasGitHub) return true;
+
+  // Implicit developer search that would benefit from GitHub
+  if (hasProfileIntent && (lowerQuery.includes('find') || lowerQuery.includes('search'))) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Extract site restriction from query
+ * Returns in format "site:domain.com" as required by CrustData API
  */
 function extractSite(query: string): string | undefined {
   const lowerQuery = query.toLowerCase();
 
-  // Common site patterns
+  // Common site patterns - value is the domain for site restriction
   const sitePatterns = [
-    { keywords: ['github', 'github.com'], site: 'github.com' },
-    { keywords: ['linkedin', 'linkedin.com'], site: 'linkedin.com' },
-    { keywords: ['twitter', 'x.com'], site: 'x.com' },
-    { keywords: ['reddit', 'reddit.com'], site: 'reddit.com' },
-    { keywords: ['hacker news', 'ycombinator', 'hn'], site: 'news.ycombinator.com' },
-    { keywords: ['techcrunch'], site: 'techcrunch.com' },
-    { keywords: ['verge'], site: 'theverge.com' },
-    { keywords: ['arxiv'], site: 'arxiv.org' },
+    { keywords: ['github profile', 'github developer', 'github user'], site: 'site:github.com' },
+    { keywords: ['github', 'github.com'], site: 'site:github.com' },
+    { keywords: ['linkedin profile', 'linkedin'], site: 'site:linkedin.com' },
+    { keywords: ['twitter', 'x.com'], site: 'site:x.com' },
+    { keywords: ['reddit', 'reddit.com'], site: 'site:reddit.com' },
+    { keywords: ['hacker news', 'ycombinator', 'hn'], site: 'site:news.ycombinator.com' },
+    { keywords: ['techcrunch'], site: 'site:techcrunch.com' },
+    { keywords: ['verge'], site: 'site:theverge.com' },
+    { keywords: ['arxiv'], site: 'site:arxiv.org' },
+    { keywords: ['stack overflow', 'stackoverflow'], site: 'site:stackoverflow.com' },
+    { keywords: ['medium'], site: 'site:medium.com' },
+    { keywords: ['dev.to'], site: 'site:dev.to' },
   ];
 
   for (const pattern of sitePatterns) {
@@ -100,10 +127,10 @@ function extractSite(query: string): string | undefined {
     }
   }
 
-  // Check for explicit site: prefix
+  // Check for explicit site: prefix (already formatted)
   const siteMatch = query.match(/site:([^\s]+)/i);
   if (siteMatch) {
-    return siteMatch[1];
+    return `site:${siteMatch[1]}`;
   }
 
   return undefined;
@@ -119,6 +146,9 @@ function cleanQuery(query: string): string {
   // Remove explicit source indicators that we've already processed
   const removePatterns = [
     /\b(on|from|in)\s+(github|linkedin|twitter|reddit|hacker news|techcrunch)\b/gi,
+    /\bgithub\s+(profile|developer|user|repo|repository)s?\b/gi,
+    /\bfind\s+(github|developer|programmer)\b/gi,
+    /\bsearch\s+(github|developer|programmer)\b/gi,
     /\bnews\s+about\b/gi,
     /\bresearch\s+papers?\s+(on|about)\b/gi,
   ];
@@ -133,13 +163,26 @@ function cleanQuery(query: string): string {
   return cleaned || query; // Fallback to original if cleaning removes everything
 }
 
+/**
+ * Determine if this is a profile search (GitHub, LinkedIn, etc.)
+ */
+function isProfileSearch(query: string): boolean {
+  const lowerQuery = query.toLowerCase();
+  const profileKeywords = [
+    'github', 'linkedin', 'profile', 'developer profile',
+    'find developer', 'search developer', 'programmer',
+    'open source contributor', 'github user'
+  ];
+  return profileKeywords.some(kw => lowerQuery.includes(kw));
+}
+
 export const webSearchFiltersTool = tool({
   description:
-    'Present a UI card to refine web search parameters before executing. Use when the user asks to search the web, find news, research articles, or discover information online.',
+    'Present a UI card to refine web search parameters before executing. Use when the user asks to search the web, find news, research articles, discover information online, or find GitHub profiles/developers.',
   parameters: z.object({
     initialQuery: z
       .string()
-      .describe('User search query, e.g. "latest AI news" or "research papers on machine learning"'),
+      .describe('User search query, e.g. "latest AI news", "research papers on machine learning", or "Tyler Lambe Github"'),
   }),
   execute: async ({ initialQuery }) => {
     // Infer search parameters from the query
@@ -148,9 +191,15 @@ export const webSearchFiltersTool = tool({
     const inferredSite = extractSite(initialQuery);
     const cleanedQuery = cleanQuery(initialQuery);
 
+    // Determine search type for specialized handling
+    const isGitHub = isGitHubProfileSearch(initialQuery);
+    const isProfile = isProfileSearch(initialQuery);
+    const searchType = isGitHub ? 'github-profile' : isProfile ? 'profile' : 'general';
+
     return {
       baseQuery: cleanedQuery,
       originalQuery: initialQuery,
+      searchType,
       inferredFilters: {
         sources: inferredSources,
         geolocation: inferredGeolocation,
@@ -160,6 +209,7 @@ export const webSearchFiltersTool = tool({
         sources: inferredSources,
         geolocation: inferredGeolocation || 'US', // Default to US if not inferred
         site: inferredSite,
+        searchType,
       },
     } as const;
   },

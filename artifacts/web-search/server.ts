@@ -23,7 +23,8 @@ function dbg(...args: any[]) {
 
 /**
  * Parse search parameters from title/query
- * Format: "query | sources:news,web | geo:US | site:example.com"
+ * Format: "query | sources:news,web | geo:US | site:github.com"
+ * Note: CrustData API expects site in format "site:domain.com"
  */
 function parseSearchParams(title: string): {
   query: string;
@@ -46,7 +47,14 @@ function parseSearchParams(title: string): {
     } else if (part.startsWith('geo:')) {
       geolocation = part.substring(4).trim();
     } else if (part.startsWith('site:')) {
-      site = part.substring(5).trim();
+      // Keep the full "site:domain.com" format for CrustData API
+      // If it's "site:site:domain.com" (double prefix), normalize it
+      const siteValue = part.trim();
+      if (siteValue.startsWith('site:site:')) {
+        site = siteValue.substring(5); // Remove one "site:" to get "site:domain.com"
+      } else {
+        site = siteValue; // Already in correct format "site:domain.com"
+      }
     }
   }
 
