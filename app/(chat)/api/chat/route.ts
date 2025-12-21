@@ -26,6 +26,7 @@ import { getWeather } from '@/lib/ai/tools/get-weather';
 import { gmailQueryTool } from '@/lib/ai/tools/gmail';
 import { peopleFiltersTool } from '@/lib/ai/tools/people-filters';
 import { companyFiltersTool } from '@/lib/ai/tools/company-filters';
+import { webSearchFiltersTool } from '@/lib/ai/tools/web-search-filters';
 import { isProductionEnvironment } from '@/lib/constants';
 import { getProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
@@ -186,6 +187,7 @@ export async function POST(request: Request) {
                   'getWeather',
                   'peopleFilters',
                   'companyFilters',
+                  'webSearchFilters',
                   'createDocument',
                   'updateDocument',
                   'requestSuggestions',
@@ -197,6 +199,7 @@ export async function POST(request: Request) {
             getWeather,
             peopleFilters: peopleFiltersTool,
             companyFilters: companyFiltersTool,
+            webSearchFilters: webSearchFiltersTool,
             createDocument: createDocument({ session, dataStream, apiKey }),
             updateDocument: updateDocument({ session, dataStream, apiKey }),
             requestSuggestions: requestSuggestions({

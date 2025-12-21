@@ -5,6 +5,7 @@ import { peopleDocumentHandler } from '@/artifacts/people/server'; // Now uses i
 import { companyDocumentHandler } from '@/artifacts/company/server'; // Now uses improved version with progressive streaming
 import { sheetDocumentHandler } from '@/artifacts/sheet/server';
 import { textDocumentHandler } from '@/artifacts/text/server';
+import { webSearchDocumentHandler } from '@/artifacts/web-search/server';
 import type { ArtifactKind } from '@/components/artifact';
 import type { DataStreamWriter } from 'ai';
 import type { Document } from '../db/schema';
@@ -216,6 +217,7 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   websetDocumentHandler,
   peopleDocumentHandler,
   companyDocumentHandler,
+  webSearchDocumentHandler,
 ];
 
 export const artifactKinds = [
@@ -226,4 +228,5 @@ export const artifactKinds = [
   'webset',
   'people',
   'company',
+  'web-search',
 ] as const;

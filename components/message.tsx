@@ -12,6 +12,7 @@ import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
 import { Weather } from './weather';
 import { PeopleFiltersCard } from './people-filters-card';
+import { WebSearchFiltersCard } from './web-search-filters-card';
 import equal from 'fast-deep-equal';
 import { cn, sanitizeText } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -96,7 +97,8 @@ const PurePreviewMessage = ({
               const firstFiltersToolIndex = parts.findIndex((p) =>
                 p.type === 'tool-invocation' &&
                 ((p as any).toolInvocation?.toolName === 'peopleFilters' ||
-                 (p as any).toolInvocation?.toolName === 'companyFilters')
+                 (p as any).toolInvocation?.toolName === 'companyFilters' ||
+                 (p as any).toolInvocation?.toolName === 'webSearchFilters')
               );
 
               return parts.map((part, index) => {
@@ -186,7 +188,7 @@ const PurePreviewMessage = ({
                     <div
                       key={toolCallId}
                       className={cx({
-                        skeleton: ['getWeather', 'peopleFilters', 'companyFilters'].includes(toolName),
+                        skeleton: ['getWeather', 'peopleFilters', 'companyFilters', 'webSearchFilters'].includes(toolName),
                       })}
                     >
                       {toolName === 'getWeather' ? (
@@ -202,6 +204,13 @@ const PurePreviewMessage = ({
                         <CompanyFiltersCard
                           chatId={chatId}
                           append={append}
+                          preset={{ baseQuery: (args as any)?.initialQuery || '' }}
+                        />
+                      ) : toolName === 'webSearchFilters' ? (
+                        <WebSearchFiltersCard
+                          chatId={chatId}
+                          append={append}
+                          setMessages={setMessages}
                           preset={{ baseQuery: (args as any)?.initialQuery || '' }}
                         />
                       ) : toolName === 'createDocument' ? (
@@ -234,6 +243,8 @@ const PurePreviewMessage = ({
                         <PeopleFiltersCard chatId={chatId} append={append} setMessages={setMessages} preset={result} />
                       ) : toolName === 'companyFilters' ? (
                         <CompanyFiltersCard chatId={chatId} append={append} preset={result} />
+                      ) : toolName === 'webSearchFilters' ? (
+                        <WebSearchFiltersCard chatId={chatId} append={append} setMessages={setMessages} preset={result} />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview
                           isReadonly={isReadonly}

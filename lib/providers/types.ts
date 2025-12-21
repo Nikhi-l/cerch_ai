@@ -78,3 +78,67 @@ export interface PeopleProvider {
 export interface CompanyProvider {
   getCompanies(query: SearchQuery): Promise<ProviderResult<Company>>;
 }
+
+// Web Search Types
+export type WebSearchSource =
+  | 'news'
+  | 'web'
+  | 'scholar-articles'
+  | 'scholar-articles-enriched'
+  | 'scholar-author';
+
+export type WebSearchGeolocation =
+  | 'US' | 'CA' | 'MX' | 'BR' | 'AR' | 'CL' | 'CO' | 'PE' | 'VE'  // Americas
+  | 'GB' | 'DE' | 'FR' | 'IT' | 'ES' | 'PT' | 'NL' | 'BE' | 'CH' | 'AT' | 'PL' | 'SE' | 'NO' | 'DK' | 'FI' | 'IE' | 'RU' | 'UA' | 'CZ' | 'GR' | 'TR' | 'RO' | 'HU'  // Europe
+  | 'JP' | 'CN' | 'KR' | 'IN' | 'ID' | 'TH' | 'VN' | 'MY' | 'SG' | 'PH' | 'TW' | 'HK'  // Asia-Pacific
+  | 'SA' | 'AE' | 'IL' | 'EG'  // Middle East
+  | 'AU' | 'NZ'  // Oceania
+  | 'ZA' | 'NG' | 'KE';  // Africa
+
+export interface WebSearchParams {
+  query: string;
+  geolocation?: WebSearchGeolocation;
+  sources?: WebSearchSource[];
+  site?: string;
+  startDate?: number;  // Unix timestamp
+  endDate?: number;    // Unix timestamp
+  fetchContent?: boolean;
+}
+
+export interface WebSearchResultItem {
+  source?: string;
+  title: string;
+  url: string;
+  snippet: string;
+  position: number;
+  authors?: string[];  // For scholar results
+  date?: string;
+}
+
+export interface WebFetchResult {
+  success: boolean;
+  url: string;
+  timestamp: number;
+  pageTitle: string;
+  content: string;  // HTML content
+  error?: string;
+}
+
+export interface WebSearchResponse {
+  success: boolean;
+  query: string;
+  sanitizedQuery?: string;
+  engine?: string;
+  timestamp?: number;
+  pageTitle?: string;
+  results: WebSearchResultItem[];
+  contents?: WebFetchResult[];  // Present when fetchContent=true
+  metadata: {
+    totalResults: number;
+  };
+}
+
+export interface WebSearchProvider {
+  search(params: WebSearchParams): Promise<ProviderResult<WebSearchResultItem>>;
+  fetch(urls: string[]): Promise<WebFetchResult[]>;
+}

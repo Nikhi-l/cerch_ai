@@ -17,6 +17,11 @@ import type {
   SearchQuery,
   CrustFilterCondition,
   CrustFilterNode,
+  WebSearchParams,
+  WebSearchResponse,
+  WebSearchResultItem,
+  WebFetchResult,
+  WebSearchProvider,
 } from '../types';
 import { normalizeCompanyRows, normalizePeopleRows } from '../normalize';
 import { fetchWithTimeout } from '@/lib/network';
@@ -40,6 +45,8 @@ const API_BASE = process.env.CRUSTDATA_API_BASE || 'https://api.crustdata.com';
 const PEOPLE_PATH = process.env.CRUSTDATA_PEOPLE_PATH || '/screener/persondb/search/';
 const COMPANY_DISCOVERY_PATH =
   process.env.CRUSTDATA_COMPANY_SEARCH_PATH || '/screener/company/search';
+const WEB_SEARCH_PATH = '/screener/web-search';
+const WEB_FETCH_PATH = '/screener/web-fetch';
 
 // Simple in-memory cache with TTL
 interface CacheEntry<T> {
@@ -51,7 +58,7 @@ class SimpleCache<T> {
   private cache = new Map<string, CacheEntry<T>>();
   private ttl: number;
 
-  constructor(ttlMinutes: number = 5) {
+  constructor(ttlMinutes = 5) {
     this.ttl = ttlMinutes * 60 * 1000;
   }
 
@@ -81,9 +88,10 @@ class SimpleCache<T> {
   }
 }
 
-// Caches for people and company searches
+// Caches for people, company, and web searches
 const peopleCache = new SimpleCache<ProviderResult<Person>>(5);
 const companyCache = new SimpleCache<ProviderResult<Company>>(5);
+const webSearchCache = new SimpleCache<ProviderResult<WebSearchResultItem>>(5);
 
 async function getCrustToken(): Promise<string> {
   try {
@@ -113,7 +121,7 @@ export async function getRemainingCredits(): Promise<number> {
 /**
  * Check if user has sufficient credits
  */
-async function checkCredits(minRequired: number = 1): Promise<void> {
+async function checkCredits(minRequired = 1): Promise<void> {
   const credits = await getRemainingCredits();
   if (credits < minRequired) {
     throw new CrustdataError(
@@ -130,8 +138,8 @@ async function checkCredits(minRequired: number = 1): Promise<void> {
  */
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries: number = 3,
-  initialDelayMs: number = 1000
+  maxRetries = 3,
+  initialDelayMs = 1000
 ): Promise<T> {
   let lastError: Error | null = null;
 
@@ -206,7 +214,7 @@ async function crustPost<T>(path: string, body: any): Promise<T> {
       url,
       hasToken: !!token,
       tokenLength: token.length,
-      tokenPrefix: token.substring(0, 8) + '...',
+      tokenPrefix: `${token.substring(0, 8)}...`,
     });
     const res = await fetchWithTimeout(url, {
       method: 'POST',
@@ -654,8 +662,8 @@ export const crustCompanyProvider: CompanyProvider = {
         { label: '10,001+', min: 10001, max: Number.POSITIVE_INFINITY },
       ];
 
-      const sizeMin = Number(qFilters.size_min ?? NaN);
-      const sizeMax = Number(qFilters.size_max ?? NaN);
+      const sizeMin = Number(qFilters.size_min ?? Number.NaN);
+      const sizeMax = Number(qFilters.size_max ?? Number.NaN);
       if (!Number.isNaN(sizeMin) || !Number.isNaN(sizeMax)) {
         const lo = Number.isNaN(sizeMin) ? 1 : sizeMin;
         const hi = Number.isNaN(sizeMax) ? Number.POSITIVE_INFINITY : sizeMax;
@@ -716,12 +724,181 @@ export const crustCompanyProvider: CompanyProvider = {
   },
 };
 
+// --- Web Search ---
+
+/**
+ * Generate cache key for web search queries
+ */
+function generateWebSearchCacheKey(params: WebSearchParams): string {
+  return JSON.stringify({
+    query: params.query,
+    geolocation: params.geolocation,
+    sources: params.sources,
+    site: params.site,
+    startDate: params.startDate,
+    endDate: params.endDate,
+    fetchContent: params.fetchContent,
+  });
+}
+
+/**
+ * Normalize web search results to consistent format
+ */
+function normalizeWebSearchResults(response: WebSearchResponse): WebSearchResultItem[] {
+  if (!response.results || !Array.isArray(response.results)) {
+    return [];
+  }
+
+  return response.results.map((item, index) => ({
+    source: item.source || 'web',
+    title: item.title || 'Untitled',
+    url: item.url || '',
+    snippet: item.snippet || '',
+    position: item.position ?? index + 1,
+    authors: item.authors,
+    date: undefined, // CrustData doesn't return dates in standard format
+  }));
+}
+
+export const crustWebSearchProvider: WebSearchProvider = {
+  async search(params: WebSearchParams): Promise<ProviderResult<WebSearchResultItem>> {
+    try {
+      // Check cache first
+      const cacheKey = generateWebSearchCacheKey(params);
+      const cached = webSearchCache.get(cacheKey);
+      if (cached) {
+        dbg('webSearch: returning cached result');
+        return cached;
+      }
+
+      // Check credits before making request (1 credit per search)
+      await checkCredits(1);
+
+      // Build request payload
+      const payload: Record<string, unknown> = {
+        query: params.query,
+      };
+
+      if (params.geolocation) {
+        payload.geolocation = params.geolocation;
+      }
+      if (params.sources && params.sources.length > 0) {
+        payload.sources = params.sources;
+      }
+      if (params.site) {
+        payload.site = params.site;
+      }
+      if (params.startDate) {
+        payload.startDate = params.startDate;
+      }
+      if (params.endDate) {
+        payload.endDate = params.endDate;
+      }
+
+      dbg('webSearch: POST', {
+        path: WEB_SEARCH_PATH,
+        query: params.query,
+        sources: params.sources,
+        geolocation: params.geolocation,
+      });
+
+      // Build URL with fetch_content query param if needed
+      const url = params.fetchContent
+        ? `${WEB_SEARCH_PATH}?fetch_content=true`
+        : WEB_SEARCH_PATH;
+
+      const response = await crustPost<WebSearchResponse>(url, payload);
+
+      if (!response.success) {
+        throw new CrustdataError(
+          'Web search request failed',
+          500,
+          response,
+          true
+        );
+      }
+
+      dbg('webSearch: response', {
+        totalResults: response.metadata?.totalResults,
+        resultCount: response.results?.length,
+        hasContents: !!response.contents,
+      });
+
+      const rows = normalizeWebSearchResults(response);
+
+      const result: ProviderResult<WebSearchResultItem> = {
+        rows,
+        source: 'crustdata',
+        creditCost: { provider: 'crustdata', estimated: 1 },
+      };
+
+      // Attach contents if fetched (for extended use)
+      if (response.contents) {
+        (result as any).contents = response.contents;
+      }
+
+      // Cache the result
+      webSearchCache.set(cacheKey, result);
+
+      return result;
+    } catch (error: any) {
+      const message = error instanceof CrustdataError ? error.message : error?.message || String(error);
+      console.error('[CRUSTDATA:CLIENT] webSearch: error', message);
+      throw error;
+    }
+  },
+
+  async fetch(urls: string[]): Promise<WebFetchResult[]> {
+    if (!Array.isArray(urls) || urls.length === 0) {
+      return [];
+    }
+
+    // Limit to 10 URLs per request as per API docs
+    const limitedUrls = urls.slice(0, 10);
+
+    try {
+      // Check credits (1 credit per URL)
+      await checkCredits(limitedUrls.length);
+
+      dbg('webFetch: POST', {
+        path: WEB_FETCH_PATH,
+        urlCount: limitedUrls.length,
+      });
+
+      const response = await crustPost<WebFetchResult[]>(WEB_FETCH_PATH, {
+        urls: limitedUrls,
+      });
+
+      if (!Array.isArray(response)) {
+        throw new CrustdataError(
+          'Invalid web fetch response format',
+          500,
+          response,
+          false
+        );
+      }
+
+      dbg('webFetch: response', {
+        resultCount: response.length,
+        successCount: response.filter(r => r.success).length,
+      });
+
+      return response;
+    } catch (error: any) {
+      const message = error instanceof CrustdataError ? error.message : error?.message || String(error);
+      console.error('[CRUSTDATA:CLIENT] webFetch: error', message);
+      throw error;
+    }
+  },
+};
+
 /**
  * Clear all caches (useful for testing or manual refresh)
  */
 export function clearCaches(): void {
   peopleCache.clear();
   companyCache.clear();
+  webSearchCache.clear();
   dbg('All caches cleared');
 }
 
@@ -735,6 +912,9 @@ export function getCacheStats() {
     },
     company: {
       size: companyCache.size(),
+    },
+    webSearch: {
+      size: webSearchCache.size(),
     },
   };
 }
