@@ -1,50 +1,13 @@
 import { Artifact } from '@/components/create-artifact';
-import { CopyIcon, RedoIcon, UndoIcon, ExternalLinkIcon } from '@/components/icons';
+import { CopyIcon, RedoIcon, UndoIcon } from '@/components/icons';
 import { WebsetTable } from '@/components/webset-table';
 import { parse, unparse } from 'papaparse';
 import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
 
 type Metadata = {
   statusText?: string;
   errorMessage?: string;
 };
-
-/**
- * Get badge variant based on source type
- */
-function getSourceBadgeVariant(source: string): 'default' | 'secondary' | 'outline' {
-  switch (source) {
-    case 'news':
-      return 'default';
-    case 'scholar-articles':
-    case 'scholar-articles-enriched':
-    case 'scholar-author':
-      return 'secondary';
-    default:
-      return 'outline';
-  }
-}
-
-/**
- * Get display name for source
- */
-function getSourceDisplayName(source: string): string {
-  switch (source) {
-    case 'news':
-      return 'News';
-    case 'web':
-      return 'Web';
-    case 'scholar-articles':
-      return 'Scholar';
-    case 'scholar-articles-enriched':
-      return 'Scholar+';
-    case 'scholar-author':
-      return 'Author';
-    default:
-      return source;
-  }
-}
 
 export const webSearchArtifact = new Artifact<'web-search', Metadata>({
   kind: 'web-search',
@@ -90,11 +53,6 @@ export const webSearchArtifact = new Artifact<'web-search', Metadata>({
     const isError = content?.startsWith('ERROR\n');
     const errorContent = isError
       ? content.substring(6).replace(/^"|"$/g, '').replace(/""/g, '"')
-      : null;
-
-    // Parse CSV to enhance URL display
-    const parsed = content && !isError
-      ? parse<string[]>(content, { skipEmptyLines: true })
       : null;
 
     return (
@@ -174,33 +132,6 @@ export const webSearchArtifact = new Artifact<'web-search', Metadata>({
             variant="webset"
             autoHideEmptyColumns
             onSaveContent={onSaveContent}
-            customRenderers={{
-              url: (value: string) => (
-                <a
-                  href={value}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 max-w-[300px] truncate"
-                  title={value}
-                >
-                  <span className="truncate">{value}</span>
-                  <ExternalLinkIcon size={12} className="flex-shrink-0" />
-                </a>
-              ),
-              source: (value: string) => (
-                <Badge variant={getSourceBadgeVariant(value)}>
-                  {getSourceDisplayName(value)}
-                </Badge>
-              ),
-              snippet: (value: string) => (
-                <div
-                  className="text-sm text-muted-foreground max-w-[400px] line-clamp-2"
-                  title={value}
-                >
-                  {value}
-                </div>
-              ),
-            }}
           />
         )}
       </div>
