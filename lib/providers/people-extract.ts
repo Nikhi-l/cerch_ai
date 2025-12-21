@@ -136,7 +136,7 @@ export async function buildPeopleQuery(
       case 'company':
         spec.company = val;
         break;
-      case 'skills':
+      case 'skills': {
         const skillTokens = val
           .split(/[,|]/)
           .map((value) => value.trim())
@@ -146,6 +146,7 @@ export async function buildPeopleQuery(
           if (merged.length) spec.skills = merged.join(', ');
         }
         break;
+      }
       case 'languages': {
         const langs = val.split(/[,|]/).map((s) => s.trim()).filter(Boolean);
         if (langs.length) {

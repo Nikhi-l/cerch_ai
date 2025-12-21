@@ -511,14 +511,14 @@ function extractExperienceLevel(text: string): {
   const yearsMatch = text.match(/(\d+)\+?\s*(?:to|-)\s*(\d+)\s*years?/i);
   if (yearsMatch) {
     return {
-      minYears: parseInt(yearsMatch[1]),
-      maxYears: parseInt(yearsMatch[2]),
+      minYears: Number.parseInt(yearsMatch[1]),
+      maxYears: Number.parseInt(yearsMatch[2]),
     };
   }
 
   const minYearsMatch = text.match(/(\d+)\+\s*years?|at\s+least\s+(\d+)\s*years?|minimum\s+(\d+)\s*years?/i);
   if (minYearsMatch) {
-    const years = parseInt(minYearsMatch[1] || minYearsMatch[2] || minYearsMatch[3]);
+    const years = Number.parseInt(minYearsMatch[1] || minYearsMatch[2] || minYearsMatch[3]);
     return { minYears: years };
   }
 
@@ -546,19 +546,19 @@ function extractCompanySize(text: string): { min?: number; max?: number } {
   const sizeMatch = text.match(/(\d+)\s*[-to]+\s*(\d+)\s*(?:employees?|people|headcount)/i);
   if (sizeMatch) {
     return {
-      min: parseInt(sizeMatch[1]),
-      max: parseInt(sizeMatch[2]),
+      min: Number.parseInt(sizeMatch[1]),
+      max: Number.parseInt(sizeMatch[2]),
     };
   }
 
   const minMatch = text.match(/(?:at\s+least|min(?:imum)?|over)\s+(\d+)\s*(?:employees?|people)/i);
   if (minMatch) {
-    return { min: parseInt(minMatch[1]) };
+    return { min: Number.parseInt(minMatch[1]) };
   }
 
   const maxMatch = text.match(/(?:at\s+most|max(?:imum)?|under)\s+(\d+)\s*(?:employees?|people)/i);
   if (maxMatch) {
-    return { max: parseInt(maxMatch[1]) };
+    return { max: Number.parseInt(maxMatch[1]) };
   }
 
   // Keyword patterns
@@ -684,7 +684,7 @@ export function parseCompanyQuery(text: string, limit = 100): SearchQuery {
   // Year founded
   const yearMatch = text.match(/(?:founded|started|after|since)\s+(\d{4})/i);
   if (yearMatch) {
-    filters.year_founded_min = parseInt(yearMatch[1]);
+    filters.year_founded_min = Number.parseInt(yearMatch[1]);
   }
 
   return {

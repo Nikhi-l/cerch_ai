@@ -51,7 +51,7 @@ class SimpleCache<T> {
   private cache = new Map<string, CacheEntry<T>>();
   private ttl: number;
 
-  constructor(ttlMinutes: number = 5) {
+  constructor(ttlMinutes = 5) {
     this.ttl = ttlMinutes * 60 * 1000;
   }
 
@@ -113,7 +113,7 @@ export async function getRemainingCredits(): Promise<number> {
 /**
  * Check if user has sufficient credits
  */
-async function checkCredits(minRequired: number = 1): Promise<void> {
+async function checkCredits(minRequired = 1): Promise<void> {
   const credits = await getRemainingCredits();
   if (credits < minRequired) {
     throw new CrustdataError(
@@ -130,8 +130,8 @@ async function checkCredits(minRequired: number = 1): Promise<void> {
  */
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries: number = 3,
-  initialDelayMs: number = 1000
+  maxRetries = 3,
+  initialDelayMs = 1000
 ): Promise<T> {
   let lastError: Error | null = null;
 
@@ -625,8 +625,8 @@ export const crustCompanyProvider: CompanyProvider = {
         { label: '10,001+', min: 10001, max: Number.POSITIVE_INFINITY },
       ];
 
-      const sizeMin = Number(qFilters.size_min ?? NaN);
-      const sizeMax = Number(qFilters.size_max ?? NaN);
+      const sizeMin = Number(qFilters.size_min ?? Number.NaN);
+      const sizeMax = Number(qFilters.size_max ?? Number.NaN);
       if (!Number.isNaN(sizeMin) || !Number.isNaN(sizeMax)) {
         const lo = Number.isNaN(sizeMin) ? 1 : sizeMin;
         const hi = Number.isNaN(sizeMax) ? Number.POSITIVE_INFINITY : sizeMax;

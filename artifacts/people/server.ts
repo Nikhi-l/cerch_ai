@@ -12,9 +12,8 @@ import {
   crustPeopleProvider,
   isCrustConfigured,
 } from '@/lib/providers/crustdata/client';
-import { toCSV } from '@/lib/providers/normalize';
 import { buildPeopleQuery } from '@/lib/providers/people-extract';
-import { checkUserCredits, deductUserCredits, getRemainingUserCredits } from '@/lib/db/queries';
+import { deductUserCredits, getRemainingUserCredits } from '@/lib/db/queries';
 
 function debugEnabled() {
   return process.env.DEBUG_CRUSTDATA === 'true';
@@ -31,7 +30,7 @@ function streamCSVRows(
   headers: string[],
   rows: any[],
   dataStream: any,
-  chunkSize: number = 10
+  chunkSize = 10
 ): string {
   // Send headers first
   const csvLines: string[] = [headers.join(',')];

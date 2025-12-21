@@ -2,7 +2,6 @@ import { auth } from '@/app/(auth)/auth';
 import { ChatSDKError } from '@/lib/errors';
 import { saveDocument, saveMessages, saveChat, getChatById } from '@/lib/db/queries';
 import { generateUUID } from '@/lib/utils';
-import { aggregatePeople } from '@/lib/providers';
 import {
   crustPeopleProvider,
   isCrustConfigured,

@@ -350,7 +350,7 @@ export interface BuildQueryResult {
  */
 export function buildAdvancedPeopleQuery(
   text: string,
-  limit: number = 50
+  limit = 50
 ): BuildQueryResult {
   // Parse the query
   const parsed = parseAdvancedPeopleQuery(text);
@@ -408,8 +408,8 @@ export function buildAdvancedPeopleQuery(
  */
 export async function buildAdaptivePeopleQuery(
   text: string,
-  limit: number = 50,
-  attemptNumber: number = 1
+  limit = 50,
+  attemptNumber = 1
 ): Promise<{
   query: SearchQuery;
   usedAlternative: boolean;

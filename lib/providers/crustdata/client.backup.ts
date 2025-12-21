@@ -406,8 +406,8 @@ export const crustCompanyProvider: CompanyProvider = {
         { label: '10,001+', min: 10001, max: Number.POSITIVE_INFINITY },
       ];
 
-      const sizeMin = Number(qFilters.size_min ?? NaN);
-      const sizeMax = Number(qFilters.size_max ?? NaN);
+      const sizeMin = Number(qFilters.size_min ?? Number.NaN);
+      const sizeMax = Number(qFilters.size_max ?? Number.NaN);
       if (!Number.isNaN(sizeMin) || !Number.isNaN(sizeMax)) {
         const lo = Number.isNaN(sizeMin) ? 1 : sizeMin;
         const hi = Number.isNaN(sizeMax) ? Number.POSITIVE_INFINITY : sizeMax;

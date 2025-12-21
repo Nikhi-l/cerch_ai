@@ -13,7 +13,6 @@ import {
   isCrustConfigured,
   getRemainingCredits,
 } from '@/lib/providers/crustdata/client-improved';
-import { toCSV } from '@/lib/providers/normalize';
 import { buildPeopleQuery } from '@/lib/providers/people-extract';
 
 function debugEnabled() {
@@ -31,7 +30,7 @@ function streamCSVRows(
   headers: string[],
   rows: any[],
   dataStream: any,
-  chunkSize: number = 10
+  chunkSize = 10
 ): string {
   // Send headers first
   const csvLines: string[] = [headers.join(',')];

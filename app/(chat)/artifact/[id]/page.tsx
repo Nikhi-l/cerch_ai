@@ -3,9 +3,6 @@ import { getChatIdByDocumentId, getDocumentsById } from '@/lib/db/queries';
 import { ChatSDKError } from '@/lib/errors';
 import { notFound, redirect } from 'next/navigation';
 import { WebsetTable } from '@/components/webset-table';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { ArtifactViewerActions } from '@/components/artifact-viewer-actions';
 import { SidebarToggle } from '@/components/sidebar-toggle';
 

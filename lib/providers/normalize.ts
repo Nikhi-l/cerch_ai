@@ -4,7 +4,7 @@ export function toCSV(headers: string[], rows: Array<Record<string, any>>): stri
   const escape = (v: any) => {
     const s = v == null ? '' : String(v);
     if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-      return '"' + s.replace(/"/g, '""') + '"';
+      return `"${s.replace(/"/g, '""')}"`;
     }
     return s;
   };
